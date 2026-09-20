@@ -1,0 +1,46 @@
+{
+	"name": "keynest",
+	"private": true,
+	"description": "Private home for your digital keys.",
+	"workspaces": {
+		"packages": [
+			"apps/*",
+			"packages/*"
+		],
+		"catalog": {
+			"typescript": "^6.0.3",
+			"@types/node": "^26.4.1"
+		}
+	},
+	"type": "module",
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"check-types": "turbo run check-types",
+		"dev:web": "turbo run dev:bare -F web --",
+		"dev:server": "turbo run dev:bare -F hono --",
+		"db:generate": "turbo run db:generate -F @keynest/db --",
+		"deploy": "turbo run deploy -F @keynest/infra --",
+		"destroy": "turbo run destroy -F @keynest/infra --",
+		"check": "oxlint && oxfmt --write",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.5.0",
+		"oxfmt": "^0.66.0",
+		"oxlint": "^1.83.0",
+		"turbo": "^2.10.12",
+		"typescript": "catalog:"
+	},
+	"lint-staged": {
+		"*": [
+			"oxlint",
+			"oxfmt --write"
+		]
+	},
+	"packageManager": "bun@1.4.2"
+}
