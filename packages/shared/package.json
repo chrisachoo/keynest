@@ -1,0 +1,17 @@
+{
+	"name": "@keynest/shared",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "tsc -b",
+		"check-types": "tsc -b"
+	},
+	"dependencies": {
+		"valibot": "catalog:"
+	},
+	"devDependencies": {
+		"typescript": "catalog:"
+	}
+}
