@@ -6,7 +6,7 @@ export default defineConfig({
 	printWidth: 80,
 	quoteProps: "as-needed",
 	semi: false,
-	singleAttributePerLine: true,
+	singleAttributePerLine: false,
 	singleQuote: false,
 	sortImports: true,
 	tabWidth: 2,
