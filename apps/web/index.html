@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			;(function () {
+				var theme = localStorage.getItem("vite-ui-theme")
+				if (theme !== "sunset") theme = "light"
+				var root = document.documentElement
+				root.dataset.theme = theme
+				root.style.colorScheme = theme === "sunset" ? "dark" : "light"
+			})()
+		</script>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>web</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
+</html>
