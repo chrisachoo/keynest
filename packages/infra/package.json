@@ -1,0 +1,22 @@
+{
+	"name": "@keynest/infra",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./alchemy.run.ts",
+		"./alchemy.run": "./alchemy.run.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit",
+		"dev": "alchemy dev",
+		"deploy": "alchemy deploy",
+		"destroy": "alchemy destroy"
+	},
+	"devDependencies": {
+		"@effect/platform-bun": "^4.0.0-rc.118",
+		"@effect/platform-node": "^4.0.0-rc.118",
+		"alchemy": "^2.0.0-beta.79",
+		"effect": "^4.0.0-rc.118",
+		"typescript": "catalog:"
+	}
+}
