@@ -6,20 +6,25 @@ const buttonVariants = cva("btn", {
 	variants: {
 		color: {
 			accent: "btn-accent",
-			default: "btn-neutral",
+			neutral: "btn-neutral",
 			primary: "btn-primary",
 			secondary: "btn-secondary"
 		},
+		shape: {
+			circle: "btn-circle",
+			square: "btn-square"
+		},
 		size: {
 			lg: "btn-lg",
-			sm: "btn-sm"
+			sm: "btn-sm",
+			xs: "btn-xs"
 		},
 		variant: {
 			destructive: "btn-error",
 			ghost: "btn-ghost",
 			light: "btn-soft",
 			link: "btn-link",
-			outline: "btn-outline ",
+			outline: "btn-outline",
 			primary: "btn-primary"
 		}
 	}
@@ -28,11 +33,18 @@ const buttonVariants = cva("btn", {
 type ButtonProps = ComponentProps<"button"> &
 	VariantProps<typeof buttonVariants>
 
-function Button({ className, variant, size, ...props }: Readonly<ButtonProps>) {
+function Button({
+	className,
+	color,
+	shape,
+	size,
+	variant,
+	...props
+}: Readonly<ButtonProps>) {
 	return (
 		<button
 			data-slot="button"
-			className={cn(buttonVariants({ variant, size, className }))}
+			className={cn(buttonVariants({ color, shape, size, variant }), className)}
 			{...props}
 		/>
 	)
