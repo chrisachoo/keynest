@@ -1,4 +1,4 @@
-import { userPublic } from "@keynest/shared"
+import { UserPublicSchema } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 
@@ -12,7 +12,7 @@ export const usersRoutes = new Hono<ApiEnv>().get(
 		description:
 			"Return the authenticated account. Session/OAuth is not wired yet.",
 		responses: {
-			200: jsonContent(userPublic, "Current user"),
+			200: jsonContent(UserPublicSchema, "Current user"),
 			401: unauthorizedResponse
 		},
 		security: [{ SessionCookie: [] }],

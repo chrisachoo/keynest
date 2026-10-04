@@ -1,4 +1,4 @@
-import type { UserPublic } from "@keynest/shared"
+import type { UserPublicSchema } from "@keynest/shared"
 import type { Context } from "hono"
 import { createMiddleware } from "hono/factory"
 
@@ -11,7 +11,7 @@ export const requireAuth = createMiddleware<ApiEnv>(async (c, next) => {
 	await next()
 })
 
-export function getAuthUser(c: Context<ApiEnv>): UserPublic {
+export function getAuthUser(c: Context<ApiEnv>): UserPublicSchema {
 	const user = c.get("user")
 	if (!user) throw unauthorized()
 

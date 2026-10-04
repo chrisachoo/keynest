@@ -1,6 +1,6 @@
 import * as v from "valibot"
 
-export const userPublic = v.object({
+export const UserPublicSchema = v.object({
 	email: v.pipe(v.string(), v.email()),
 	emailVerified: v.boolean(),
 	id: v.string(),
@@ -8,4 +8,4 @@ export const userPublic = v.object({
 	name: v.string()
 })
 
-export type UserPublic = v.InferOutput<typeof userPublic>
+export type UserPublicSchema = v.InferOutput<typeof UserPublicSchema>
