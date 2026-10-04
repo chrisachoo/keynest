@@ -15,6 +15,7 @@ export const server = Cloudflare.Worker("server", {
 		port: 8080
 	},
 	env: {
+		COOKIE_SECRET: Config.String("COOKIE_SECRET"),
 		CORS_ORIGIN: Config.String("CORS_ORIGIN"),
 		DB: db
 	},
