@@ -5,6 +5,7 @@ import type { ApiEnv } from "../env"
 
 export const withDb = createMiddleware<ApiEnv>(async (c, next) => {
 	c.set("db", createDb(c.env.DB))
+	c.set("sessionId", null)
 	c.set("user", null)
 	await next()
 })
