@@ -79,3 +79,7 @@
 	--depth: 0;
 	--noise: 1;
 }
+
+@theme {
+	--grid-template-columns-sidebar-layout: 2fr 1fr;
+}
