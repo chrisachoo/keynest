@@ -1,4 +1,4 @@
-import { SESSION_COOKIE_NAME } from "@keynest/shared"
+import { SESSION_COOKIE } from "@keynest/shared"
 import { Scalar } from "@scalar/hono-api-reference"
 import { Hono } from "hono"
 import { openAPIRouteHandler } from "hono-openapi"
@@ -30,7 +30,7 @@ api.get(
 				securitySchemes: {
 					SessionCookie: {
 						in: "cookie",
-						name: SESSION_COOKIE_NAME,
+						name: SESSION_COOKIE,
 						type: "apiKey"
 					}
 				}
@@ -43,6 +43,7 @@ api.get(
 			},
 			servers: [{ description: "API v1", url: "/api/v1" }],
 			tags: [
+				{ description: "Sign up, log in, and log out", name: "Auth" },
 				{ description: "Authenticated account", name: "Users" },
 				{
 					description: "Encrypted vault items. Never plaintext secrets.",
