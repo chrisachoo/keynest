@@ -47,5 +47,13 @@ function InputGroup({ className, ...props }: ComponentProps<"label">) {
 	return <label className={cn("input w-full", className)} {...props} />
 }
 
-export { Input, InputGroup, inputVariants }
+function Legend({ className, ...props }: ComponentProps<"legend">) {
+	return <legend className={cn("fieldset-legend", className)} {...props} />
+}
+
+function Fieldset({ className, ...props }: ComponentProps<"fieldset">) {
+	return <fieldset className={cn("fieldset", className)} {...props} />
+}
+
+export { Fieldset, Input, InputGroup, inputVariants, Legend }
 export type { InputProps }
