@@ -9,7 +9,7 @@ const meterLevel = {
 
 export type MeterLevel = keyof typeof meterLevel
 
-export function Meter({
+export default function Meter({
 	caption,
 	level
 }: Readonly<{
