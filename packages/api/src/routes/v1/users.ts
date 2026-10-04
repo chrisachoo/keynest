@@ -9,8 +9,7 @@ import { getAuthUser, requireAuth } from "../../middleware/auth"
 export const usersRoutes = new Hono<ApiEnv>().get(
 	"/me",
 	describeRoute({
-		description:
-			"Return the authenticated account. Session/OAuth is not wired yet.",
+		description: "Return the authenticated account.",
 		responses: {
 			200: jsonContent(UserPublicSchema, "Current user"),
 			401: UNAUTHORIZED_RESPONSE
