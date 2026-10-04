@@ -17,6 +17,7 @@
 		"@keynest/shared": "workspace:*",
 		"@reduxjs/toolkit": "^2.13.0",
 		"@t3-oss/env-core": "catalog:",
+		"@tanstack/react-form": "^1.33.5",
 		"class-variance-authority": "^0.7.1",
 		"cn": "^0.4.0",
 		"daisyui": "^5.7.47",
