@@ -39,3 +39,13 @@ export const NOT_FOUND_RESPONSE: JsonContentResponse = jsonContent(
 	apiError,
 	"Not found"
 )
+
+export const CONFLICT_RESPONSE: JsonContentResponse = jsonContent(
+	apiError,
+	"Conflict"
+)
+
+export const INTERNAL_SERVER_ERROR: JsonContentResponse = jsonContent(
+	apiError,
+	"Internal server error"
+)
