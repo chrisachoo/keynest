@@ -2,7 +2,19 @@ import { apiError } from "@keynest/shared"
 import { resolver } from "hono-openapi"
 import type { GenericSchema } from "valibot"
 
-export function jsonContent(schema: GenericSchema, description: string) {
+type JsonContentResponse = {
+	content: {
+		"application/json": {
+			schema: ReturnType<typeof resolver>
+		}
+	}
+	description: string
+}
+
+export function jsonContent(
+	schema: GenericSchema,
+	description: string
+): JsonContentResponse {
 	return {
 		content: {
 			"application/json": {
@@ -13,5 +25,17 @@ export function jsonContent(schema: GenericSchema, description: string) {
 	}
 }
 
-export const unauthorizedResponse = jsonContent(apiError, "Unauthorized")
-export const notFoundResponse = jsonContent(apiError, "Not found")
+export const UNAUTHORIZED_RESPONSE: JsonContentResponse = jsonContent(
+	apiError,
+	"Unauthorized"
+)
+
+export const INVALID_CREDENTIALS_RESPONSE: JsonContentResponse = jsonContent(
+	apiError,
+	"Invalid email or password"
+)
+
+export const NOT_FOUND_RESPONSE: JsonContentResponse = jsonContent(
+	apiError,
+	"Not found"
+)

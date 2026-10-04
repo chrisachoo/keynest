@@ -14,8 +14,8 @@ import type { ApiEnv } from "../../env"
 import { internalError, notFound } from "../../lib/http"
 import {
 	jsonContent,
-	notFoundResponse,
-	unauthorizedResponse
+	NOT_FOUND_RESPONSE,
+	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 
@@ -40,7 +40,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 				"List encrypted vault items for the current user. Ciphertext only — never plaintext secrets.",
 			responses: {
 				200: jsonContent(vaultItemList, "Vault items"),
-				401: unauthorizedResponse
+				401: UNAUTHORIZED_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "List vault items",
@@ -74,7 +74,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 				"Store a client-encrypted vault item. The server never sees plaintext.",
 			responses: {
 				201: jsonContent(vaultItem, "Created vault item"),
-				401: unauthorizedResponse
+				401: UNAUTHORIZED_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "Create vault item",
@@ -107,8 +107,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description: "Fetch one encrypted vault item owned by the current user.",
 			responses: {
 				200: jsonContent(vaultItem, "Vault item"),
-				401: unauthorizedResponse,
-				404: notFoundResponse
+				401: UNAUTHORIZED_RESPONSE,
+				404: NOT_FOUND_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "Get vault item",
@@ -139,8 +139,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description: "Replace ciphertext for a vault item. Type cannot change.",
 			responses: {
 				200: jsonContent(vaultItem, "Updated vault item"),
-				401: unauthorizedResponse,
-				404: notFoundResponse
+				401: UNAUTHORIZED_RESPONSE,
+				404: NOT_FOUND_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "Update vault item",
@@ -176,8 +176,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description: "Delete a vault item owned by the current user.",
 			responses: {
 				204: { description: "Deleted" },
-				401: unauthorizedResponse,
-				404: notFoundResponse
+				401: UNAUTHORIZED_RESPONSE,
+				404: NOT_FOUND_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "Delete vault item",
