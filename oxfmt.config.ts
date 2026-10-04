@@ -9,6 +9,11 @@ export default defineConfig({
 	singleAttributePerLine: false,
 	singleQuote: false,
 	sortImports: true,
+	sortTailwindcss: {
+		stylesheet: "./apps/web/src/app.css",
+		functions: ["clsx", "cn"],
+		preserveWhitespace: true
+	},
 	tabWidth: 2,
 	trailingComma: "none",
 	useTabs: true
