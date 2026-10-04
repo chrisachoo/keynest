@@ -1,6 +1,12 @@
 import { createId } from "@paralleldrive/cuid2"
 import { sql } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import {
+	index,
+	integer,
+	sqliteTable,
+	text,
+	uniqueIndex
+} from "drizzle-orm/sqlite-core"
 
 export const user = sqliteTable("user", {
 	id: text("id")
@@ -33,6 +39,7 @@ export const session = sqliteTable(
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),
 		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => /* @__PURE__ */ new Date())
 			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull(),
 		ipAddress: text("ip_address"),
@@ -70,10 +77,17 @@ export const account = sqliteTable(
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),
 		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => /* @__PURE__ */ new Date())
 			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull()
 	},
-	(table) => [index("account_userId_idx").on(table.userId)]
+	(table) => [
+		index("account_userId_idx").on(table.userId),
+		uniqueIndex("account_provider_account_idx").on(
+			table.providerId,
+			table.accountId
+		)
+	]
 )
 
 export const verification = sqliteTable(
