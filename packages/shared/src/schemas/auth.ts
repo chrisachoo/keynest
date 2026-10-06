@@ -1,17 +1,33 @@
 import * as v from "valibot"
 
-const email = v.pipe(v.string(), v.email())
-const password = v.pipe(v.string(), v.minLength(8), v.maxLength(128))
+const EmailSchema = v.pipe(
+	v.string(),
+	v.nonEmpty("Email is required."),
+	v.email("The email is badly formatted.")
+)
+
+export const PasswordSchema = v.pipe(
+	v.string(),
+	v.minLength(8),
+	v.maxLength(128),
+	v.nonEmpty("Password is required.")
+)
+export const NameSchema = v.pipe(
+	v.string(),
+	v.minLength(2),
+	v.maxLength(80),
+	v.nonEmpty("Please enter your name.")
+)
 
 export const SignupSchema = v.object({
-	email,
-	name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(80)),
-	password
+	email: EmailSchema,
+	name: NameSchema,
+	password: PasswordSchema
 })
 
 export const LoginSchema = v.object({
-	email,
-	password
+	email: EmailSchema,
+	password: PasswordSchema
 })
 
 export type SignupInput = v.InferOutput<typeof SignupSchema>
