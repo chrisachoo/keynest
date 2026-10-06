@@ -20,7 +20,7 @@ function ToggleTheme() {
 	}, [theme])
 
 	return (
-		<label className="swap swap-rotate btn btn-ghost btn-square">
+		<label className="btn swap btn-square swap-rotate btn-ghost">
 			<input
 				type="checkbox"
 				className="theme-controller"
@@ -32,8 +32,8 @@ function ToggleTheme() {
 					dispatch(setTheme(next))
 				}}
 			/>
-			<SunIcon className="swap-off size-5" />
-			<MoonIcon className="swap-on size-5" />
+			<SunIcon className="size-5 swap-off" />
+			<MoonIcon className="size-5 swap-on" />
 		</label>
 	)
 }

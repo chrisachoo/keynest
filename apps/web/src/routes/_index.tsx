@@ -26,10 +26,10 @@ export function Component() {
 
 	return (
 		<div className="container mx-auto max-w-3xl px-4 py-8">
-			<div className="flex items-center justify-between w-full">
+			<div className="flex w-full items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-medium">Keynest</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
+					<p className="text-muted-foreground mt-1 text-sm">
 						Private home for your digital keys.
 					</p>
 				</div>
@@ -43,7 +43,7 @@ export function Component() {
 					<div
 						className={`h-2 w-2 rounded-full ${loaderData.ok ? "bg-green-500" : "bg-red-500"}`}
 					/>
-					<span className="text-sm text-muted-foreground">
+					<span className="text-muted-foreground text-sm">
 						{loaderData.ok ? "Connected" : "Disconnected"}
 						{loaderData.message ? ` — ${loaderData.message}` : ""}
 					</span>
