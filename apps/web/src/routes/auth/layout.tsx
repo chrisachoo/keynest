@@ -1,6 +1,6 @@
 import { Outlet } from "react-router"
 
-import AuthPanel from "@/components/auth-panel"
+import AuthPanel from "@/components/auth/auth-panel"
 
 export function Component() {
 	return (
