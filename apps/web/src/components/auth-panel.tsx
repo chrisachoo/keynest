@@ -3,31 +3,33 @@ import {
 	Fingerprint,
 	KeyRound,
 	LockKeyhole,
-	MoreHorizontal,
 	ShieldCheck
 } from "lucide-react"
 
-export default function AuthBrandPanel() {
-	const features = [
-		{
-			icon: KeyRound,
-			title: "Passwords",
-			description: "Your saved logins"
-		},
-		{
-			icon: Fingerprint,
-			title: "Passkeys",
-			description: "Passwordless sign-in"
-		},
-		{
-			icon: ShieldCheck,
-			title: "Authenticator",
-			description: "Two-factor codes"
-		}
-	]
+import { IconBadge } from "@/components/ui/icon-badge"
+import { authAssurance } from "@/constants"
 
+const features = [
+	{
+		icon: KeyRound,
+		title: "Passwords",
+		description: "Your saved logins"
+	},
+	{
+		icon: Fingerprint,
+		title: "Passkeys",
+		description: "Passwordless sign-in"
+	},
+	{
+		icon: ShieldCheck,
+		title: "Authenticator",
+		description: "Two-factor codes"
+	}
+] as const
+
+export default function AuthPanel() {
 	return (
-		<aside className="text-card-foreground relative hidden min-h-0 flex-col justify-around overflow-hidden p-8 md:flex lg:p-10">
+		<aside className="text-card-foreground relative hidden min-h-0 flex-col justify-between overflow-hidden p-8 md:flex lg:p-10">
 			<div className="relative z-10 mx-auto w-full max-w-sm space-y-6">
 				<div className="space-y-3">
 					<div className="bg-muted inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs">
@@ -36,7 +38,7 @@ export default function AuthBrandPanel() {
 					</div>
 
 					<h2 className="text-3xl font-semibold tracking-tight lg:text-4xl">
-						Everything secure.
+						Everything secure.{" "}
 						<span className="text-muted-foreground block">
 							Everything in its place.
 						</span>
@@ -48,24 +50,24 @@ export default function AuthBrandPanel() {
 					</p>
 				</div>
 
-				<div className="bg-muted/40 space-y-1 rounded-2xl border p-4">
-					<div className="mb-3 flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<ShieldCheck className="size-5 text-primary" />
-							<span className="text-sm font-medium">My vault</span>
-						</div>
-						<MoreHorizontal className="text-muted-foreground size-5" />
+				<div
+					className="bg-muted/40 space-y-1 rounded-2xl border p-4"
+					aria-hidden
+				>
+					<div className="mb-3 flex items-center gap-2">
+						<ShieldCheck className="size-5 text-primary" />
+						<span className="text-sm font-medium">My vault</span>
 					</div>
 
 					<div className="space-y-1 border-t pt-3">
 						{features.map(({ icon: Icon, title, description }) => (
 							<div
 								key={title}
-								className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-accent"
+								className="flex items-center gap-3 rounded-xl p-3"
 							>
-								<div className="bg-background flex size-10 shrink-0 items-center justify-center rounded-lg">
+								<IconBadge className="bg-background rounded-lg">
 									<Icon className="size-5 text-primary" />
-								</div>
+								</IconBadge>
 
 								<div className="min-w-0 flex-1">
 									<p className="text-sm font-medium">{title}</p>
@@ -81,7 +83,7 @@ export default function AuthBrandPanel() {
 
 			<div className="text-muted-foreground relative z-10 flex items-center gap-2 text-xs">
 				<LockKeyhole className="size-4 text-primary" />
-				Your credentials. Your control.
+				{authAssurance}
 			</div>
 
 			<div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-lime-300/[0.07] blur-3xl" />

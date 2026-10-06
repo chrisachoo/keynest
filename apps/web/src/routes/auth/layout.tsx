@@ -1,6 +1,6 @@
 import { Outlet } from "react-router"
 
-import AuthBrandPanel from "@/components/auth-brand-panel"
+import AuthPanel from "@/components/auth-panel"
 
 export function Component() {
 	return (
@@ -10,7 +10,7 @@ export function Component() {
 					<Outlet />
 				</div>
 
-				<AuthBrandPanel />
+				<AuthPanel />
 			</div>
 		</main>
 	)
