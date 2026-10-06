@@ -1,3 +1,4 @@
+import { getInitials } from "@keynest/shared"
 import {
 	ChevronsUpDown,
 	FolderLock,
@@ -9,11 +10,15 @@ import {
 	Zap,
 	type LucideIcon
 } from "lucide-react"
-import { NavLink } from "react-router"
+import type { MouseEvent } from "react"
+import { NavLink, useNavigate } from "react-router"
 
 import { Avatar } from "@/components/ui/avatar"
 import Logo from "@/components/ui/logo"
 import Meter from "@/components/ui/meter"
+import { useAppDispatch, useAppSelector } from "@/store"
+import { selectUser } from "@/store/auth/auth-slice"
+import { logoutAsync } from "@/store/auth/extra-reducers"
 
 const itemsMenu: {
 	count?: number
@@ -32,6 +37,24 @@ const itemsMenu: {
 ]
 
 export default function AppSidebar() {
+	const dispatch = useAppDispatch()
+	const user = useAppSelector(selectUser)
+
+	const navigate = useNavigate()
+
+	async function handleLogout(
+		event: MouseEvent<HTMLAnchorElement, globalThis.MouseEvent>
+	) {
+		event.preventDefault()
+		document.getElementById("profile")?.hidePopover()
+
+		const result = await dispatch(logoutAsync())
+
+		if (logoutAsync.fulfilled.match(result)) {
+			navigate("/login", { replace: true })
+		}
+	}
+
 	return (
 		<aside className="flex min-h-dvh w-72 flex-col bg-base-200 p-4 text-base-content">
 			<Logo name />
@@ -88,12 +111,12 @@ export default function AppSidebar() {
 				<div className="divider divide-base-300" />
 
 				<div className="flex items-center gap-2">
-					<Avatar>D</Avatar>
+					<Avatar>{getInitials(user?.name ?? "")}</Avatar>
 
 					<div className="min-w-0 flex-1">
-						<p className="truncate text-xs font-medium">Daisy UI</p>
+						<p className="truncate text-xs font-medium">{user?.name}</p>
 						<p className="truncate text-xs text-base-content/60">
-							Personal vault
+							{user?.email}
 						</p>
 					</div>
 
@@ -120,7 +143,7 @@ export default function AppSidebar() {
 						</li>
 
 						<li>
-							<NavLink to="/">
+							<NavLink to="/login" onClick={(event) => handleLogout(event)}>
 								<LogOut className="size-4" />
 								<span className="min-w-0 flex-1 truncate">Log out</span>
 							</NavLink>

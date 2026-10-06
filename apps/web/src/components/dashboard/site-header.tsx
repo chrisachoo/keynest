@@ -1,11 +1,16 @@
+import { getInitials } from "@keynest/shared"
 import { CircleHelp, LockKeyhole, Search } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
 import ToggleTheme from "@/components/ui/toggle-theme"
+import { useAppSelector } from "@/store"
+import { selectUser } from "@/store/auth/auth-slice"
 
 export default function SiteHeader() {
+	const user = useAppSelector(selectUser)
+
 	return (
 		<header className="navbar border-b border-base-300 bg-base-100 px-5 sm:px-8">
 			<div className="navbar-start">
@@ -57,7 +62,7 @@ export default function SiteHeader() {
 
 				<ToggleTheme />
 				<div className="sm:hidden">
-					<Avatar>D</Avatar>
+					<Avatar>{getInitials(user?.name ?? "")}</Avatar>
 				</div>
 			</div>
 		</header>
