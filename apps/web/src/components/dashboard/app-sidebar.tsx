@@ -7,7 +7,7 @@ import {
 	ShieldCheck,
 	Star,
 	StickyNote,
-	Zap,
+	WandSparkles,
 	type LucideIcon
 } from "lucide-react"
 import type { MouseEvent } from "react"
@@ -80,10 +80,10 @@ export default function AppSidebar() {
 
 					<ul>
 						<li>
-							<button type="button">
-								<Zap className="size-4" />
+							<NavLink to="/dashboard/password">
+								<WandSparkles className="size-4" />
 								Password generator
-							</button>
+							</NavLink>
 						</li>
 
 						<li>
