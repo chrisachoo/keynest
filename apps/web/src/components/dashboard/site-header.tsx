@@ -49,7 +49,7 @@ export default function SiteHeader() {
 						<CircleHelp />
 					</Button>
 
-					<div className="tooltip-content w-64 space-y-1 border border-base-300 bg-base-200 text-start">
+					<div className="tooltip-content w-64 space-y-1 border border-base-300 bg-base-200 p-4 text-start">
 						<p className="text-sm font-semibold text-base-content">
 							Using your vault
 						</p>
