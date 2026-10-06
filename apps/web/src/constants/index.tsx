@@ -19,19 +19,31 @@ export const vaultCopy = {
 	}
 } as const
 
+export const authAssurance = "Your credentials. Your control."
+
 export const authCopy = {
 	login: {
 		title: "Welcome back",
 		subtitle: "Log in to pick up where you left off.",
-		button: "Log in",
+		submit: "Log in",
+		pending: "Logging in...",
 		switchPrompt: "New here?",
-		switchLink: "Create an account"
+		switchLink: "Create an account",
+		switchTo: "/signup",
+		passwordAutoComplete: "current-password",
+		showForgotPassword: true
 	},
 	signup: {
 		title: "Create your account",
 		subtitle: "It takes less than a minute to get started.",
-		button: "Create account",
+		submit: "Create account",
+		pending: "Creating account...",
 		switchPrompt: "Already have an account?",
-		switchLink: "Log in"
+		switchLink: "Log in",
+		switchTo: "/login",
+		passwordAutoComplete: "new-password",
+		showForgotPassword: false
 	}
 } as const
+
+export type AuthMode = keyof typeof authCopy
