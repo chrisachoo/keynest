@@ -21,7 +21,7 @@ export const RANDOM_PASSWORD_LIMITS = {
 
 export const MEMORABLE_PASSWORD_LIMITS = {
 	minWords: 3,
-	maxWords: 8
+	maxWords: 10
 } as const
 
 export const PASSWORD_SEPARATORS = ["-", "_", ".", "!", "@"] as const
@@ -64,7 +64,7 @@ export const DEFAULT_RANDOM_PASSWORD_OPTIONS = {
 } as const
 
 export const DEFAULT_MEMORABLE_PASSWORD_OPTIONS = {
-	wordCount: 4,
+	wordCount: 5,
 	capitalize: true,
 	numbers: true,
 	separator: "-"

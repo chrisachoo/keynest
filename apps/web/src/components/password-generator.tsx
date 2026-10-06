@@ -226,8 +226,8 @@ export default function PasswordGenerator() {
 				<p
 					className={
 						generator.message
-							? "text-sm text-error"
-							: "text-sm text-base-content/70"
+							? "text-sm font-medium text-error"
+							: "text-sm font-medium text-base-content/70"
 					}
 				>
 					{generator.message ?? generator.crackTime}
