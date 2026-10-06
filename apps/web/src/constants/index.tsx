@@ -46,4 +46,17 @@ export const authCopy = {
 	}
 } as const
 
+export const RANDOM_TOGGLES = [
+	{ key: "uppercase", label: "Uppercase letters" },
+	{ key: "lowercase", label: "Lowercase letters" },
+	{ key: "numbers", label: "Numbers" },
+	{ key: "symbols", label: "Symbols" },
+	{ key: "excludeAmbiguous", label: "Exclude ambiguous characters" }
+] as const
+
+export const MEMORABLE_TOGGLES = [
+	{ key: "capitalize", label: "Uppercase letters" },
+	{ key: "numbers", label: "Numbers" }
+] as const
+
 export type AuthMode = keyof typeof authCopy
