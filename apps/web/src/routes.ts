@@ -83,6 +83,14 @@ export const routes = [
 					const { Component } = await import("./routes/dashboard/settings")
 					return { Component }
 				}
+			},
+			{
+				path: "password",
+				HydrateFallback,
+				lazy: async () => {
+					const { Component } = await import("./routes/dashboard/password")
+					return { Component }
+				}
 			}
 		]
 	}
