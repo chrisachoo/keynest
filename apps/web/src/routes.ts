@@ -1,6 +1,7 @@
-import type { RouteObject } from "react-router"
+import { createBrowserRouter, type RouteObject } from "react-router"
 
 import { ErrorBoundary } from "@/components/error-boundary"
+import { redirectIfAuthed, requireAuth } from "@/lib/guards"
 
 function HydrateFallback() {
 	return null
@@ -21,7 +22,7 @@ export const routes = [
 		ErrorBoundary,
 		lazy: async () => {
 			const { Component } = await import("./routes/auth/layout")
-			return { Component }
+			return { Component, loader: redirectIfAuthed }
 		},
 		children: [
 			{
@@ -48,7 +49,7 @@ export const routes = [
 		ErrorBoundary,
 		lazy: async () => {
 			const { Component } = await import("./routes/dashboard/layout")
-			return { Component }
+			return { Component, loader: requireAuth }
 		},
 		children: [
 			{
@@ -86,3 +87,5 @@ export const routes = [
 		]
 	}
 ] satisfies RouteObject[]
+
+export const router = createBrowserRouter(routes)
