@@ -1,12 +1,15 @@
+import type { Action, ThunkAction } from "@reduxjs/toolkit"
 import { configureStore } from "@reduxjs/toolkit"
 import { useDispatch, useSelector } from "react-redux"
 import * as v from "valibot"
 
+import authSlice from "@/store/auth/auth-slice"
 import uiSlice from "@/store/ui/ui-slice"
 import { ThemeSchema } from "@/types"
 
 export const store = configureStore({
 	reducer: {
+		auth: authSlice,
 		ui: uiSlice
 	},
 	preloadedState: {
@@ -25,3 +28,9 @@ export type AppDispatch = typeof store.dispatch
 
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>()
 export const useAppSelector = useSelector.withTypes<RootState>()
+export type AppThunk<ThunkReturnType = void> = ThunkAction<
+	ThunkReturnType,
+	RootState,
+	unknown,
+	Action
+>
