@@ -35,11 +35,11 @@
 	--color-warning-content: oklch(41% 0.112 45.904);
 	--color-error: oklch(71% 0.194 13.428);
 	--color-error-content: oklch(27% 0.105 12.094);
-	--radius-selector: 0.5rem;
-	--radius-field: 0.5rem;
-	--radius-box: 1rem;
-	--size-selector: 0.21875rem;
-	--size-field: 0.21875rem;
+	--radius-selector: 2rem;
+	--radius-field: 2rem;
+	--radius-box: 2rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
 	--border: 0.5px;
 	--depth: 0;
 	--noise: 1;
@@ -56,7 +56,7 @@
 	--color-base-content: oklch(77.383% 0.043 245.096);
 	--color-primary: oklch(70% 0.14 182.503);
 	--color-primary-content: oklch(14.94% 0.031 39.947);
-	--color-secondary: oklch(72.537% 0.177 2.72);
+	--color-secondary: oklch(96% 0.001 286.375);
 	--color-secondary-content: oklch(14.507% 0.035 2.72);
 	--color-accent: oklch(71.294% 0.166 299.844);
 	--color-accent-content: oklch(14.258% 0.033 299.844);
@@ -70,11 +70,11 @@
 	--color-warning-content: oklch(17.113% 0.016 74.427);
 	--color-error: oklch(85.511% 0.078 16.886);
 	--color-error-content: oklch(17.102% 0.015 16.886);
-	--radius-selector: 0.5rem;
-	--radius-field: 0.5rem;
-	--radius-box: 1rem;
-	--size-selector: 0.21875rem;
-	--size-field: 0.21875rem;
+	--radius-selector: 2rem;
+	--radius-field: 2rem;
+	--radius-box: 2rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
 	--border: 0.5px;
 	--depth: 0;
 	--noise: 1;
@@ -82,4 +82,12 @@
 
 @theme {
 	--grid-template-columns-sidebar-layout: 2fr 1fr;
+}
+
+@utility scrollbar-none {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
 }
