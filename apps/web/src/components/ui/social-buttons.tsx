@@ -8,7 +8,7 @@ export default function SocialButtons() {
 				type="button"
 				shape="square"
 				aria-label="Continue with GitHub"
-				className="border-black bg-black text-white"
+				className="border-neutral bg-neutral text-neutral-content"
 			>
 				<Github />
 			</Button>
@@ -17,7 +17,7 @@ export default function SocialButtons() {
 				type="button"
 				shape="square"
 				aria-label="Continue with Google"
-				className="border-white bg-white text-black"
+				className="border-base-300 bg-base-100 text-base-content"
 			>
 				<Google />
 			</Button>
