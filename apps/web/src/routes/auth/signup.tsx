@@ -13,7 +13,7 @@ import { signupAsync } from "@/store/auth/extra-reducers"
 
 export function Component() {
 	const navigate = useNavigate()
-	const copy = authCopy["login"]
+	const copy = authCopy["signup"]
 	const dispatch = useAppDispatch()
 
 	const [showPassword, setShowPassword] = useState(false)
