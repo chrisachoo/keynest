@@ -1,54 +1,63 @@
-import {
-	disconnected,
-	type HealthResponse,
-	healthResponse
-} from "@keynest/shared"
-import { useLoaderData } from "react-router"
-import * as v from "valibot"
+import { useEffect } from "react"
 
-import ToggleTheme from "@/components/ui/toggle-theme"
-import { api } from "@/lib/client"
-
-export const loader = async (): Promise<HealthResponse> => {
-	try {
-		const response = await api.index.$get()
-
-		if (!response.ok) return disconnected(healthResponse, "API is unreachable")
-
-		return v.parse(healthResponse, await response.json())
-	} catch {
-		return disconnected(healthResponse, "API is unreachable")
-	}
-}
+import CtaSection from "@/components/marketing/cta"
+import FaqSection from "@/components/marketing/faq"
+import FeaturesSection from "@/components/marketing/features"
+import SiteFooter from "@/components/marketing/footer"
+import HeroSection from "@/components/marketing/hero"
+import Navbar, {
+	MARKETING_NAV_ID,
+	MarketingDrawer
+} from "@/components/marketing/navbar"
+import SecuritySection from "@/components/marketing/security"
+import { marketingCopy } from "@/constants"
+import { useDisclosure } from "@/hooks/use-disclosure"
 
 export function Component() {
-	const loaderData = useLoaderData<typeof loader>()
+	const [opened, { close, set: setMenuOpen }] = useDisclosure(false)
+
+	useEffect(() => {
+		document.title = marketingCopy.seo.title
+
+		const description = document.querySelector('meta[name="description"]')
+		if (description) {
+			description.setAttribute("content", marketingCopy.seo.description)
+		}
+
+		const root = document.documentElement
+		const reduceMotion = globalThis.matchMedia(
+			"(prefers-reduced-motion: reduce)"
+		).matches
+
+		root.classList.add("scrollbar-none")
+		if (!reduceMotion) root.classList.add("scroll-smooth")
+
+		return () => {
+			root.classList.remove("scrollbar-none", "scroll-smooth")
+		}
+	}, [])
 
 	return (
-		<div className="container mx-auto max-w-3xl px-4 py-8">
-			<div className="flex w-full items-center justify-between">
-				<div>
-					<h1 className="text-2xl font-medium">Keynest</h1>
-					<p className="text-muted-foreground mt-1 text-sm">
-						Private home for your digital keys.
-					</p>
-				</div>
-
-				<ToggleTheme />
+		<div className="drawer">
+			<input
+				id={MARKETING_NAV_ID}
+				type="checkbox"
+				className="drawer-toggle"
+				checked={opened}
+				onChange={(event) => setMenuOpen(event.target.checked)}
+			/>
+			<div className="drawer-content min-h-screen bg-base-100">
+				<Navbar />
+				<main>
+					<HeroSection />
+					<FeaturesSection />
+					<SecuritySection />
+					<FaqSection />
+					<CtaSection />
+				</main>
+				<SiteFooter />
 			</div>
-
-			<section className="mt-6 rounded-lg border p-4">
-				<h2 className="mb-2 font-medium">API status</h2>
-				<div className="flex items-center gap-2">
-					<div
-						className={`h-2 w-2 rounded-full ${loaderData.ok ? "bg-green-500" : "bg-red-500"}`}
-					/>
-					<span className="text-muted-foreground text-sm">
-						{loaderData.ok ? "Connected" : "Disconnected"}
-						{loaderData.message ? ` — ${loaderData.message}` : ""}
-					</span>
-				</div>
-			</section>
+			<MarketingDrawer onNavigate={close} />
 		</div>
 	)
 }
