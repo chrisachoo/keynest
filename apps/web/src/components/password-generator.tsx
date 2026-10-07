@@ -12,11 +12,15 @@ import { type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { MEMORABLE_TOGGLES, RANDOM_TOGGLES } from "@/constants"
-import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
+import { useClipboard } from "@/hooks/use-clipboard"
 import { usePasswordGenerator } from "@/hooks/use-password-generator"
 
-function PasswordPreview(props: ReturnType<typeof usePasswordGenerator>) {
-	const { hasCopied, copyToClipboard } = useCopyToClipboard()
+function PasswordPreview(
+	props: Readonly<ReturnType<typeof usePasswordGenerator>>
+) {
+	const { copied: hasCopied, copy: copyToClipboard } = useClipboard({
+		timeout: 500
+	})
 
 	return (
 		<div className="space-y-6">
