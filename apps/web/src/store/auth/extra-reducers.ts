@@ -42,7 +42,7 @@ export const signupAsync = createAsyncThunk(
 	"auth/signupAsync",
 	async (credentials: SignupInput, { rejectWithValue }) => {
 		try {
-			const response = await client.auth.login.$post({ json: credentials })
+			const response = await client.auth.signup.$post({ json: credentials })
 
 			if (!response.ok) return rejectWithValue(await errorMessage(response))
 
