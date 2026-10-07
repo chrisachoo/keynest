@@ -1,4 +1,3 @@
-// oxlint-disable react/only-export-components
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import type { ComponentProps } from "react"
