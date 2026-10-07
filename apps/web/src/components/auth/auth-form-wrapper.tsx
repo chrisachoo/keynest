@@ -1,6 +1,6 @@
 import { CircleAlert, LockKeyhole } from "lucide-react"
 import type { ReactNode } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link } from "react-router"
 
 import { authAssurance, authCopy } from "@/constants"
 
@@ -19,8 +19,6 @@ export default function AuthFormWrapper({
 	serverError,
 	authCopyKey
 }: AuthFormWrapperProps) {
-	const navigate = useNavigate()
-
 	const { title, subtitle, switchLink, switchPrompt, switchTo } =
 		authCopy[authCopyKey]
 
@@ -38,11 +36,7 @@ export default function AuthFormWrapper({
 					</Alert>
 				)}
 
-				<Logo
-					size="md"
-					logoClassName="rounded-2xl"
-					onClick={() => navigate("/")}
-				/>
+				<Logo size="md" to="/" />
 
 				<div className="space-y-2">
 					<h1 className="text-3xl font-semibold tracking-tight">{title}</h1>

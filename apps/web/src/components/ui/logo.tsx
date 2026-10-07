@@ -1,10 +1,13 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import { KeyRound } from "lucide-react"
-import type { ComponentProps } from "react"
+import type { MouseEvent } from "react"
+import { Link, useLocation } from "react-router"
+
+import { marketingCopy } from "@/constants"
 
 const logoVariants = cva(
-	"flex items-center justify-center rounded-lg bg-primary text-primary-content",
+	"flex items-center justify-center rounded-full bg-primary text-primary-content",
 	{
 		defaultVariants: {
 			size: "xs"
@@ -20,30 +23,66 @@ const logoVariants = cva(
 )
 
 type LogoProps = {
-	name?: boolean
+	"aria-label"?: string
+	className?: string
 	logoClassName?: string
-} & ComponentProps<"div"> &
-	VariantProps<typeof logoVariants>
+	name?: boolean
+	onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
+	to?: string
+} & VariantProps<typeof logoVariants>
 
 export default function Logo({
 	name = false,
 	size,
 	className,
 	logoClassName,
-	...props
+	to,
+	onClick,
+	"aria-label": ariaLabel
 }: Readonly<LogoProps>) {
-	return (
-		<div
-			className={cn("flex cursor-pointer items-center gap-2", className)}
-			{...props}
-		>
+	const { pathname } = useLocation()
+
+	const mark = (
+		<>
 			<div className={cn(logoVariants({ size }), logoClassName)}>
 				<KeyRound />
 			</div>
-
 			{name && (
-				<span className="text-base font-semibold tracking-tight">keynest</span>
+				<span className="text-base font-semibold tracking-tight">
+					{marketingCopy.brand.name}
+				</span>
 			)}
-		</div>
+		</>
+	)
+
+	if (!to) {
+		return (
+			<div className={cn("flex items-center gap-2", className)}>{mark}</div>
+		)
+	}
+
+	function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+		onClick?.(event)
+		if (event.defaultPrevented || pathname !== "/" || to !== "/") return
+
+		event.preventDefault()
+		const reduceMotion = globalThis.matchMedia(
+			"(prefers-reduced-motion: reduce)"
+		).matches
+		globalThis.scrollTo({
+			behavior: reduceMotion ? "auto" : "smooth",
+			top: 0
+		})
+	}
+
+	return (
+		<Link
+			to={to}
+			aria-label={ariaLabel}
+			onClick={handleClick}
+			className={cn("flex items-center gap-2", className)}
+		>
+			{mark}
+		</Link>
 	)
 }
