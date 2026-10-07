@@ -12,8 +12,8 @@ export const routes = [
 		path: "/",
 		HydrateFallback,
 		lazy: async () => {
-			const { Component, loader } = await import("./routes/_index")
-			return { Component, loader }
+			const { Component } = await import("./routes/_index")
+			return { Component }
 		}
 	},
 	{
