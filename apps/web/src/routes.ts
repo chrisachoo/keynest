@@ -1,10 +1,14 @@
 import { createBrowserRouter, type RouteObject } from "react-router"
 
 import { ErrorBoundary } from "@/components/error-boundary"
-import { redirectIfAuthed, requireAuth } from "@/lib/guards"
+import { redirectIfAuthed } from "@/lib/guards"
 
 function HydrateFallback() {
 	return null
+}
+
+function inDashboard(pathname: string) {
+	return pathname === "/dashboard" || pathname.startsWith("/dashboard/")
 }
 
 export const routes = [
@@ -44,12 +48,28 @@ export const routes = [
 		]
 	},
 	{
+		id: "dashboard",
 		path: "/dashboard",
 		HydrateFallback,
 		ErrorBoundary,
+		shouldRevalidate({
+			currentUrl,
+			defaultShouldRevalidate,
+			formAction,
+			nextUrl
+		}) {
+			if (formAction) return true
+			if (inDashboard(currentUrl.pathname) && inDashboard(nextUrl.pathname))
+				return false
+			return defaultShouldRevalidate
+		},
 		lazy: async () => {
-			const { Component } = await import("./routes/dashboard/layout")
-			return { Component, loader: requireAuth }
+			const route = await import("./routes/dashboard/layout")
+			return {
+				Component: route.Component,
+				action: route.action,
+				loader: route.loader
+			}
 		},
 		children: [
 			{
