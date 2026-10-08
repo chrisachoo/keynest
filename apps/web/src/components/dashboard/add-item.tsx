@@ -1,15 +1,21 @@
-import { VAULT_ITEM_TYPES, type VaultItemType } from "@keynest/shared"
+import {
+	AddItemSchema,
+	VAULT_ITEM_TYPES,
+	type VaultItemType
+} from "@keynest/shared"
 import { type PasswordMode } from "@keynest/utils"
+import { useForm, type AnyFieldApi } from "@tanstack/react-form"
 import { Shuffle } from "lucide-react"
-import { useState, type FormEvent } from "react"
+import { useEffect, type ReactNode } from "react"
+import { useFetcher } from "react-router"
 
-import type { VaultDraft } from "@/components/dashboard/vault-session"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { useDialog } from "@/hooks/use-dialog"
 import { usePasswordGenerator } from "@/hooks/use-password-generator"
 import { cn } from "@/lib/cn"
+import { DASHBOARD_ACTION, type VaultActionData } from "@/lib/vault/vault"
 
 const itemTypeLabels = {
 	login: "Login",
@@ -24,12 +30,10 @@ const loginModes = [
 export default function AddItemDialog({
 	defaultType,
 	onClose,
-	onSubmit,
 	open
 }: Readonly<{
 	defaultType: VaultItemType
 	onClose: () => void
-	onSubmit: (draft: VaultDraft) => Promise<void>
 	open: boolean
 }>) {
 	const dialogRef = useDialog(open)
@@ -38,11 +42,7 @@ export default function AddItemDialog({
 		<Dialog onClose={onClose} ref={dialogRef}>
 			<DialogContent className="max-h-[90dvh] overflow-y-auto">
 				{open ? (
-					<AddItemForm
-						defaultType={defaultType}
-						onClose={onClose}
-						onSubmit={onSubmit}
-					/>
+					<AddItemForm defaultType={defaultType} onClose={onClose} />
 				) : null}
 			</DialogContent>
 			<form className="modal-backdrop" method="dialog">
@@ -52,162 +52,204 @@ export default function AddItemDialog({
 	)
 }
 
+function FieldError({ field }: Readonly<{ field: AnyFieldApi }>) {
+	return field.state.meta.errors.flatMap((error) => {
+		const text = error?.message
+		if (!text) return []
+		return [
+			<p className="text-sm text-error" key={text}>
+				{text}
+			</p>
+		]
+	})
+}
+
 function AddItemForm({
 	defaultType,
-	onClose,
-	onSubmit
+	onClose
 }: Readonly<{
 	defaultType: VaultItemType
 	onClose: () => void
-	onSubmit: (draft: VaultDraft) => Promise<void>
 }>) {
 	const generator = usePasswordGenerator()
-	const [error, setError] = useState<string | null>(null)
-	const [name, setName] = useState("")
-	const [note, setNote] = useState("")
-	const [saving, setSaving] = useState(false)
-	const [type, setType] = useState<VaultItemType>(defaultType)
-	const [username, setUsername] = useState("")
-	const missing =
-		!name.trim() ||
-		(type === "login" ? !username.trim() || !generator.password : !note.trim())
+	const fetcher = useFetcher<VaultActionData>()
+	const pending = fetcher.state !== "idle"
+	const actionError =
+		fetcher.state === "idle" && fetcher.data?.intent === "create"
+			? fetcher.data.error
+			: null
 
-	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault()
-		setSaving(true)
-		setError(null)
+	useEffect(() => {
+		if (fetcher.state !== "idle" || !fetcher.data) return
+		if (fetcher.data.intent !== "create" || fetcher.data.error) return
+		onClose()
+	}, [fetcher.data, fetcher.state, onClose])
 
-		try {
-			await onSubmit({
-				name,
-				secret: type === "login" ? generator.password : note,
-				type,
-				username
-			})
-			onClose()
-		} catch {
-			setError("Enter a name and a secret before saving.")
-		} finally {
-			setSaving(false)
+	const form = useForm({
+		defaultValues: {
+			name: "",
+			note: "",
+			type: defaultType,
+			username: ""
+		},
+		onSubmit: async ({ value }) => {
+			const secret = value.type === "login" ? generator.password : value.note
+			if (!secret.trim()) return
+
+			await fetcher.submit(
+				{
+					intent: "create",
+					name: value.name,
+					secret,
+					type: value.type,
+					username: value.type === "login" ? value.username : ""
+				},
+				{ action: DASHBOARD_ACTION, method: "post" }
+			)
+		},
+		validators: {
+			onSubmit: AddItemSchema
 		}
-	}
+	})
 
 	return (
-		<form autoComplete="off" className="space-y-3" onSubmit={handleSubmit}>
+		<form
+			autoComplete="off"
+			className="space-y-3"
+			onSubmit={(event) => {
+				event.preventDefault()
+				event.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
 			<div>
 				<h2 className="text-lg font-semibold">Add item</h2>
 			</div>
 
-			<div className="tabs tabs-box w-full" role="tablist">
-				{VAULT_ITEM_TYPES.map((itemType) => (
-					<button
-						aria-selected={type === itemType}
-						className={cn("tab flex-1", type === itemType && "tab-active")}
-						key={itemType}
-						onClick={() => setType(itemType)}
-						role="tab"
-						type="button"
-					>
-						{itemTypeLabels[itemType]}
-					</button>
-				))}
-			</div>
+			<form.Field name="type">
+				{(field) => (
+					<div className="tabs tabs-box w-full" role="tablist">
+						{VAULT_ITEM_TYPES.map((itemType) => (
+							<button
+								aria-selected={field.state.value === itemType}
+								className={cn(
+									"tab flex-1",
+									field.state.value === itemType && "tab-active"
+								)}
+								key={itemType}
+								onClick={() => field.handleChange(itemType)}
+								role="tab"
+								type="button"
+							>
+								{itemTypeLabels[itemType]}
+							</button>
+						))}
+					</div>
+				)}
+			</form.Field>
 
-			<Fieldset className="p-0">
-				<Legend>Name</Legend>
-				<Input
-					autoComplete="off"
-					maxLength={120}
-					name="keynest-item-name"
-					onChange={(event) => setName(event.target.value)}
-					placeholder={type === "login" ? "GitHub" : "Recovery codes"}
-					required
-					value={name}
-				/>
-			</Fieldset>
+			<form.Subscribe selector={(state) => state.values.type}>
+				{(type) => (
+					<form.Field name="name">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Name</Legend>
+								<Input
+									autoComplete="off"
+									maxLength={120}
+									name={field.name}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									placeholder={type === "login" ? "GitHub" : "Recovery codes"}
+									required
+									value={field.state.value}
+								/>
+								<FieldError field={field} />
+							</Fieldset>
+						)}
+					</form.Field>
+				)}
+			</form.Subscribe>
 
-			<ItemFields
-				generator={generator}
-				note={note}
-				onNote={setNote}
-				onUsername={setUsername}
-				type={type}
-				username={username}
-			/>
+			<form.Subscribe selector={(state) => state.values.type}>
+				{(type) =>
+					type === "login" ? (
+						<LoginFields form={form} generator={generator} />
+					) : (
+						<NoteFields form={form} />
+					)
+				}
+			</form.Subscribe>
 
-			{error ? <p className="text-sm text-error">{error}</p> : null}
+			{actionError ? <p className="text-sm text-error">{actionError}</p> : null}
 
 			<div className="modal-action">
 				<Button onClick={onClose} type="button" variant="ghost">
 					Cancel
 				</Button>
-				<Button disabled={saving || missing} type="submit" variant="primary">
-					{saving ? "Saving..." : "Save item"}
-				</Button>
+				<form.Subscribe
+					selector={(state) => ({
+						canSubmit: state.canSubmit,
+						isSubmitting: state.isSubmitting,
+						type: state.values.type
+					})}
+				>
+					{({ canSubmit, isSubmitting, type }) => {
+						const busy = pending || isSubmitting
+						const missingSecret = type === "login" && !generator.password
+						return (
+							<Button
+								disabled={!canSubmit || busy || missingSecret}
+								type="submit"
+								variant="primary"
+							>
+								{busy ? "Saving..." : "Save item"}
+							</Button>
+						)
+					}}
+				</form.Subscribe>
 			</div>
 		</form>
 	)
 }
 
-function ItemFields({
-	generator,
-	note,
-	onNote,
-	onUsername,
-	type,
-	username
-}: Readonly<{
-	generator: ReturnType<typeof usePasswordGenerator>
-	note: string
-	onNote: (value: string) => void
-	onUsername: (value: string) => void
-	type: VaultItemType
-	username: string
-}>) {
-	switch (type) {
-		case "login":
-			return (
-				<LoginFields
-					generator={generator}
-					onUsername={onUsername}
-					username={username}
-				/>
-			)
-		case "secure_note":
-			return <NoteFields note={note} onNote={onNote} />
-		default: {
-			const unreachable: never = type
-			return unreachable
-		}
+function LoginFields<
+	TForm extends {
+		Field: (props: {
+			children: (field: AnyFieldApi) => ReactNode
+			name: "username"
+		}) => ReactNode | Promise<ReactNode>
 	}
-}
-
-function LoginFields({
-	generator,
-	onUsername,
-	username
+>({
+	form,
+	generator
 }: Readonly<{
+	form: TForm
 	generator: ReturnType<typeof usePasswordGenerator>
-	onUsername: (value: string) => void
-	username: string
 }>) {
 	return (
 		<>
-			<Fieldset className="p-0">
-				<Legend>Username or email</Legend>
-				<Input
-					autoCapitalize="off"
-					autoComplete="off"
-					autoCorrect="off"
-					maxLength={320}
-					name="keynest-item-username"
-					onChange={(event) => onUsername(event.target.value)}
-					placeholder="you@example.com"
-					required
-					spellCheck={false}
-					value={username}
-				/>
-			</Fieldset>
+			<form.Field name="username">
+				{(field) => (
+					<Fieldset className="p-0">
+						<Legend>Username or email</Legend>
+						<Input
+							autoCapitalize="off"
+							autoComplete="off"
+							autoCorrect="off"
+							maxLength={320}
+							name={field.name}
+							onBlur={field.handleBlur}
+							onChange={(event) => field.handleChange(event.target.value)}
+							placeholder="you@example.com"
+							required
+							spellCheck={false}
+							value={field.state.value}
+						/>
+						<FieldError field={field} />
+					</Fieldset>
+				)}
+			</form.Field>
 
 			<div className="join w-full">
 				{loginModes.map((mode) => (
@@ -244,27 +286,38 @@ function LoginFields({
 	)
 }
 
-function NoteFields({
-	note,
-	onNote
+function NoteFields<
+	TForm extends {
+		Field: (props: {
+			children: (field: AnyFieldApi) => ReactNode
+			name: "note"
+		}) => ReactNode | Promise<ReactNode>
+	}
+>({
+	form
 }: Readonly<{
-	note: string
-	onNote: (value: string) => void
+	form: TForm
 }>) {
 	return (
-		<Fieldset className="p-0">
-			<Legend>Note</Legend>
-			<textarea
-				autoComplete="off"
-				className="textarea w-full"
-				maxLength={8000}
-				name="keynest-item-note"
-				onChange={(event) => onNote(event.target.value)}
-				placeholder="Private note"
-				required
-				rows={3}
-				value={note}
-			/>
-		</Fieldset>
+		<form.Field name="note">
+			{(field) => (
+				<Fieldset className="p-0">
+					<Legend>Note</Legend>
+					<textarea
+						autoComplete="off"
+						className="textarea w-full"
+						maxLength={8000}
+						name={field.name}
+						onBlur={field.handleBlur}
+						onChange={(event) => field.handleChange(event.target.value)}
+						placeholder="Private note"
+						required
+						rows={3}
+						value={field.state.value}
+					/>
+					<FieldError field={field} />
+				</Fieldset>
+			)}
+		</form.Field>
 	)
 }

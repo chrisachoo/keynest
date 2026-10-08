@@ -1,5 +1,12 @@
-import { getInitials } from "@keynest/shared"
-import { Check, Copy, Eye, EyeOff, Trash, X } from "lucide-react"
+import {
+	CLIPBOARD_TIMEOUT,
+	DRAWER_HIDE_TIMEOUT,
+	FIELD_LABELS,
+	SECRET_LABELS,
+	TYPE_NAMES
+} from "@keynest/shared"
+import { getInitials } from "@keynest/utils"
+import { Check, Copy, Eye, EyeOff, Star, Trash, X } from "lucide-react"
 import {
 	createContext,
 	use,
@@ -10,35 +17,20 @@ import {
 	useState,
 	type ReactNode
 } from "react"
+import { useFetcher } from "react-router"
 
-import type {
-	OpenVaultItem,
-	VaultItemView
-} from "@/components/dashboard/vault-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { cn } from "@/lib/cn"
-
-const CLIPBOARD_TIMEOUT = 15_000
-const DRAWER_HIDE_TIMEOUT = 300
-
-const TYPE_NAMES = {
-	login: "Login",
-	secure_note: "Note"
-} as const
-
-const SECRET_LABELS = {
-	login: "password",
-	secure_note: "note"
-} as const
-
-const FIELD_LABELS = {
-	login: "Password",
-	secure_note: "Note"
-} as const
+import {
+	DASHBOARD_ACTION,
+	type OpenVaultItem,
+	type VaultActionData,
+	type VaultItemView
+} from "@/lib/vault/vault"
 
 type VaultListContextValue = {
 	activeId: string | null
@@ -46,7 +38,6 @@ type VaultListContextValue = {
 	copiedId: string | null
 	copySecret: (id: string, secret: string) => Promise<void>
 	openItem: (item: VaultItemView) => void
-	removeItem: (id: string) => void
 }
 
 const VaultListContext = createContext<VaultListContextValue | null>(null)
@@ -132,15 +123,22 @@ function useSecretClipboard() {
 
 function ListItem({
 	children,
-	onRemove
+	items
 }: Readonly<{
 	children: ReactNode
-	onRemove: (id: string) => void
+	items: VaultItemView[]
 }>) {
 	const { copiedId, copySecret } = useSecretClipboard()
 	const [open, setOpen] = useState(false)
-	const [selected, setSelected] = useState<VaultItemView | null>(null)
+	const [selectedId, setSelectedId] = useState<string | null>(null)
+	const [snapshot, setSnapshot] = useState<VaultItemView | null>(null)
 	const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const live = selectedId
+		? (items.find((item) => item.id === selectedId) ?? null)
+		: null
+	if (live && live !== snapshot) setSnapshot(live)
+	if (!selectedId && snapshot) setSnapshot(null)
+	const selected = selectedId ? (live ?? snapshot) : null
 
 	useEffect(
 		() => () => {
@@ -160,36 +158,34 @@ function ListItem({
 		setOpen(false)
 		clearHideTimer()
 		hideTimer.current = globalThis.setTimeout(() => {
-			setSelected(null)
+			setSelectedId(null)
 		}, DRAWER_HIDE_TIMEOUT)
 	}, [clearHideTimer])
 
 	const openItem = useCallback(
 		(item: VaultItemView) => {
 			clearHideTimer()
-			if (open && selected?.id === item.id) {
+			if (open && selectedId === item.id) {
 				close()
 				return
 			}
 
-			setSelected(item)
+			setSelectedId(item.id)
 			setOpen(true)
 		},
-		[clearHideTimer, close, open, selected]
+		[clearHideTimer, close, open, selectedId]
 	)
 
-	const removeItem = useCallback(
-		(id: string) => {
-			onRemove(id)
-			close()
-		},
-		[close, onRemove]
-	)
-
-	const activeId = open && selected ? selected.id : null
+	const activeId = open && selectedId ? selectedId : null
 	const listActions = useMemo(
-		() => ({ activeId, close, copiedId, copySecret, openItem, removeItem }),
-		[activeId, close, copiedId, copySecret, openItem, removeItem]
+		() => ({
+			activeId,
+			close,
+			copiedId,
+			copySecret,
+			openItem
+		}),
+		[activeId, close, copiedId, copySecret, openItem]
 	)
 
 	return (
@@ -216,7 +212,7 @@ function ListItem({
 	)
 }
 
-function RowBadge({ item }: Readonly<{ item: VaultItemView }>) {
+export function RowBadge({ item }: Readonly<{ item: VaultItemView }>) {
 	if (!isOpenItem(item)) {
 		return (
 			<Badge size="sm" variant="destructive">
@@ -226,9 +222,46 @@ function RowBadge({ item }: Readonly<{ item: VaultItemView }>) {
 	}
 
 	return (
-		<Badge size="sm" variant="ghost">
+		<Badge size="sm" variant={item.type === "login" ? "light" : "success"}>
 			{TYPE_NAMES[item.type]}
 		</Badge>
+	)
+}
+
+function RowFavoriteButton({ item }: Readonly<{ item: OpenVaultItem }>) {
+	const fetcher = useFetcher<VaultActionData>({ key: `favorite:${item.id}` })
+	const pendingFavorite = fetcher.formData?.get("favorite")
+	const favorite =
+		typeof pendingFavorite === "string"
+			? pendingFavorite === "true"
+			: item.favorite
+	const label = favorite ? "Remove from favorites" : "Add to favorites"
+	const pending = fetcher.state !== "idle"
+
+	return (
+		<Button
+			aria-label={label}
+			aria-pressed={favorite}
+			disabled={pending}
+			onClick={(event) => {
+				event.stopPropagation()
+				void fetcher.submit(
+					{
+						favorite: favorite ? "false" : "true",
+						id: item.id,
+						intent: "favorite"
+					},
+					{ action: DASHBOARD_ACTION, method: "post" }
+				)
+			}}
+			shape="square"
+			type="button"
+			variant="ghost"
+		>
+			<Star
+				className={favorite ? "fill-amber-500 text-amber-500" : undefined}
+			/>
+		</Button>
 	)
 }
 
@@ -305,6 +338,7 @@ function ListRow({ item }: Readonly<{ item: VaultItemView }>) {
 				</span>
 			</button>
 			<RowBadge item={item} />
+			{isOpenItem(item) ? <RowFavoriteButton item={item} /> : null}
 			{isOpenItem(item) ? <RowCopyButton item={item} /> : null}
 			<RevealButton item={item} revealed={revealed} />
 		</li>
@@ -389,13 +423,41 @@ function CopySecretButton({
 	)
 }
 
+function useDeleteItem(id: string, onDeleted: () => void) {
+	const fetcher = useFetcher<VaultActionData>()
+	const deleting = fetcher.state !== "idle"
+
+	useEffect(() => {
+		if (!deleting && fetcher.data?.intent === "delete" && !fetcher.data.error)
+			onDeleted()
+	}, [deleting, fetcher.data, onDeleted])
+
+	const remove = useCallback(() => {
+		void fetcher.submit(
+			{ id, intent: "delete" },
+			{ action: DASHBOARD_ACTION, method: "post" }
+		)
+	}, [fetcher, id])
+
+	return {
+		deleting,
+		error:
+			fetcher.state === "idle" && fetcher.data?.intent === "delete"
+				? fetcher.data.error
+				: null,
+		remove
+	}
+}
+
 function DeleteChoice({
 	confirming,
+	deleting,
 	onAsk,
 	onKeep,
 	onRemove
 }: Readonly<{
 	confirming: boolean
+	deleting: boolean
 	onAsk: () => void
 	onKeep: () => void
 	onRemove: () => void
@@ -428,11 +490,12 @@ function DeleteChoice({
 				</Button>
 				<Button
 					className="flex-1"
+					disabled={deleting}
 					onClick={onRemove}
 					type="button"
 					variant="destructive"
 				>
-					Delete
+					{deleting ? "Deleting..." : "Delete"}
 				</Button>
 			</div>
 		</div>
@@ -440,8 +503,9 @@ function DeleteChoice({
 }
 
 function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
-	const { close, copiedId, copySecret, removeItem } = useVaultList()
+	const { close, copiedId, copySecret } = useVaultList()
 	const [confirming, setConfirming] = useState(false)
+	const deletion = useDeleteItem(item.id, close)
 	const label = SECRET_LABELS[item.type]
 
 	return (
@@ -452,9 +516,12 @@ function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
 				onClose={close}
 				title={item.name}
 			/>
-			<Badge size="sm" variant="outline">
-				{TYPE_NAMES[item.type]}
-			</Badge>
+			<div className="flex items-center gap-2">
+				<Badge size="sm" variant="outline">
+					{TYPE_NAMES[item.type]}
+				</Badge>
+				<RowFavoriteButton item={item} />
+			</div>
 			<OpenItemFields item={item} />
 			<div className="mt-auto flex flex-col gap-2">
 				<CopySecretButton
@@ -462,11 +529,15 @@ function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
 					label={label}
 					onCopy={() => void copySecret(item.id, item.secret)}
 				/>
+				{deletion.error ? (
+					<p className="text-sm text-error">{deletion.error}</p>
+				) : null}
 				<DeleteChoice
 					confirming={confirming}
+					deleting={deletion.deleting}
 					onAsk={() => setConfirming(true)}
 					onKeep={() => setConfirming(false)}
-					onRemove={() => removeItem(item.id)}
+					onRemove={deletion.remove}
 				/>
 			</div>
 		</div>
@@ -474,7 +545,8 @@ function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
 }
 
 function BlockedItemDrawer({ item }: Readonly<{ item: VaultItemView }>) {
-	const { close, removeItem } = useVaultList()
+	const { close } = useVaultList()
+	const deletion = useDeleteItem(item.id, close)
 
 	return (
 		<div className="flex h-full flex-1 flex-col gap-6 p-5">
@@ -494,14 +566,18 @@ function BlockedItemDrawer({ item }: Readonly<{ item: VaultItemView }>) {
 					Its secret stays hidden.
 				</AlertDescription>
 			</Alert>
-			<div className="mt-auto">
+			<div className="mt-auto space-y-2">
+				{deletion.error ? (
+					<p className="text-sm text-error">{deletion.error}</p>
+				) : null}
 				<Button
 					className="w-full"
-					onClick={() => removeItem(item.id)}
+					disabled={deletion.deleting}
+					onClick={deletion.remove}
 					type="button"
 					variant="destructive"
 				>
-					Remove
+					{deletion.deleting ? "Removing..." : "Remove"}
 				</Button>
 			</div>
 		</div>
