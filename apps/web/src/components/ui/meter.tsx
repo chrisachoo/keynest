@@ -19,7 +19,7 @@ export default function Meter({
 	const meter = meterLevel[level]
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex flex-col gap-1">
 			<progress
 				className={cn("progress flex-1", meter.color)}
 				max={100}
