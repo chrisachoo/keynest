@@ -1,17 +1,26 @@
-import PageHeading from "@/components/dashboard/page-heading"
+import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
+import { useVault } from "@/components/dashboard/vault-context"
 import PasswordGenerator from "@/components/password-generator"
-import Container from "@/components/ui/container"
+import { Button } from "@/components/ui/button"
 
 export function Component() {
-	return (
-		<Container className="w-full space-y-6">
-			<PageHeading
-				eyebrow="Utilities"
-				description="Create unique, strong passwords for your accounts."
-				title="Password generator"
-			/>
+	const vault = useVault()
 
+	return (
+		<DashboardWrapper
+			actions={
+				<Button
+					disabled={vault.status !== "unlocked"}
+					onClick={() => vault.openComposer("login")}
+					type="button"
+				>
+					Add login
+				</Button>
+			}
+			description="Create a password or passphrase, then save it as a login."
+			title="Password generator"
+		>
 			<PasswordGenerator />
-		</Container>
+		</DashboardWrapper>
 	)
 }
