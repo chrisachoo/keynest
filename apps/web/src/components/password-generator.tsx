@@ -200,7 +200,7 @@ export default function PasswordGenerator() {
 	const generator = usePasswordGenerator()
 
 	return (
-		<div className="card w-full max-w-3xl bg-base-200 card-md">
+		<div className="card w-full max-w-4xl bg-base-200">
 			<div className="card-body gap-6">
 				<h2 className="card-title">Choose password type</h2>
 
