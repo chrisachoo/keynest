@@ -1,24 +1,3 @@
-export const vaultCopy = {
-	all: {
-		description: "Your private home for digital keys.",
-		eyebrow: "Personal vault",
-		section: "Recently used",
-		title: "Vault"
-	},
-	favorites: {
-		description: "Your private home for digital keys.",
-		eyebrow: "Personal vault",
-		section: "Favorite items",
-		title: "Favorites"
-	},
-	notes: {
-		description: "Your private home for digital keys.",
-		eyebrow: "Personal vault",
-		section: "Your notes",
-		title: "Secure notes"
-	}
-} as const
-
 export const marketingCopy = {
 	account: {
 		getStarted: { title: "Get started", to: "/signup" },
