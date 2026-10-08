@@ -4,56 +4,81 @@ import {
 	FolderLock,
 	LogOut,
 	Settings,
-	ShieldCheck,
-	Star,
 	StickyNote,
+	UserKey,
 	WandSparkles,
 	type LucideIcon
 } from "lucide-react"
-import type { MouseEvent } from "react"
-import { NavLink, useNavigate } from "react-router"
+import { Link, NavLink, useLocation, useNavigate } from "react-router"
 
 import { Avatar } from "@/components/ui/avatar"
 import Logo from "@/components/ui/logo"
-import Meter from "@/components/ui/meter"
 import { useAppDispatch, useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 import { logoutAsync } from "@/store/auth/extra-reducers"
 
-const itemsMenu: {
-	count?: number
-	end?: boolean
+const itemsMenu = {
+	"personal-vaults": [
+		{ icon: FolderLock, label: "Vault", to: "/dashboard" },
+		{ icon: UserKey, label: "Logins", to: "/dashboard?view=logins" },
+		{ icon: StickyNote, label: "Secure notes", to: "/dashboard/notes" }
+	],
+	"your-activity": [
+		{
+			icon: WandSparkles,
+			label: "Password generator",
+			to: "/dashboard/password"
+		},
+		{ icon: Settings, label: "Settings", to: "/dashboard/settings" }
+	]
+} as const
+
+function isMenuActive(to: string, pathname: string, search: string) {
+	const [path, query = ""] = to.split("?")
+	if (pathname !== path) return false
+
+	const expected = new URLSearchParams(query)
+	const current = new URLSearchParams(search)
+	if ([...expected.keys()].length === 0) return !current.get("view")
+
+	for (const [key, value] of expected) {
+		if (current.get(key) !== value) return false
+	}
+
+	return true
+}
+
+function MenuLink({
+	icon: Icon,
+	label,
+	to
+}: Readonly<{
 	icon: LucideIcon
 	label: string
 	to: string
-}[] = [
-	{ end: true, icon: FolderLock, label: "Vault", to: "/dashboard" },
-	{
-		icon: Star,
-		label: "Favorites",
-		to: "/dashboard/favorites"
-	},
-	{ icon: StickyNote, label: "Secure notes", to: "/dashboard/notes" }
-]
+}>) {
+	const location = useLocation()
+	const active = isMenuActive(to, location.pathname, location.search)
+
+	return (
+		<li>
+			<Link
+				aria-current={active ? "page" : undefined}
+				className={active ? "active" : undefined}
+				to={to}
+			>
+				<Icon className="size-4" />
+				<span className="min-w-0 flex-1 truncate">{label}</span>
+			</Link>
+		</li>
+	)
+}
 
 export default function AppSidebar() {
 	const dispatch = useAppDispatch()
-	const user = useAppSelector(selectUser)
-
+	const location = useLocation()
 	const navigate = useNavigate()
-
-	async function handleLogout(
-		event: MouseEvent<HTMLAnchorElement, globalThis.MouseEvent>
-	) {
-		event.preventDefault()
-		document.getElementById("profile")?.hidePopover()
-
-		const result = await dispatch(logoutAsync())
-
-		if (logoutAsync.fulfilled.match(result)) {
-			navigate("/login", { replace: true })
-		}
-	}
+	const user = useAppSelector(selectUser)
 
 	return (
 		<aside className="flex min-h-dvh w-72 flex-col bg-base-200 p-4 text-base-content">
@@ -61,95 +86,81 @@ export default function AppSidebar() {
 
 			<ul className="menu mt-4 w-full flex-1 space-y-2 p-0">
 				<li>
-					<h2 className="menu-title">Vault</h2>
-
+					<h2 className="menu-title uppercase">personal vaults</h2>
 					<ul>
-						{itemsMenu.map(({ icon: Icon, label, to, end }) => (
-							<li key={label}>
-								<NavLink end={end} to={to}>
-									<Icon className="size-4" />
-									<span className="min-w-0 flex-1 truncate">{label}</span>
-								</NavLink>
-							</li>
+						{itemsMenu["personal-vaults"].map((item) => (
+							<MenuLink key={item.label} {...item} />
 						))}
 					</ul>
 				</li>
 
 				<li>
-					<h2 className="menu-title">Workspace</h2>
-
+					<h2 className="menu-title uppercase">your activity</h2>
 					<ul>
-						<li>
-							<NavLink to="/dashboard/password">
-								<WandSparkles className="size-4" />
-								Password generator
-							</NavLink>
-						</li>
-
-						<li>
-							<NavLink to="/dashboard/settings">
-								<Settings className="size-4" />
-								<span className="min-w-0 flex-1 truncate">Settings</span>
-							</NavLink>
-						</li>
+						{itemsMenu["your-activity"].map((item) => (
+							<MenuLink key={item.label} {...item} />
+						))}
 					</ul>
 				</li>
 			</ul>
 
-			<div className="space-y-2">
-				<div className="card bg-base-100 card-sm card-border">
-					<div className="card-body space-y-2">
-						<div className="mbe-0 flex items-center justify-between">
-							<span className="text-xs font-medium">Vault strength</span>
-							<ShieldCheck className="size-4 text-success" />
-						</div>
+			<div className="flex items-center gap-2">
+				<Avatar>{getInitials(user?.name ?? "")}</Avatar>
 
-						<Meter caption="Great protection" level="veryStrong" />
-					</div>
+				<div className="min-w-0 flex-1">
+					<p className="truncate text-xs font-medium">{user?.name}</p>
+					<p className="truncate text-xs text-base-content/60">{user?.email}</p>
 				</div>
 
-				<div className="divider divide-base-300" />
+				<button
+					aria-label="Account menu"
+					className="btn btn-square btn-ghost btn-sm"
+					popoverTarget="profile"
+					style={{ anchorName: "--anchor-1" }}
+					type="button"
+				>
+					<ChevronsUpDown className="size-4" />
+				</button>
 
-				<div className="flex items-center gap-2">
-					<Avatar>{getInitials(user?.name ?? "")}</Avatar>
+				<ul
+					className="menu dropdown w-56 rounded-box border border-base-300 bg-base-200"
+					id="profile"
+					popover="auto"
+					style={{ positionAnchor: "--anchor-1" }}
+				>
+					<li>
+						<Link
+							className={
+								location.pathname === "/dashboard/settings"
+									? "active"
+									: undefined
+							}
+							to="/dashboard/settings"
+						>
+							<Settings className="size-4" />
+							<span className="min-w-0 flex-1 truncate">Settings</span>
+						</Link>
+					</li>
 
-					<div className="min-w-0 flex-1">
-						<p className="truncate text-xs font-medium">{user?.name}</p>
-						<p className="truncate text-xs text-base-content/60">
-							{user?.email}
-						</p>
-					</div>
+					<li>
+						<NavLink
+							onClick={async (event) => {
+								event.preventDefault()
+								document.getElementById("profile")?.hidePopover()
 
-					<button
-						className="btn btn-square btn-ghost btn-sm"
-						aria-label="account menu"
-						popoverTarget="profile"
-						style={{ anchorName: "--anchor-1" }}
-					>
-						<ChevronsUpDown className="size-4" />
-					</button>
+								const result = await dispatch(logoutAsync())
 
-					<ul
-						className="menu dropdown w-56 rounded-box border border-base-300 bg-base-200"
-						popover="auto"
-						id="profile"
-						style={{ positionAnchor: "--anchor-1" }}
-					>
-						<li>
-							<NavLink to="/dashboard/settings">
-								<Settings className="size-4" />
-								<span className="min-w-0 flex-1 truncate">Settings</span>
-							</NavLink>
-						</li>
-
-						<li>
-							<NavLink to="/login" onClick={(event) => handleLogout(event)}>
-								<LogOut className="size-4" />
-								<span className="min-w-0 flex-1 truncate">Log out</span>
-							</NavLink>
-						</li>
-					</ul>
-				</div>
+								if (logoutAsync.fulfilled.match(result)) {
+									navigate("/login", { replace: true })
+								}
+							}}
+							to="/login"
+						>
+							<LogOut className="size-4" />
+							<span className="min-w-0 flex-1 truncate">Log out</span>
+						</NavLink>
+					</li>
+				</ul>
 			</div>
 		</aside>
 	)

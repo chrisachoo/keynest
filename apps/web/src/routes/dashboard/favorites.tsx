@@ -1,3 +1,5 @@
+import { Navigate } from "react-router"
+
 export function Component() {
-	return <div>favorite</div>
+	return <Navigate replace to="/dashboard" />
 }
