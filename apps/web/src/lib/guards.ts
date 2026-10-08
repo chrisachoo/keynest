@@ -1,12 +1,11 @@
 import { redirect } from "react-router"
 
 import { store } from "@/store"
-import { selectAuthInitialized, selectUser } from "@/store/auth/auth-slice"
+import { selectUser } from "@/store/auth/auth-slice"
 import { fetchMeAsync } from "@/store/auth/extra-reducers"
 
 async function getUser() {
-	if (!selectAuthInitialized(store.getState()))
-		await store.dispatch(fetchMeAsync())
+	await store.dispatch(fetchMeAsync())
 	return selectUser(store.getState())
 }
 
