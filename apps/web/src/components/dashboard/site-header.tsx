@@ -1,11 +1,11 @@
-import { getInitials } from "@keynest/shared"
+import { getInitials } from "@keynest/utils"
 import { LockKeyhole, Search } from "lucide-react"
 
-import { useVault } from "@/components/dashboard/vault-context"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
 import ToggleTheme from "@/components/ui/toggle-theme"
+import { useVault } from "@/lib/vault/vault"
 import { useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 
@@ -28,7 +28,7 @@ export default function SiteHeader({
 					<LockKeyhole
 						className={locked ? "size-4 text-warning" : "size-4 text-success"}
 					/>
-					{locked ? "Vault locked" : "Encrypted in this tab"}
+					{locked ? "Vault locked" : "Encrypted"}
 				</div>
 			</div>
 

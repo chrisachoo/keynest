@@ -1,4 +1,4 @@
-import { getInitials } from "@keynest/shared"
+import { getInitials } from "@keynest/utils"
 import {
 	ChevronsUpDown,
 	FolderLock,
