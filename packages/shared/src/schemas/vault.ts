@@ -1,6 +1,7 @@
 import * as v from "valibot"
 
 import { VAULT_ITEM_TYPES } from "../constants"
+import { NameSchema } from "./auth"
 import { id, isoDateTime } from "./common"
 
 export const vaultItemType = v.picklist(VAULT_ITEM_TYPES)
@@ -15,7 +16,7 @@ export const listVaultItemsQuery = v.object({
 	type: v.optional(vaultItemType)
 })
 
-export const createVaultItem = v.object({
+export const CreateVaultItemSchema = v.object({
 	ciphertext: v.pipe(v.string(), v.minLength(1)),
 	favorite: v.boolean(),
 	id: v.pipe(v.string(), v.uuid()),
@@ -33,7 +34,7 @@ export const updateVaultItem = v.union([
 	})
 ])
 
-export const vaultItem = v.object({
+export const VaultItemSchema = v.object({
 	ciphertext: v.string(),
 	createdAt: isoDateTime,
 	favorite: v.boolean(),
@@ -44,11 +45,37 @@ export const vaultItem = v.object({
 	userId: v.string()
 })
 
-export const vaultItemList = v.object({
-	items: v.array(vaultItem)
+export const AddItemSchema = v.variant("type", [
+	v.object({
+		name: NameSchema,
+		note: v.string(),
+		type: v.literal("login"),
+		username: v.pipe(
+			v.string(),
+			v.trim(),
+			v.minLength(1, "Username or email is required."),
+			v.maxLength(320)
+		)
+	}),
+	v.object({
+		name: NameSchema,
+		note: v.pipe(
+			v.string(),
+			v.trim(),
+			v.minLength(1, "Note is required."),
+			v.maxLength(8_000)
+		),
+		type: v.literal("secure_note"),
+		username: v.string()
+	})
+])
+
+export const VaultItemListSchema = v.object({
+	items: v.array(VaultItemSchema)
 })
 
-export type CreateVaultItem = v.InferOutput<typeof createVaultItem>
+export type CreateVaultItem = v.InferOutput<typeof CreateVaultItemSchema>
 export type UpdateVaultItem = v.InferOutput<typeof updateVaultItem>
-export type VaultItem = v.InferOutput<typeof vaultItem>
-export type VaultItemList = v.InferOutput<typeof vaultItemList>
+export type VaultItem = v.InferOutput<typeof VaultItemSchema>
+export type VaultItemList = v.InferOutput<typeof VaultItemListSchema>
+export type AddItem = v.InferOutput<typeof AddItemSchema>

@@ -1,11 +1,11 @@
 import { and, eq, vaultItem as vaultItemTable } from "@keynest/db"
 import {
-	createVaultItem,
+	CreateVaultItemSchema,
 	listVaultItemsQuery,
 	updateVaultItem,
-	vaultItem,
 	vaultItemIdParam,
-	vaultItemList
+	VaultItemListSchema,
+	VaultItemSchema
 } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute, validator } from "hono-openapi"
@@ -40,7 +40,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description:
 				"List encrypted vault items for the current user. Ciphertext only — never plaintext secrets.",
 			responses: {
-				200: jsonContent(vaultItemList, "Vault items"),
+				200: jsonContent(VaultItemListSchema, "Vault items"),
 				401: UNAUTHORIZED_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
@@ -74,14 +74,14 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description:
 				"Store a client-encrypted vault item. The server never sees plaintext.",
 			responses: {
-				201: jsonContent(vaultItem, "Created vault item"),
+				201: jsonContent(VaultItemSchema, "Created vault item"),
 				401: UNAUTHORIZED_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			summary: "Create vault item",
 			tags: ["Vault items"]
 		}),
-		validator("json", createVaultItem),
+		validator("json", CreateVaultItemSchema),
 		async (c) => {
 			const user = getAuthUser(c)
 			const input = c.req.valid("json")
@@ -109,7 +109,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 		describeRoute({
 			description: "Fetch one encrypted vault item owned by the current user.",
 			responses: {
-				200: jsonContent(vaultItem, "Vault item"),
+				200: jsonContent(VaultItemSchema, "Vault item"),
 				401: UNAUTHORIZED_RESPONSE,
 				404: NOT_FOUND_RESPONSE
 			},
@@ -142,7 +142,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			description:
 				"Update a favorite flag, or replace ciphertext for a vault item. Type cannot change.",
 			responses: {
-				200: jsonContent(vaultItem, "Updated vault item"),
+				200: jsonContent(VaultItemSchema, "Updated vault item"),
 				401: UNAUTHORIZED_RESPONSE,
 				404: NOT_FOUND_RESPONSE
 			},
