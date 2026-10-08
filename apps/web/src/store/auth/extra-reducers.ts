@@ -1,11 +1,8 @@
-import {
-	errorMessage,
-	message,
-	type LoginInput,
-	type SignupInput
-} from "@keynest/shared"
+import { ClientError, type LoginInput, type SignupInput } from "@keynest/shared"
+import { errorMessage, message } from "@keynest/utils"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 
+import { lockVault } from "@/components/dashboard/vault-session"
 import { client } from "@/lib/client"
 
 export const fetchMeAsync = createAsyncThunk(
@@ -14,7 +11,9 @@ export const fetchMeAsync = createAsyncThunk(
 		try {
 			const response = await client.users.me.$get()
 
-			if (!response.ok) return rejectWithValue("unauthorized")
+			if (response.status === ClientError.unauthorized)
+				return rejectWithValue("unauthorized")
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
 
 			return await response.json()
 		} catch (error) {
@@ -56,6 +55,8 @@ export const signupAsync = createAsyncThunk(
 export const logoutAsync = createAsyncThunk(
 	"auth/logoutAsync",
 	async (_, { rejectWithValue }) => {
+		lockVault()
+
 		try {
 			const res = await client.auth.logout.$post()
 			if (!res.ok) return rejectWithValue(await errorMessage(res))

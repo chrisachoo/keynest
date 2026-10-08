@@ -1,3 +1,4 @@
+import type { AuthSession } from "@keynest/shared"
 import { createSlice } from "@reduxjs/toolkit"
 
 import {
@@ -9,8 +10,16 @@ import {
 import type { AuthState } from "@/types"
 
 const initialState: AuthState = {
-	user: null,
-	initialized: false
+	initialized: false,
+	sessionExpiresAt: null,
+	user: null
+}
+
+function applySession(state: AuthState, payload: AuthSession) {
+	const { sessionExpiresAt, ...user } = payload
+	state.user = user
+	state.sessionExpiresAt = sessionExpiresAt
+	state.initialized = true
 }
 
 const authSlice = createSlice({
@@ -18,40 +27,41 @@ const authSlice = createSlice({
 	initialState,
 	reducers: {
 		sessionExpired: (state) => {
+			state.sessionExpiresAt = null
 			state.user = null
 		}
 	},
 	selectors: {
 		selectUser: (state) => state.user,
 		selectIsAuthenticated: (state) => state.user !== null,
-		selectAuthInitialized: (state) => state.initialized
+		selectSessionExpiresAt: (state) => state.sessionExpiresAt
 	},
 	extraReducers: (builder) => {
 		builder
-			.addCase(fetchMeAsync.fulfilled, (state, { payload }) => {
-				state.user = payload
-				state.initialized = true
+			.addCase(fetchMeAsync.fulfilled, (state, action) => {
+				applySession(state, action.payload)
 			})
-			.addCase(fetchMeAsync.rejected, (state) => {
+			.addCase(fetchMeAsync.rejected, (state, action) => {
+				state.initialized = true
+				if (action.payload !== "unauthorized") return
+				state.sessionExpiresAt = null
 				state.user = null
-				state.initialized = true
 			})
-			.addCase(loginAsync.fulfilled, (state, { payload }) => {
-				state.user = payload
-				state.initialized = true
+			.addCase(loginAsync.fulfilled, (state, action) => {
+				applySession(state, action.payload)
 			})
-			.addCase(signupAsync.fulfilled, (state, { payload }) => {
-				state.user = payload
-				state.initialized = true
+			.addCase(signupAsync.fulfilled, (state, action) => {
+				applySession(state, action.payload)
 			})
 			.addCase(logoutAsync.fulfilled, (state) => {
+				state.sessionExpiresAt = null
 				state.user = null
 				state.initialized = false
 			})
 	}
 })
 
-export const { selectUser, selectIsAuthenticated, selectAuthInitialized } =
+export const { selectUser, selectIsAuthenticated, selectSessionExpiresAt } =
 	authSlice.selectors
 export const { sessionExpired } = authSlice.actions
 export default authSlice.reducer
