@@ -3,11 +3,11 @@ import { type PasswordMode } from "@keynest/utils"
 import { Shuffle } from "lucide-react"
 import { useState, type FormEvent } from "react"
 
-import { useDialog } from "@/components/dashboard/use-dialog"
 import type { VaultDraft } from "@/components/dashboard/vault-session"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
+import { useDialog } from "@/hooks/use-dialog"
 import { usePasswordGenerator } from "@/hooks/use-password-generator"
 import { cn } from "@/lib/cn"
 
