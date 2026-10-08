@@ -8,6 +8,7 @@ import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
+import { installVaultKey, lockVault } from "@/lib/vault/vault-session"
 import { useAppDispatch } from "@/store"
 import { signupAsync } from "@/store/auth/extra-reducers"
 
@@ -29,7 +30,13 @@ export function Component() {
 			setServerError(null)
 
 			try {
-				await dispatch(signupAsync(value)).unwrap()
+				const session = await dispatch(signupAsync(value)).unwrap()
+				try {
+					const key = await installVaultKey(value.password, session.vaultSalt)
+					if (!key) lockVault()
+				} catch {
+					lockVault()
+				}
 
 				navigate("/dashboard", { replace: true })
 			} catch (error) {
