@@ -92,9 +92,9 @@ export default function VaultBrowser({
 			) : null}
 
 			{vault.status === "unlocked" && items.length > 0 ? (
-				<ListItem>
+				<ListItem onRemove={vault.removeItem}>
 					{items.map((item) => (
-						<ListRow item={item} key={item.id} onRemove={vault.removeItem} />
+						<ListRow item={item} key={item.id} />
 					))}
 				</ListItem>
 			) : null}
