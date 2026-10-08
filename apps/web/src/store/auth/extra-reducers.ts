@@ -2,8 +2,8 @@ import { ClientError, type LoginInput, type SignupInput } from "@keynest/shared"
 import { errorMessage, message } from "@keynest/utils"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 
-import { lockVault } from "@/components/dashboard/vault-session"
 import { client } from "@/lib/client"
+import { lockVault } from "@/lib/vault/vault-session"
 
 export const fetchMeAsync = createAsyncThunk(
 	"auth/fetchMeAsync",

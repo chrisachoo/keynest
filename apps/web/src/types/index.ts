@@ -1,9 +1,10 @@
-import { UserPublicSchema } from "@keynest/shared"
+import { isoDateTime, UserPublicSchema } from "@keynest/shared"
 import * as v from "valibot"
 
 export const AuthStateSchema = v.object({
-	user: v.nullable(UserPublicSchema),
-	initialized: v.boolean("A boolean is required")
+	initialized: v.boolean("A boolean is required"),
+	sessionExpiresAt: v.nullable(isoDateTime),
+	user: v.nullable(UserPublicSchema)
 })
 
 export const ThemeSchema = v.fallback(v.picklist(["light", "sunset"]), "light")
