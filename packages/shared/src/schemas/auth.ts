@@ -30,5 +30,10 @@ export const LoginSchema = v.object({
 	password: PasswordSchema
 })
 
+export const UnlockSchema = v.object({
+	password: PasswordSchema
+})
+
 export type SignupInput = v.InferOutput<typeof SignupSchema>
 export type LoginInput = v.InferOutput<typeof LoginSchema>
+export type UnlockInput = v.InferOutput<typeof UnlockSchema>

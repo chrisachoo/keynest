@@ -17,18 +17,26 @@ export const listVaultItemsQuery = v.object({
 
 export const createVaultItem = v.object({
 	ciphertext: v.pipe(v.string(), v.minLength(1)),
+	favorite: v.boolean(),
+	id: v.pipe(v.string(), v.uuid()),
 	nonce: v.pipe(v.string(), v.minLength(1)),
 	type: vaultItemType
 })
 
-export const updateVaultItem = v.object({
-	ciphertext: v.pipe(v.string(), v.minLength(1)),
-	nonce: v.pipe(v.string(), v.minLength(1))
-})
+export const updateVaultItem = v.union([
+	v.object({
+		favorite: v.boolean()
+	}),
+	v.object({
+		ciphertext: v.pipe(v.string(), v.minLength(1)),
+		nonce: v.pipe(v.string(), v.minLength(1))
+	})
+])
 
 export const vaultItem = v.object({
 	ciphertext: v.string(),
 	createdAt: isoDateTime,
+	favorite: v.boolean(),
 	id: v.string(),
 	nonce: v.string(),
 	type: vaultItemType,
