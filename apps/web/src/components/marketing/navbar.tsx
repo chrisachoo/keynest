@@ -3,70 +3,58 @@ import { ArrowRight, Menu, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
 
+import { DrawerTrigger } from "@/components/ui/drawer"
 import Logo from "@/components/ui/logo"
 import ToggleTheme from "@/components/ui/toggle-theme"
 import { marketingCopy } from "@/constants"
 
 import SectionLink from "./section-link"
 
-const MARKETING_NAV_ID = "marketing-nav"
-
 type MarketingDrawerProps = {
 	onNavigate: () => void
 }
 
-export function MarketingDrawer({ onNavigate }: MarketingDrawerProps) {
+export function MarketingDrawer({
+	onNavigate
+}: Readonly<MarketingDrawerProps>) {
 	const { account, footer, nav } = marketingCopy
 
 	return (
-		<div className="drawer-side z-50">
-			<label
-				htmlFor={MARKETING_NAV_ID}
-				aria-label="Close menu"
-				className="drawer-overlay"
-			/>
-			<div className="flex min-h-full w-72 max-w-[85vw] flex-col bg-base-100 p-4 text-base-content">
-				<div className="mb-2 flex items-center justify-between">
-					<Logo
-						name
-						to="/"
-						aria-label={footer.homeLabel}
-						onClick={onNavigate}
-					/>
-					<label
-						htmlFor={MARKETING_NAV_ID}
-						aria-label="Close menu"
-						className="btn btn-square btn-ghost btn-sm"
-					>
-						<X className="size-5" />
-					</label>
-				</div>
-				<ul className="menu w-full grow menu-lg px-0">
-					{nav.map(({ title, url }) => (
-						<li key={url}>
-							<SectionLink href={url} onClick={onNavigate}>
-								{title}
-							</SectionLink>
-						</li>
-					))}
-				</ul>
-				<div className="flex flex-col gap-2">
-					<Link
-						to={account.signIn.to}
-						className="btn btn-ghost"
-						onClick={onNavigate}
-					>
-						{account.signIn.title}
-					</Link>
-					<Link
-						to={account.getStarted.to}
-						className="btn btn-primary"
-						onClick={onNavigate}
-					>
-						{account.getStarted.title}
-						<ArrowRight className="size-4" />
-					</Link>
-				</div>
+		<div className="flex min-h-full w-72 max-w-[85vw] flex-col bg-base-100 p-4 text-base-content">
+			<div className="mb-2 flex items-center justify-between">
+				<Logo name to="/" aria-label={footer.homeLabel} onClick={onNavigate} />
+				<DrawerTrigger
+					aria-label="Close menu"
+					className="btn btn-square btn-ghost btn-sm"
+				>
+					<X className="size-5" />
+				</DrawerTrigger>
+			</div>
+			<ul className="menu w-full grow menu-lg px-0">
+				{nav.map(({ title, url }) => (
+					<li key={url}>
+						<SectionLink href={url} onClick={onNavigate}>
+							{title}
+						</SectionLink>
+					</li>
+				))}
+			</ul>
+			<div className="flex flex-col gap-2">
+				<Link
+					to={account.signIn.to}
+					className="btn btn-ghost"
+					onClick={onNavigate}
+				>
+					{account.signIn.title}
+				</Link>
+				<Link
+					to={account.getStarted.to}
+					className="btn btn-primary"
+					onClick={onNavigate}
+				>
+					{account.getStarted.title}
+					<ArrowRight className="size-4" />
+				</Link>
 			</div>
 		</div>
 	)
@@ -95,13 +83,12 @@ export default function Navbar() {
 		>
 			<nav className="navbar mx-auto w-full max-w-7xl px-2 sm:px-4">
 				<div className="navbar-start">
-					<label
-						htmlFor={MARKETING_NAV_ID}
+					<DrawerTrigger
 						aria-label="Open menu"
 						className="btn btn-square btn-ghost lg:hidden"
 					>
 						<Menu className="size-5" />
-					</label>
+					</DrawerTrigger>
 					<Logo
 						name
 						to="/"
@@ -146,5 +133,3 @@ export default function Navbar() {
 		</header>
 	)
 }
-
-export { MARKETING_NAV_ID }

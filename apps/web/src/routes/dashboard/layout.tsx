@@ -8,6 +8,7 @@ import SiteHeader from "@/components/dashboard/site-header"
 import { useVault } from "@/components/dashboard/vault-context"
 import { VaultProvider } from "@/components/dashboard/vault-provider"
 import VaultSearch from "@/components/dashboard/vault-search"
+import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { useDisclosure } from "@/hooks/use-disclosure"
 
 export function Component() {
@@ -39,28 +40,25 @@ function DashboardShell() {
 	useVaultSearchShortcut(toggleSearch)
 
 	return (
-		<div className="drawer min-h-screen bg-base-100 text-base-content antialiased lg:drawer-open">
-			<input className="drawer-toggle" id="app-drawer" type="checkbox" />
-			<div className="drawer-content flex min-h-screen flex-col pb-16 lg:pb-0">
+		<Drawer
+			className="min-h-screen bg-base-100 text-base-content antialiased lg:drawer-open"
+			id="app-drawer"
+		>
+			<DrawerContent className="flex min-h-screen flex-col pb-16 lg:pb-0">
 				<SiteHeader onSearch={toggleSearch} />
 				<Outlet />
 				<MobileMenu />
-			</div>
-			<div className="drawer-side z-40">
-				<label
-					aria-label="Close sidebar"
-					className="drawer-overlay"
-					htmlFor="app-drawer"
+				<VaultSearch onClose={closeSearch} open={searchOpen} />
+				<AddItemDialog
+					defaultType={vault.composerType}
+					onClose={vault.closeComposer}
+					onSubmit={vault.saveItem}
+					open={vault.composerOpen}
 				/>
+			</DrawerContent>
+			<DrawerSide className="z-40" closeLabel="Close sidebar">
 				<AppSidebar />
-			</div>
-			<VaultSearch onClose={closeSearch} open={searchOpen} />
-			<AddItemDialog
-				defaultType={vault.composerType}
-				onClose={vault.closeComposer}
-				onSubmit={vault.saveItem}
-				open={vault.composerOpen}
-			/>
-		</div>
+			</DrawerSide>
+		</Drawer>
 	)
 }

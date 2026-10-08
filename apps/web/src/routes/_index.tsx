@@ -5,11 +5,9 @@ import FaqSection from "@/components/marketing/faq"
 import FeaturesSection from "@/components/marketing/features"
 import SiteFooter from "@/components/marketing/footer"
 import HeroSection from "@/components/marketing/hero"
-import Navbar, {
-	MARKETING_NAV_ID,
-	MarketingDrawer
-} from "@/components/marketing/navbar"
+import Navbar, { MarketingDrawer } from "@/components/marketing/navbar"
 import SecuritySection from "@/components/marketing/security"
+import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { marketingCopy } from "@/constants"
 import { useDisclosure } from "@/hooks/use-disclosure"
 
@@ -38,15 +36,8 @@ export function Component() {
 	}, [])
 
 	return (
-		<div className="drawer">
-			<input
-				id={MARKETING_NAV_ID}
-				type="checkbox"
-				className="drawer-toggle"
-				checked={opened}
-				onChange={(event) => setMenuOpen(event.target.checked)}
-			/>
-			<div className="drawer-content min-h-screen bg-base-100">
+		<Drawer id="marketing-nav" onOpenChange={setMenuOpen} open={opened}>
+			<DrawerContent className="min-h-screen bg-base-100">
 				<Navbar />
 				<main>
 					<HeroSection />
@@ -56,8 +47,10 @@ export function Component() {
 					<CtaSection />
 				</main>
 				<SiteFooter />
-			</div>
-			<MarketingDrawer onNavigate={close} />
-		</div>
+			</DrawerContent>
+			<DrawerSide className="z-50" closeLabel="Close menu">
+				<MarketingDrawer onNavigate={close} />
+			</DrawerSide>
+		</Drawer>
 	)
 }
