@@ -4,12 +4,13 @@ import { Plus } from "lucide-react"
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import { ListItem, ListRow } from "@/components/dashboard/list-item"
 import UnlockVault from "@/components/dashboard/unlock-vault"
-import {
-	useVault,
-	type VaultItemView
-} from "@/components/dashboard/vault-context"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+	useOpenComposer,
+	useVault,
+	type VaultItemView
+} from "@/lib/vault/vault"
 
 export default function VaultBrowser({
 	addLabel,
@@ -27,14 +28,16 @@ export default function VaultBrowser({
 	title: string
 }>) {
 	const vault = useVault()
+	const openComposer = useOpenComposer()
 	const items = vault.items.filter(predicate)
+	const unlocked = vault.status === "unlocked"
 
 	return (
 		<DashboardWrapper
 			actions={
 				<Button
-					disabled={vault.status !== "unlocked"}
-					onClick={() => vault.openComposer(addType)}
+					disabled={!unlocked}
+					onClick={() => openComposer(addType)}
 					type="button"
 				>
 					<Plus />
@@ -46,21 +49,17 @@ export default function VaultBrowser({
 		>
 			{vault.notice ? (
 				<Alert variant="warning">
-					<AlertTitle>Vault data was reset</AlertTitle>
+					<AlertTitle>Could not load the vault</AlertTitle>
 					<AlertDescription>{vault.notice}</AlertDescription>
 				</Alert>
-			) : null}
-
-			{vault.status === "loading" ? (
-				<span className="loading loading-spinner text-primary" />
 			) : null}
 
 			{vault.status === "locked" ? (
 				<div className="rounded-box border border-base-300 bg-base-200 p-5">
 					<h2 className="font-semibold">Vault locked</h2>
 					<p className="mt-1 max-w-lg text-sm text-base-content/70">
-						{vault.sessionCount
-							? `${vault.sessionCount} encrypted ${vault.sessionCount === 1 ? "item is" : "items are"} saved for this account.`
+						{vault.itemCount
+							? `${vault.itemCount} encrypted ${vault.itemCount === 1 ? "item is" : "items are"} saved for this account.`
 							: "No encrypted items are saved for this account yet."}{" "}
 						Enter your password to unlock them in this tab. Locking drops the
 						key. The server keeps ciphertext only.
@@ -69,7 +68,7 @@ export default function VaultBrowser({
 				</div>
 			) : null}
 
-			{vault.status === "unlocked" && items.length === 0 ? (
+			{unlocked && items.length === 0 ? (
 				<div className="rounded-box border border-base-300 bg-base-200 p-5">
 					<h2 className="font-semibold">No items yet</h2>
 					<p className="mt-1 max-w-lg text-sm text-base-content/70">
@@ -77,7 +76,7 @@ export default function VaultBrowser({
 					</p>
 					<Button
 						className="mt-4"
-						onClick={() => vault.openComposer(addType)}
+						onClick={() => openComposer(addType)}
 						type="button"
 					>
 						<Plus />
@@ -86,11 +85,8 @@ export default function VaultBrowser({
 				</div>
 			) : null}
 
-			{vault.status === "unlocked" && items.length > 0 ? (
-				<ListItem
-					onRemove={vault.removeItem}
-					onToggleFavorite={vault.toggleFavorite}
-				>
+			{unlocked && items.length > 0 ? (
+				<ListItem items={items}>
 					{items.map((item) => (
 						<ListRow item={item} key={item.id} />
 					))}

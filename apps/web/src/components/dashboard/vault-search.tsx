@@ -1,15 +1,20 @@
-import { Search } from "lucide-react"
+import { TYPE_NAMES } from "@keynest/shared"
+import { getInitials } from "@keynest/utils"
+import { Search, Star } from "lucide-react"
 import { useEffect, useState, type KeyboardEvent } from "react"
 import { useNavigate } from "react-router"
 
+import { Avatar, getAvatarColor } from "@/components/ui/avatar"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { useDialog } from "@/hooks/use-dialog"
 import {
 	useVault,
 	type OpenVaultItem,
 	type VaultItemView
-} from "@/components/dashboard/vault-context"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { useDialog } from "@/hooks/use-dialog"
-import { cn } from "@/lib/cn"
+} from "@/lib/vault/vault"
+
+import { Badge } from "../ui/badge"
+import { Button } from "../ui/button"
 
 function isOpen(item: VaultItemView): item is OpenVaultItem {
 	return item.status === "open"
@@ -35,7 +40,7 @@ export default function VaultSearch({
 			onClose={onClose}
 			ref={dialogRef}
 		>
-			<DialogContent className="w-full max-w-lg p-0">
+			<DialogContent className="w-full max-w-lg p-2">
 				{open ? <SearchPanel onClose={onClose} /> : null}
 			</DialogContent>
 			<form className="modal-backdrop" method="dialog">
@@ -91,7 +96,7 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 
 	return (
 		<>
-			<label className="input w-full rounded-none border-x-0 border-t-0">
+			<label className="input w-full">
 				<Search className="size-4 opacity-60" />
 				<input
 					aria-activedescendant={
@@ -116,7 +121,7 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 				/>
 			</label>
 
-			<div className="max-h-72 overflow-y-auto p-2" id="vault-search-results">
+			<div className="max-h-72 overflow-y-auto pt-2" id="vault-search-results">
 				{vault.status === "locked" ? (
 					<p className="px-3 py-4 text-sm text-base-content/60">
 						Unlock this tab to search items.
@@ -138,27 +143,41 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 				{results.length > 0 ? (
 					<ul
 						aria-label="Search results"
-						className="menu w-full p-0"
+						className="list w-full p-0"
 						role="listbox"
 					>
 						{results.map((item, index) => (
-							<li key={item.id}>
-								<button
-									aria-selected={index === selected}
-									className={cn(index === selected && "menu-active")}
-									id={`search-result-${item.id}`}
-									onClick={() => choose(item)}
-									onMouseEnter={() => setActiveIndex(index)}
-									role="option"
-									type="button"
-								>
-									<span className="min-w-0 flex-1 text-left">
-										<span className="block truncate">{item.name}</span>
-										<span className="block truncate text-xs text-base-content/60">
-											{item.type === "login" ? item.username : "Secure note"}
-										</span>
+							<li
+								className="list-row cursor-pointer items-center px-1 transition-colors hover:bg-base-200"
+								key={item.id}
+								onClick={() => choose(item)}
+								onMouseEnter={() => setActiveIndex(index)}
+							>
+								<Avatar className={getAvatarColor(item.name)}>
+									{getInitials(item.name)}
+								</Avatar>
+								<div>
+									<span className="block truncate">{item.name}</span>
+									<span className="block truncate text-xs font-semibold uppercase opacity-60">
+										{item.type === "login" ? item.username : "Secure note"}
 									</span>
-								</button>
+								</div>
+
+								<Badge
+									size="sm"
+									variant={item.type === "login" ? "light" : "success"}
+								>
+									{TYPE_NAMES[item.type]}
+								</Badge>
+								<Button variant="ghost" shape="circle">
+									<Star
+										className={
+											item.favorite
+												? "fill-amber-500 text-amber-500"
+												: undefined
+										}
+									/>
+								</Button>
 							</li>
 						))}
 					</ul>
