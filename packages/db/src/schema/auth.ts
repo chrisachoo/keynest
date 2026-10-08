@@ -14,6 +14,7 @@ export const user = sqliteTable("user", {
 		.$defaultFn(() => createId()),
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
+	vaultSalt: text("vault_salt"),
 	emailVerified: integer("email_verified", { mode: "boolean" })
 		.default(false)
 		.notNull(),

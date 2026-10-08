@@ -17,6 +17,7 @@ export const vaultItem = sqliteTable(
 		type: text("type", { enum: VAULT_ITEM_TYPES }).notNull(),
 		ciphertext: text("ciphertext").notNull(),
 		nonce: text("nonce").notNull(),
+		favorite: integer("favorite", { mode: "boolean" }).default(false).notNull(),
 		createdAt: integer("created_at", { mode: "timestamp_ms" })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),
