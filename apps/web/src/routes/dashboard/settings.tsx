@@ -1,13 +1,13 @@
-import { SESSION_TTL_SECONDS, VAULT_IDLE_MS } from "@keynest/shared"
+import { VAULT_IDLE_MS } from "@keynest/shared"
 import { useFetcher } from "react-router"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import UnlockVault from "@/components/dashboard/unlock-vault"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Countdown } from "@/components/ui/countdown"
 import { DASHBOARD_ACTION, useVault } from "@/lib/vault/vault"
 
-const sessionMinutes = SESSION_TTL_SECONDS / 60
 const idleMinutes = VAULT_IDLE_MS / 60_000
 
 function LockButton({ disabled }: Readonly<{ disabled: boolean }>) {
@@ -40,12 +40,14 @@ export function Component() {
 						{locked ? "Locked" : "Unlocked"}
 					</Badge>
 				</div>
+
 				<p className="mt-2 max-w-2xl text-sm text-base-content/70">
 					{vault.itemCount} encrypted {vault.itemCount === 1 ? "item" : "items"}
-					. Sign-in ends {sessionMinutes} minutes after you log in. Leaving this
-					tab, or leaving it idle for {idleMinutes} minutes, locks the vault
-					until you enter your password again.
+					. Sign-in ends in <Countdown />. Leaving this tab, or leaving it idle
+					for {idleMinutes} minutes, locks the vault until you enter your
+					password again.
 				</p>
+
 				<div className="mt-4">
 					{locked ? (
 						<UnlockVault />
