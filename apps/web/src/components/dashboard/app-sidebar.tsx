@@ -4,6 +4,7 @@ import {
 	FolderLock,
 	LogOut,
 	Settings,
+	Star,
 	StickyNote,
 	UserKey,
 	WandSparkles,
@@ -21,6 +22,7 @@ const itemsMenu = {
 	"personal-vaults": [
 		{ icon: FolderLock, label: "Vault", to: "/dashboard" },
 		{ icon: UserKey, label: "Logins", to: "/dashboard?view=logins" },
+		{ icon: Star, label: "Favorites", to: "/dashboard/favorites" },
 		{ icon: StickyNote, label: "Secure notes", to: "/dashboard/notes" }
 	],
 	"your-activity": [

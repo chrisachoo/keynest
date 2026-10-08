@@ -1,4 +1,4 @@
-import { FolderLock, Settings, StickyNote, Zap } from "lucide-react"
+import { FolderLock, Settings, Star, StickyNote, Zap } from "lucide-react"
 import { NavLink } from "react-router"
 
 export default function MobileMenu() {
@@ -7,6 +7,10 @@ export default function MobileMenu() {
 			<NavLink end to="/dashboard">
 				<FolderLock className="size-4" />
 				<span className="dock-label">Vault</span>
+			</NavLink>
+			<NavLink to="/dashboard/favorites">
+				<Star className="size-4" />
+				<span className="dock-label">Favorites</span>
 			</NavLink>
 			<NavLink to="/dashboard/notes">
 				<StickyNote className="size-4" />

@@ -3,6 +3,7 @@ import { Plus } from "lucide-react"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import { ListItem, ListRow } from "@/components/dashboard/list-item"
+import UnlockVault from "@/components/dashboard/unlock-vault"
 import {
 	useVault,
 	type VaultItemView
@@ -57,20 +58,14 @@ export default function VaultBrowser({
 			{vault.status === "locked" ? (
 				<div className="rounded-box border border-base-300 bg-base-200 p-5">
 					<h2 className="font-semibold">Vault locked</h2>
-					<p className="mt-1 text-sm text-base-content/70">
-						This tab no longer has the session key
+					<p className="mt-1 max-w-lg text-sm text-base-content/70">
 						{vault.sessionCount
-							? `, so ${vault.sessionCount} saved ${vault.sessionCount === 1 ? "item is" : "items are"} unreadable`
-							: ""}
-						. Starting again removes those encrypted items from this tab.
+							? `${vault.sessionCount} encrypted ${vault.sessionCount === 1 ? "item is" : "items are"} saved for this account.`
+							: "No encrypted items are saved for this account yet."}{" "}
+						Enter your password to unlock them in this tab. Locking drops the
+						key. The server keeps ciphertext only.
 					</p>
-					<Button
-						className="mt-4"
-						onClick={() => void vault.startSession()}
-						type="button"
-					>
-						Start a new session
-					</Button>
+					<UnlockVault />
 				</div>
 			) : null}
 
@@ -92,7 +87,10 @@ export default function VaultBrowser({
 			) : null}
 
 			{vault.status === "unlocked" && items.length > 0 ? (
-				<ListItem onRemove={vault.removeItem}>
+				<ListItem
+					onRemove={vault.removeItem}
+					onToggleFavorite={vault.toggleFavorite}
+				>
 					{items.map((item) => (
 						<ListRow item={item} key={item.id} />
 					))}
