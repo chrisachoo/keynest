@@ -2,13 +2,13 @@ import { Search } from "lucide-react"
 import { useEffect, useState, type KeyboardEvent } from "react"
 import { useNavigate } from "react-router"
 
-import { useDialog } from "@/components/dashboard/use-dialog"
 import {
 	useVault,
 	type OpenVaultItem,
 	type VaultItemView
 } from "@/components/dashboard/vault-context"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { useDialog } from "@/hooks/use-dialog"
 import { cn } from "@/lib/cn"
 
 function isOpen(item: VaultItemView): item is OpenVaultItem {
