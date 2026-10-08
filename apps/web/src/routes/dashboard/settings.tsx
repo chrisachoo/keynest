@@ -1,7 +1,28 @@
+import { SESSION_TTL_SECONDS, VAULT_IDLE_MS } from "@keynest/shared"
+import { useFetcher } from "react-router"
+
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
-import { useVault } from "@/components/dashboard/vault-context"
+import UnlockVault from "@/components/dashboard/unlock-vault"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { DASHBOARD_ACTION, useVault } from "@/lib/vault/vault"
+
+const sessionMinutes = SESSION_TTL_SECONDS / 60
+const idleMinutes = VAULT_IDLE_MS / 60_000
+
+function LockButton({ disabled }: Readonly<{ disabled: boolean }>) {
+	const fetcher = useFetcher()
+	const pending = fetcher.state !== "idle"
+
+	return (
+		<fetcher.Form action={DASHBOARD_ACTION} method="post">
+			<input name="intent" type="hidden" value="lock" />
+			<Button disabled={disabled || pending} type="submit" variant="outline">
+				{pending ? "Locking..." : "Lock vault"}
+			</Button>
+		</fetcher.Form>
+	)
+}
 
 export function Component() {
 	const vault = useVault()
@@ -9,39 +30,28 @@ export function Component() {
 
 	return (
 		<DashboardWrapper
-			description="This browser tab holds the key for your encrypted items."
+			description="Your password derives the key for this tab. The server stores ciphertext only."
 			title="Settings"
 		>
 			<div className="rounded-box border border-base-300 bg-base-100 p-5">
 				<div className="flex flex-wrap items-center justify-between gap-3">
 					<h2 className="font-semibold">Session</h2>
 					<Badge variant={locked ? "warning" : "success"}>
-						{vault.status === "loading"
-							? "Checking"
-							: locked
-								? "Locked"
-								: "Unlocked"}
+						{locked ? "Locked" : "Unlocked"}
 					</Badge>
 				</div>
 				<p className="mt-2 max-w-2xl text-sm text-base-content/70">
-					{vault.sessionCount} encrypted{" "}
-					{vault.sessionCount === 1 ? "item" : "items"}. Each item is stored as
-					type, ciphertext, and nonce. Locking drops the key for this tab.
+					{vault.itemCount} encrypted {vault.itemCount === 1 ? "item" : "items"}
+					. Sign-in ends {sessionMinutes} minutes after you log in. Leaving this
+					tab, or leaving it idle for {idleMinutes} minutes, locks the vault
+					until you enter your password again.
 				</p>
-				<div className="mt-4 flex flex-wrap gap-2">
-					<Button
-						disabled={vault.status !== "unlocked"}
-						onClick={vault.lock}
-						type="button"
-						variant="outline"
-					>
-						Lock vault
-					</Button>
+				<div className="mt-4">
 					{locked ? (
-						<Button onClick={() => void vault.startSession()} type="button">
-							Start a new session
-						</Button>
-					) : null}
+						<UnlockVault />
+					) : (
+						<LockButton disabled={vault.status !== "unlocked"} />
+					)}
 				</div>
 			</div>
 		</DashboardWrapper>

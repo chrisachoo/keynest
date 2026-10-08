@@ -1,17 +1,18 @@
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
-import { useVault } from "@/components/dashboard/vault-context"
 import PasswordGenerator from "@/components/password-generator"
 import { Button } from "@/components/ui/button"
+import { useOpenComposer, useVault } from "@/lib/vault/vault"
 
 export function Component() {
 	const vault = useVault()
+	const openComposer = useOpenComposer()
 
 	return (
 		<DashboardWrapper
 			actions={
 				<Button
 					disabled={vault.status !== "unlocked"}
-					onClick={() => vault.openComposer("login")}
+					onClick={() => openComposer("login")}
 					type="button"
 				>
 					Add login
