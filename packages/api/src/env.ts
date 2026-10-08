@@ -1,5 +1,5 @@
 import type { Database } from "@keynest/db"
-import type { UserPublicSchema } from "@keynest/shared"
+import type { AuthSession } from "@keynest/shared"
 
 export type ApiEnv = {
 	Bindings: {
@@ -10,6 +10,6 @@ export type ApiEnv = {
 	Variables: {
 		db: Database
 		sessionId: string | null
-		user: UserPublicSchema | null
+		user: AuthSession | null
 	}
 }

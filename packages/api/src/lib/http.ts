@@ -1,5 +1,9 @@
 import { HTTPException } from "hono/http-exception"
 
+export function badRequest(message = "Bad request") {
+	return new HTTPException(400, { message })
+}
+
 export function unauthorized(message = "Unauthorized") {
 	return new HTTPException(401, { message })
 }

@@ -23,6 +23,7 @@ function toVaultItem(row: typeof vaultItemTable.$inferSelect) {
 	return {
 		ciphertext: row.ciphertext,
 		createdAt: row.createdAt.toISOString(),
+		favorite: row.favorite,
 		id: row.id,
 		nonce: row.nonce,
 		type: row.type,
@@ -90,6 +91,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 				.insert(vaultItemTable)
 				.values({
 					ciphertext: input.ciphertext,
+					favorite: input.favorite,
+					id: input.id,
 					nonce: input.nonce,
 					type: input.type,
 					userId: user.id
@@ -136,7 +139,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 	.patch(
 		"/:id",
 		describeRoute({
-			description: "Replace ciphertext for a vault item. Type cannot change.",
+			description:
+				"Update a favorite flag, or replace ciphertext for a vault item. Type cannot change.",
 			responses: {
 				200: jsonContent(vaultItem, "Updated vault item"),
 				401: UNAUTHORIZED_RESPONSE,
@@ -156,10 +160,11 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 
 			const [updated] = await db
 				.update(vaultItemTable)
-				.set({
-					ciphertext: input.ciphertext,
-					nonce: input.nonce
-				})
+				.set(
+					"favorite" in input
+						? { favorite: input.favorite }
+						: { ciphertext: input.ciphertext, nonce: input.nonce }
+				)
 				.where(
 					and(eq(vaultItemTable.id, id), eq(vaultItemTable.userId, user.id))
 				)

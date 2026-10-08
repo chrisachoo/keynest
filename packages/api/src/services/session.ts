@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto"
 
 import { eq, session, user, type Database } from "@keynest/db"
-import { SESSION_TTL_SECONDS, type UserPublicSchema } from "@keynest/shared"
+import { SESSION_TTL_SECONDS, type AuthSession } from "@keynest/shared"
 
-import { toPublicUser } from "../lib/user"
+import { ensureVaultSalt, toAuthSession } from "../lib/user"
 
 export type SessionClient = {
 	ipAddress: string | null
@@ -22,24 +22,25 @@ export async function createSession(
 	db: Database,
 	userId: string,
 	client: SessionClient
-): Promise<string> {
+): Promise<{ expiresAt: Date; token: string }> {
 	const token = generateSessionToken()
+	const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000)
 
 	await db.insert(session).values({
-		expiresAt: new Date(Date.now() + SESSION_TTL_SECONDS * 1000),
+		expiresAt,
 		ipAddress: client.ipAddress,
 		token: hashToken(token),
 		userAgent: client.userAgent,
 		userId
 	})
 
-	return token
+	return { expiresAt, token }
 }
 
 export async function findSession(
 	db: Database,
 	token: string
-): Promise<{ sessionId: string; user: UserPublicSchema } | null> {
+): Promise<{ sessionId: string; user: AuthSession } | null> {
 	const [row] = await db
 		.select()
 		.from(session)
@@ -54,7 +55,11 @@ export async function findSession(
 		return null
 	}
 
-	return { sessionId: row.session.id, user: toPublicUser(row.user) }
+	const stored = await ensureVaultSalt(db, row.user)
+	return {
+		sessionId: row.session.id,
+		user: toAuthSession(stored, row.session.expiresAt)
+	}
 }
 
 export async function destroySession(

@@ -1,4 +1,4 @@
-import { UserPublicSchema } from "@keynest/shared"
+import { AuthSessionSchema } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 
@@ -11,7 +11,7 @@ export const usersRoutes = new Hono<ApiEnv>().get(
 	describeRoute({
 		description: "Return the authenticated account.",
 		responses: {
-			200: jsonContent(UserPublicSchema, "Current user"),
+			200: jsonContent(AuthSessionSchema, "Current user"),
 			401: UNAUTHORIZED_RESPONSE
 		},
 		security: [{ SessionCookie: [] }],
