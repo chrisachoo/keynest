@@ -38,6 +38,7 @@
         "@fontsource-variable/roboto": "^5.3.0",
         "@keynest/api": "workspace:*",
         "@keynest/shared": "workspace:*",
+        "@keynest/utils": "workspace:*",
         "@reduxjs/toolkit": "^2.13.0",
         "@t3-oss/env-core": "catalog:",
         "@tanstack/react-form": "^1.33.5",
@@ -113,6 +114,15 @@
     },
     "packages/shared": {
       "name": "@keynest/shared",
+      "dependencies": {
+        "valibot": "catalog:",
+      },
+      "devDependencies": {
+        "typescript": "catalog:",
+      },
+    },
+    "packages/utils": {
+      "name": "@keynest/utils",
       "dependencies": {
         "valibot": "catalog:",
       },
@@ -417,6 +427,8 @@
     "@keynest/infra": ["@keynest/infra@workspace:packages/infra"],
 
     "@keynest/shared": ["@keynest/shared@workspace:packages/shared"],
+
+    "@keynest/utils": ["@keynest/utils@workspace:packages/utils"],
 
     "@libsql/client": ["@libsql/client@0.17.4", "", { "dependencies": { "@libsql/core": "^0.17.4", "@libsql/hrana-client": "^0.10.0", "js-base64": "^3.7.5", "libsql": "^0.5.28", "promise-limit": "^2.7.0" } }, "sha512-lYayFWasDV78A+TjlEhr6ubb3odBV6OHjb+wdp8VQcyWWAEIjuwbCHaraEUS4m4yWoo0BvZo96It4VdzZRmRWw=="],
 
