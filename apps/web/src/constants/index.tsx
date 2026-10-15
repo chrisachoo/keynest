@@ -83,6 +83,11 @@ export const marketingCopy = {
 		{ title: "Security", url: "#security" },
 		{ title: "FAQ", url: "#faq" }
 	],
+	privacy: [
+		{ title: "Privacy Policy", url: "/privacy" },
+		{ title: "Term & Condition", url: "/terms" },
+		{ title: "About", url: "/about" }
+	],
 	preview: {
 		eyebrow: "Your vault",
 		greeting: "Good morning, Olivia",

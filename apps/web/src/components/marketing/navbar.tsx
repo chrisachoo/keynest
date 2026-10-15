@@ -1,7 +1,7 @@
 import { cn } from "cn"
 import { ArrowRight, Menu, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Link } from "react-router"
+import { Link, NavLink } from "react-router"
 
 import { DrawerTrigger } from "@/components/ui/drawer"
 import Logo from "@/components/ui/logo"
@@ -17,7 +17,7 @@ type MarketingDrawerProps = {
 export function MarketingDrawer({
 	onNavigate
 }: Readonly<MarketingDrawerProps>) {
-	const { account, footer, nav } = marketingCopy
+	const { account, footer, nav, privacy } = marketingCopy
 
 	return (
 		<div className="flex min-h-full w-72 max-w-[85vw] flex-col bg-base-100 p-4 text-base-content">
@@ -30,14 +30,31 @@ export function MarketingDrawer({
 					<X className="size-5" />
 				</DrawerTrigger>
 			</div>
+
 			<ul className="menu w-full grow menu-lg px-0">
-				{nav.map(({ title, url }) => (
-					<li key={url}>
-						<SectionLink href={url} onClick={onNavigate}>
-							{title}
-						</SectionLink>
-					</li>
-				))}
+				<li>
+					<h2 className="menu-title">Keynest</h2>
+					<ul>
+						{nav.map(({ title, url }) => (
+							<li key={url}>
+								<SectionLink href={url} onClick={onNavigate}>
+									{title}
+								</SectionLink>
+							</li>
+						))}
+					</ul>
+
+					<h2 className="menu-title">Privacy & Policy</h2>
+					<ul>
+						{privacy.map(({ title, url }) => (
+							<li key={url}>
+								<NavLink to={url} discover="render" end>
+									{title}
+								</NavLink>
+							</li>
+						))}
+					</ul>
+				</li>
 			</ul>
 			<div className="flex flex-col gap-2">
 				<Link
