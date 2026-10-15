@@ -1,4 +1,5 @@
-import { SignupSchema } from "@keynest/shared"
+import { SignupFormSchema } from "@keynest/shared"
+import { createAccountSecrets, message, wipe } from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react"
 import { useState } from "react"
@@ -6,9 +7,10 @@ import { useNavigate } from "react-router"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
+import RecoveryKit from "@/components/auth/recovery-kit"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
-import { installVaultKey, lockVault } from "@/lib/vault/vault-session"
+import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import { signupAsync } from "@/store/auth/extra-reducers"
 
@@ -19,6 +21,8 @@ export function Component() {
 
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
+	const [recoveryPhrase, setRecoveryPhrase] = useState<string | null>(null)
+	const [awaitingEmail, setAwaitingEmail] = useState(false)
 
 	const form = useForm({
 		defaultValues: {
@@ -30,25 +34,58 @@ export function Component() {
 			setServerError(null)
 
 			try {
-				const session = await dispatch(signupAsync(value)).unwrap()
+				const created = await createAccountSecrets(value.password)
 				try {
-					const key = await installVaultKey(value.password, session.vaultSalt)
-					if (!key) lockVault()
-				} catch {
+					const session = await dispatch(
+						signupAsync({
+							email: value.email,
+							name: value.name,
+							...created.secrets
+						})
+					).unwrap()
+					if (!("sessionExpiresAt" in session)) {
+						wipe(created.masterKey)
+						lockVault()
+						setAwaitingEmail(true)
+						setRecoveryPhrase(created.recoveryPhrase)
+						return
+					}
+					try {
+						const key = await installMasterKey(created.masterKey, session)
+						if (!key) lockVault()
+					} catch {
+						lockVault()
+					}
+					setRecoveryPhrase(created.recoveryPhrase)
+				} catch (error) {
+					wipe(created.masterKey)
 					lockVault()
+					setServerError(typeof error === "string" ? error : message(error))
 				}
-
-				navigate("/dashboard", { replace: true })
 			} catch (error) {
-				setServerError(
-					typeof error === "string" ? error : "Something went wrong"
-				)
+				setServerError(message(error))
 			}
 		},
 		validators: {
-			onSubmit: SignupSchema
+			onSubmit: SignupFormSchema
 		}
 	})
+
+	if (recoveryPhrase) {
+		return (
+			<RecoveryKit
+				note={
+					awaitingEmail
+						? "If this email is new, save the code and open the confirmation link before signing in. If you already have an account, ignore the code and sign in."
+						: undefined
+				}
+				onContinue={() =>
+					navigate(awaitingEmail ? "/login" : "/dashboard", { replace: true })
+				}
+				phrase={recoveryPhrase}
+			/>
+		)
+	}
 
 	return (
 		<AuthFormWrapper authCopyKey="signup" serverError={serverError}>
@@ -94,7 +131,7 @@ export function Component() {
 							label="Password"
 							type={showPassword ? "text" : "password"}
 							autoComplete={copy.passwordAutoComplete}
-							placeholder="Password"
+							placeholder="At least 12 characters"
 							trailing={
 								<button
 									type="button"

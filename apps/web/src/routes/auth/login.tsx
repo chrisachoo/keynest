@@ -1,16 +1,24 @@
-import { LoginSchema } from "@keynest/shared"
+import { LoginFormSchema } from "@keynest/shared"
+import { loginSecrets, message, wipe } from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
-import { useState } from "react"
-import { useNavigate } from "react-router"
+import { useRef, useState, type FormEvent } from "react"
+import { Link, useNavigate } from "react-router"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
 import { Button } from "@/components/ui/button"
+import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { authCopy } from "@/constants"
-import { installVaultKey, lockVault } from "@/lib/vault/vault-session"
+import { fetchPrelogin } from "@/lib/auth-api"
+import { client } from "@/lib/client"
+import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
-import { loginAsync } from "@/store/auth/extra-reducers"
+import {
+	confirmTotpAsync,
+	loginAsync,
+	logoutAsync
+} from "@/store/auth/extra-reducers"
 
 export function Component() {
 	const navigate = useNavigate()
@@ -19,6 +27,19 @@ export function Component() {
 
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
+	const [ticket, setTicket] = useState<string | null>(null)
+	const [code, setCode] = useState("")
+	const [confirming, setConfirming] = useState(false)
+	const pendingKey = useRef<Uint8Array | null>(null)
+
+	async function finishLogin(
+		masterKey: Uint8Array,
+		session: Parameters<typeof installMasterKey>[1]
+	) {
+		const key = await installMasterKey(masterKey, session)
+		if (!key) throw new Error("Could not unlock the vault.")
+		await navigate("/dashboard", { replace: true })
+	}
 
 	const form = useForm({
 		defaultValues: {
@@ -29,24 +50,98 @@ export function Component() {
 			setServerError(null)
 
 			try {
-				const session = await dispatch(loginAsync(value)).unwrap()
+				const prelogin = await fetchPrelogin(value.email)
+				const secrets = await loginSecrets(value.password, prelogin)
+				let signedIn = false
+
 				try {
-					const key = await installVaultKey(value.password, session.vaultSalt)
-					if (!key) lockVault()
-				} catch {
+					const session = await dispatch(
+						loginAsync({ email: value.email, verifier: secrets.verifier })
+					).unwrap()
+					if ("totpRequired" in session) {
+						pendingKey.current = secrets.masterKey
+						setTicket(session.ticket)
+						return
+					}
+					signedIn = true
+					await finishLogin(secrets.masterKey, session)
+				} catch (error) {
+					wipe(secrets.masterKey)
 					lockVault()
+					if (signedIn) await dispatch(logoutAsync())
+					setServerError(
+						signedIn
+							? "Could not unlock the vault."
+							: typeof error === "string"
+								? error
+								: message(error)
+					)
 				}
-				navigate("/dashboard", { replace: true })
 			} catch (error) {
-				setServerError(
-					typeof error === "string" ? error : "Something went wrong"
-				)
+				setServerError(message(error))
 			}
 		},
 		validators: {
-			onSubmit: LoginSchema
+			onSubmit: LoginFormSchema
 		}
 	})
+
+	async function submitCode(event: FormEvent) {
+		event.preventDefault()
+		const masterKey = pendingKey.current
+		if (!ticket || !masterKey) return
+		setServerError(null)
+		setConfirming(true)
+		let signedIn = false
+		try {
+			const session = await dispatch(
+				confirmTotpAsync({ code, ticket })
+			).unwrap()
+			signedIn = true
+			pendingKey.current = null
+			await finishLogin(masterKey, session)
+		} catch (error) {
+			const text = typeof error === "string" ? error : message(error)
+			if (!signedIn && text === "Incorrect authentication code") {
+				setServerError(text)
+				return
+			}
+			wipe(masterKey)
+			pendingKey.current = null
+			lockVault()
+			if (signedIn) await dispatch(logoutAsync())
+			setTicket(null)
+			setServerError(signedIn ? "Could not unlock the vault." : text)
+		} finally {
+			setConfirming(false)
+		}
+	}
+
+	if (ticket) {
+		return (
+			<AuthFormWrapper authCopyKey="login" serverError={serverError}>
+				<form
+					className="space-y-4"
+					onSubmit={(event) => void submitCode(event)}
+				>
+					<Fieldset className="p-0">
+						<Legend>Authentication code</Legend>
+						<Input
+							autoComplete="one-time-code"
+							inputMode="text"
+							onChange={(event) => setCode(event.target.value)}
+							placeholder="123456 or recovery code"
+							required
+							value={code}
+						/>
+					</Fieldset>
+					<Button className="w-full" disabled={confirming} type="submit">
+						{confirming ? "Checking..." : "Continue"}
+					</Button>
+				</form>
+			</AuthFormWrapper>
+		)
+	}
 
 	return (
 		<AuthFormWrapper authCopyKey="login" serverError={serverError}>
@@ -99,16 +194,29 @@ export function Component() {
 					)}
 				</form.Field>
 
+				{serverError?.includes("Confirm your email") ? (
+					<Button
+						className="h-auto px-0 text-xs"
+						onClick={() => {
+							const email = form.getFieldValue("email")
+							void client.auth.verification.$post({ json: { email } })
+							setServerError(
+								"If an account is waiting, a new link is on its way."
+							)
+						}}
+						size="sm"
+						type="button"
+						variant="link"
+					>
+						Resend confirmation
+					</Button>
+				) : null}
+
 				{copy.showForgotPassword && (
 					<div className="flex justify-end">
-						<Button
-							type="button"
-							variant="link"
-							size="sm"
-							className="h-auto px-0 text-xs"
-						>
+						<Link className="link text-xs link-primary" to="/recover">
 							Forgot password?
-						</Button>
+						</Link>
 					</div>
 				)}
 
