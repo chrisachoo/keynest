@@ -15,6 +15,21 @@ export const user = sqliteTable("user", {
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
 	vaultSalt: text("vault_salt"),
+	kdfMemory: integer("kdf_memory"),
+	kdfIterations: integer("kdf_iterations"),
+	kdfParallelism: integer("kdf_parallelism"),
+	wrappedKey: text("wrapped_key"),
+	wrappedKeyNonce: text("wrapped_key_nonce"),
+	keyCheck: text("key_check"),
+	keyCheckNonce: text("key_check_nonce"),
+	recoveryWrappedKey: text("recovery_wrapped_key"),
+	recoveryWrappedKeyNonce: text("recovery_wrapped_key_nonce"),
+	recoverySalt: text("recovery_salt"),
+	recoveryVerifier: text("recovery_verifier"),
+	totpSecret: text("totp_secret"),
+	totpEnabled: integer("totp_enabled", { mode: "boolean" })
+		.default(false)
+		.notNull(),
 	emailVerified: integer("email_verified", { mode: "boolean" })
 		.default(false)
 		.notNull(),
@@ -108,5 +123,26 @@ export const verification = sqliteTable(
 			.$onUpdate(() => /* @__PURE__ */ new Date())
 			.notNull()
 	},
-	(table) => [index("verification_identifier_idx").on(table.identifier)]
+	(table) => [
+		index("verification_identifier_idx").on(table.identifier),
+		uniqueIndex("verification_value_idx").on(table.value)
+	]
+)
+
+export const recoveryCode = sqliteTable(
+	"recovery_code",
+	{
+		id: text("id")
+			.primaryKey()
+			.$defaultFn(() => createId()),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		codeHash: text("code_hash").notNull(),
+		usedAt: integer("used_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [index("recovery_code_userId_idx").on(table.userId)]
 )
