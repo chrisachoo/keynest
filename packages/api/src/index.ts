@@ -22,6 +22,21 @@ api.use("*", withDb)
 api.route("/health", healthRoutes)
 api.route("/v1", v1)
 
+function localDocs(url: string) {
+	const host = new URL(url).hostname
+	return host === "localhost" || host === "127.0.0.1"
+}
+
+api.use("/openapi.json", async (c, next) => {
+	if (!localDocs(c.req.url)) return c.json({ message: "Not found" }, 404)
+	await next()
+})
+
+api.use("/docs", async (c, next) => {
+	if (!localDocs(c.req.url)) return c.json({ message: "Not found" }, 404)
+	await next()
+})
+
 api.get(
 	"/openapi.json",
 	openAPIRouteHandler(v1, {

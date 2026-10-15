@@ -6,6 +6,8 @@ export type ApiEnv = {
 		COOKIE_SECRET: string
 		CORS_ORIGIN: string
 		DB: D1Database
+		EMAIL_FROM?: string
+		RESEND_API_KEY?: string
 	}
 	Variables: {
 		db: Database

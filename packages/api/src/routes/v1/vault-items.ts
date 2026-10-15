@@ -1,23 +1,33 @@
-import { and, eq, vaultItem as vaultItemTable } from "@keynest/db"
+import { and, desc, eq, lt, or, vaultItem as vaultItemTable } from "@keynest/db"
 import {
 	CreateVaultItemSchema,
-	listVaultItemsQuery,
-	updateVaultItem,
-	vaultItemIdParam,
+	UpdateVaultItemSchema,
+	VAULT_PAGE_SIZE,
+	VaultItemIdParamSchema,
 	VaultItemListSchema,
+	VaultItemQuerySchema,
 	VaultItemSchema
 } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute, validator } from "hono-openapi"
 
 import type { ApiEnv } from "../../env"
-import { internalError, notFound } from "../../lib/http"
+import { conflict, internalError, notFound } from "../../lib/http"
 import {
 	jsonContent,
 	NOT_FOUND_RESPONSE,
 	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
+
+function decodeCursor(cursor: string) {
+	const split = cursor.lastIndexOf("_")
+	if (split <= 0) return null
+	const createdAt = new Date(Number(cursor.slice(0, split)))
+	const id = cursor.slice(split + 1)
+	if (Number.isNaN(createdAt.getTime()) || !id) return null
+	return { createdAt, id }
+}
 
 function toVaultItem(row: typeof vaultItemTable.$inferSelect) {
 	return {
@@ -47,25 +57,49 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			summary: "List vault items",
 			tags: ["Vault items"]
 		}),
-		validator("query", listVaultItemsQuery),
+		validator("query", VaultItemQuerySchema),
 		async (c) => {
 			const user = getAuthUser(c)
 			const query = c.req.valid("query")
 			const db = c.get("db")
+			const limit = Math.min(
+				query.limit ? Number(query.limit) : VAULT_PAGE_SIZE,
+				100
+			)
+			const cursor = query.cursor ? decodeCursor(query.cursor) : null
 
-			const items = await db
+			const filters = [eq(vaultItemTable.userId, user.id)]
+			if (query.type) filters.push(eq(vaultItemTable.type, query.type))
+			if (cursor) {
+				filters.push(
+					or(
+						lt(vaultItemTable.createdAt, cursor.createdAt),
+						and(
+							eq(vaultItemTable.createdAt, cursor.createdAt),
+							lt(vaultItemTable.id, cursor.id)
+						)
+					)!
+				)
+			}
+
+			const rows = await db
 				.select()
 				.from(vaultItemTable)
-				.where(
-					query.type
-						? and(
-								eq(vaultItemTable.userId, user.id),
-								eq(vaultItemTable.type, query.type)
-							)
-						: eq(vaultItemTable.userId, user.id)
-				)
+				.where(and(...filters))
+				.orderBy(desc(vaultItemTable.createdAt), desc(vaultItemTable.id))
+				.limit(limit + 1)
 
-			return c.json({ items: items.map(toVaultItem) })
+			const page = rows.slice(0, limit)
+			const last = page.at(-1)
+			const nextCursor =
+				rows.length > limit && last
+					? `${last.createdAt.getTime()}_${last.id}`
+					: null
+
+			return c.json({
+				items: page.map(toVaultItem),
+				nextCursor
+			})
 		}
 	)
 	.post(
@@ -87,21 +121,29 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			const input = c.req.valid("json")
 			const db = c.get("db")
 
-			const [created] = await db
-				.insert(vaultItemTable)
-				.values({
-					ciphertext: input.ciphertext,
-					favorite: input.favorite,
-					id: input.id,
-					nonce: input.nonce,
-					type: input.type,
-					userId: user.id
-				})
-				.returning()
+			try {
+				const [created] = await db
+					.insert(vaultItemTable)
+					.values({
+						ciphertext: input.ciphertext,
+						favorite: input.favorite,
+						id: input.id,
+						nonce: input.nonce,
+						type: input.type,
+						userId: user.id
+					})
+					.returning()
 
-			if (!created) throw internalError("Failed to create vault item")
-
-			return c.json(toVaultItem(created), 201)
+				if (!created) throw internalError("Failed to create vault item")
+				return c.json(toVaultItem(created), 201)
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					error.message.includes("UNIQUE constraint failed")
+				)
+					throw conflict("Vault item already exists")
+				throw error
+			}
 		}
 	)
 	.get(
@@ -117,7 +159,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			summary: "Get vault item",
 			tags: ["Vault items"]
 		}),
-		validator("param", vaultItemIdParam),
+		validator("param", VaultItemIdParamSchema),
 		async (c) => {
 			const user = getAuthUser(c)
 			const { id } = c.req.valid("param")
@@ -150,8 +192,8 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			summary: "Update vault item",
 			tags: ["Vault items"]
 		}),
-		validator("param", vaultItemIdParam),
-		validator("json", updateVaultItem),
+		validator("param", VaultItemIdParamSchema),
+		validator("json", UpdateVaultItemSchema),
 		async (c) => {
 			const user = getAuthUser(c)
 			const { id } = c.req.valid("param")
@@ -188,7 +230,7 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			summary: "Delete vault item",
 			tags: ["Vault items"]
 		}),
-		validator("param", vaultItemIdParam),
+		validator("param", VaultItemIdParamSchema),
 		async (c) => {
 			const user = getAuthUser(c)
 			const { id } = c.req.valid("param")

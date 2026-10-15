@@ -1,50 +1,141 @@
-import { and, eq, isNull, user, type Database } from "@keynest/db"
-import { SALT_BYTES, type AuthSession } from "@keynest/shared"
+import { createHmac } from "node:crypto"
 
-import { internalError } from "./http"
+import { account, and, eq, user, type Database } from "@keynest/db"
+import {
+	CREDENTIAL_PROVIDER,
+	KDF_ITERATIONS,
+	KDF_MEMORY_KIB,
+	KDF_PARALLELISM,
+	type AuthSession,
+	type PreloginResult
+} from "@keynest/shared"
 
 type UserRow = typeof user.$inferSelect
-type UserWithSalt = UserRow & { vaultSalt: string }
 
-export function createVaultSalt() {
-	return Buffer.from(
-		crypto.getRandomValues(new Uint8Array(SALT_BYTES))
-	).toString("base64url")
+export type VaultUser = UserRow & {
+	kdfIterations: number
+	kdfMemory: number
+	kdfParallelism: number
+	keyCheck: string
+	keyCheckNonce: string
+	vaultSalt: string
+	wrappedKey: string
+	wrappedKeyNonce: string
 }
 
-export async function ensureVaultSalt(
-	db: Database,
-	row: UserRow
-): Promise<UserWithSalt> {
-	if (row.vaultSalt) return { ...row, vaultSalt: row.vaultSalt }
+export function readVaultUser(row: UserRow): VaultUser | null {
+	if (
+		row.kdfIterations === null ||
+		row.kdfMemory === null ||
+		row.kdfParallelism === null ||
+		!row.keyCheck ||
+		!row.keyCheckNonce ||
+		!row.vaultSalt ||
+		!row.wrappedKey ||
+		!row.wrappedKeyNonce
+	) {
+		return null
+	}
 
-	const vaultSalt = createVaultSalt()
-	const [updated] = await db
-		.update(user)
-		.set({ vaultSalt })
-		.where(and(eq(user.id, row.id), isNull(user.vaultSalt)))
-		.returning()
-
-	if (updated?.vaultSalt) return { ...updated, vaultSalt: updated.vaultSalt }
-
-	const [current] = await db
-		.select()
-		.from(user)
-		.where(eq(user.id, row.id))
-		.limit(1)
-
-	if (!current?.vaultSalt) throw internalError("Failed to store vault salt")
-	return { ...current, vaultSalt: current.vaultSalt }
+	return {
+		...row,
+		kdfIterations: row.kdfIterations,
+		kdfMemory: row.kdfMemory,
+		kdfParallelism: row.kdfParallelism,
+		keyCheck: row.keyCheck,
+		keyCheckNonce: row.keyCheckNonce,
+		vaultSalt: row.vaultSalt,
+		wrappedKey: row.wrappedKey,
+		wrappedKeyNonce: row.wrappedKeyNonce
+	}
 }
 
-export function toAuthSession(row: UserWithSalt, expiresAt: Date): AuthSession {
+export function readPrelogin(row: UserRow): PreloginResult | null {
+	const vault = readVaultUser(row)
+	if (
+		!vault ||
+		!row.recoverySalt ||
+		!row.recoveryWrappedKey ||
+		!row.recoveryWrappedKeyNonce
+	) {
+		return null
+	}
+
+	return {
+		kdfIterations: vault.kdfIterations,
+		kdfMemory: vault.kdfMemory,
+		kdfParallelism: vault.kdfParallelism,
+		recoverySalt: row.recoverySalt,
+		recoveryWrappedKey: row.recoveryWrappedKey,
+		recoveryWrappedKeyNonce: row.recoveryWrappedKeyNonce,
+		vaultSalt: vault.vaultSalt
+	}
+}
+
+export function toAuthSession(row: VaultUser, expiresAt: Date): AuthSession {
 	return {
 		email: row.email,
 		emailVerified: row.emailVerified,
 		id: row.id,
 		image: row.image,
+		kdfIterations: row.kdfIterations,
+		kdfMemory: row.kdfMemory,
+		kdfParallelism: row.kdfParallelism,
+		keyCheck: row.keyCheck,
+		keyCheckNonce: row.keyCheckNonce,
 		name: row.name,
 		sessionExpiresAt: expiresAt.toISOString(),
-		vaultSalt: row.vaultSalt
+		totpEnabled: row.totpEnabled,
+		vaultSalt: row.vaultSalt,
+		wrappedKey: row.wrappedKey,
+		wrappedKeyNonce: row.wrappedKeyNonce
 	}
+}
+
+export function placeholderPrelogin(
+	secret: string,
+	email: string
+): PreloginResult {
+	return {
+		kdfIterations: KDF_ITERATIONS,
+		kdfMemory: KDF_MEMORY_KIB,
+		kdfParallelism: KDF_PARALLELISM,
+		recoverySalt: digest(secret, `recovery-salt:${email}`, 16, "base64url"),
+		recoveryWrappedKey: digest(secret, `recovery-key:${email}`, 32, "base64"),
+		recoveryWrappedKeyNonce: digest(
+			secret,
+			`recovery-nonce:${email}`,
+			12,
+			"base64"
+		),
+		vaultSalt: digest(secret, `vault-salt:${email}`, 16, "base64url")
+	}
+}
+
+export async function storedVerifier(db: Database, userId: string) {
+	const [row] = await db
+		.select({ password: account.password })
+		.from(account)
+		.where(
+			and(
+				eq(account.userId, userId),
+				eq(account.providerId, CREDENTIAL_PROVIDER)
+			)
+		)
+		.limit(1)
+
+	return row?.password ?? null
+}
+
+function digest(
+	secret: string,
+	label: string,
+	size: number,
+	encoding: "base64" | "base64url"
+) {
+	const bytes = createHmac("sha256", secret)
+		.update(label)
+		.digest()
+		.subarray(0, size)
+	return Buffer.from(bytes).toString(encoding)
 }

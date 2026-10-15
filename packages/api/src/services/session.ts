@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto"
 
-import { eq, session, user, type Database } from "@keynest/db"
+import { and, eq, ne, session, user, type Database } from "@keynest/db"
 import { SESSION_TTL_SECONDS, type AuthSession } from "@keynest/shared"
 
-import { ensureVaultSalt, toAuthSession } from "../lib/user"
+import { readVaultUser, toAuthSession } from "../lib/user"
 
 export type SessionClient = {
 	ipAddress: string | null
@@ -55,7 +55,12 @@ export async function findSession(
 		return null
 	}
 
-	const stored = await ensureVaultSalt(db, row.user)
+	const stored = readVaultUser(row.user)
+	if (!stored) {
+		await db.delete(session).where(eq(session.id, row.session.id))
+		return null
+	}
+
 	return {
 		sessionId: row.session.id,
 		user: toAuthSession(stored, row.session.expiresAt)
@@ -67,4 +72,35 @@ export async function destroySession(
 	sessionId: string
 ): Promise<void> {
 	await db.delete(session).where(eq(session.id, sessionId))
+}
+
+export async function destroyUserSessions(
+	db: Database,
+	userId: string,
+	exceptId?: string
+): Promise<void> {
+	await db
+		.delete(session)
+		.where(
+			exceptId
+				? and(eq(session.userId, userId), ne(session.id, exceptId))
+				: eq(session.userId, userId)
+		)
+}
+
+export async function listSessions(
+	db: Database,
+	userId: string,
+	currentId: string | null
+) {
+	const rows = await db.select().from(session).where(eq(session.userId, userId))
+
+	return rows.map((row) => ({
+		createdAt: row.createdAt.toISOString(),
+		current: row.id === currentId,
+		expiresAt: row.expiresAt.toISOString(),
+		id: row.id,
+		ipAddress: row.ipAddress,
+		userAgent: row.userAgent
+	}))
 }
