@@ -21,6 +21,22 @@ export const routes = [
 		}
 	},
 	{
+		path: "/privacy",
+		HydrateFallback,
+		lazy: async () => {
+			const { Component } = await import("./routes/privacy")
+			return { Component }
+		}
+	},
+	{
+		path: "/verify-email",
+		HydrateFallback,
+		lazy: async () => {
+			const { Component } = await import("./routes/auth/verify-email")
+			return { Component }
+		}
+	},
+	{
 		path: "/",
 		HydrateFallback,
 		ErrorBoundary,
@@ -34,6 +50,14 @@ export const routes = [
 				HydrateFallback,
 				lazy: async () => {
 					const { Component } = await import("./routes/auth/login")
+					return { Component }
+				}
+			},
+			{
+				path: "recover",
+				HydrateFallback,
+				lazy: async () => {
+					const { Component } = await import("./routes/auth/recover")
 					return { Component }
 				}
 			},

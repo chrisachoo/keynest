@@ -18,6 +18,9 @@ export default function SiteFooter() {
 				<Link to={account.signIn.to} className="link link-hover">
 					{account.signIn.title}
 				</Link>
+				<Link to="/privacy" className="link link-hover">
+					Privacy
+				</Link>
 			</nav>
 			<aside>
 				<p className="text-sm text-base-content/60">{footer.copyright}</p>
