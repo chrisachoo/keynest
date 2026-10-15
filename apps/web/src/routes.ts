@@ -121,6 +121,14 @@ export const routes = [
 				}
 			},
 			{
+				path: "account",
+				HydrateFallback,
+				lazy: async () => {
+					const { Component } = await import("./routes/dashboard/account")
+					return { Component }
+				}
+			},
+			{
 				path: "settings",
 				HydrateFallback,
 				lazy: async () => {

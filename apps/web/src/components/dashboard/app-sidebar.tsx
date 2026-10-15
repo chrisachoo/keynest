@@ -7,6 +7,7 @@ import {
 	Star,
 	StickyNote,
 	UserKey,
+	UserRound,
 	WandSparkles,
 	type LucideIcon
 } from "lucide-react"
@@ -30,7 +31,10 @@ const itemsMenu = {
 			icon: WandSparkles,
 			label: "Password generator",
 			to: "/dashboard/password"
-		},
+		}
+	],
+	"your-account": [
+		{ icon: UserRound, label: "Account", to: "/dashboard/account" },
 		{ icon: Settings, label: "Settings", to: "/dashboard/settings" }
 	]
 } as const
@@ -97,6 +101,15 @@ export default function AppSidebar() {
 				</li>
 
 				<li>
+					<h2 className="menu-title uppercase">your account</h2>
+					<ul>
+						{itemsMenu["your-account"].map((item) => (
+							<MenuLink key={item.label} {...item} />
+						))}
+					</ul>
+				</li>
+
+				<li>
 					<h2 className="menu-title uppercase">your activity</h2>
 					<ul>
 						{itemsMenu["your-activity"].map((item) => (
@@ -130,6 +143,20 @@ export default function AppSidebar() {
 					popover="auto"
 					style={{ positionAnchor: "--anchor-1" }}
 				>
+					<li>
+						<Link
+							className={
+								location.pathname === "/dashboard/account"
+									? "active"
+									: undefined
+							}
+							to="/dashboard/account"
+						>
+							<UserRound className="size-4" />
+							<span className="min-w-0 flex-1 truncate">Account</span>
+						</Link>
+					</li>
+
 					<li>
 						<Link
 							className={
