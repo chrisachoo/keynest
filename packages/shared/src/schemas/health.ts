@@ -1,11 +1,11 @@
 import * as v from "valibot"
 
-import { isoDateTime } from "./common"
+import { IsoDateTimeSchema } from "./common"
 
-export const healthResponse = v.object({
+export const HealthResponseSchema = v.object({
 	message: v.string(),
 	ok: v.boolean(),
-	timestamp: isoDateTime
+	timestamp: IsoDateTimeSchema
 })
 
 export function disconnected<TSchema extends v.GenericSchema>(
@@ -19,4 +19,4 @@ export function disconnected<TSchema extends v.GenericSchema>(
 	})
 }
 
-export type HealthResponse = v.InferOutput<typeof healthResponse>
+export type HealthResponse = v.InferOutput<typeof HealthResponseSchema>
