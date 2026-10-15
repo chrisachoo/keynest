@@ -1,5 +1,5 @@
 import { client, onUnauthorized } from "@/lib/client"
-import { lockVault } from "@/lib/vault/vault-session"
+import { lockVault } from "@/lib/vault-session"
 import { router } from "@/routes"
 import { store } from "@/store"
 import {

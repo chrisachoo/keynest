@@ -1,14 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 type UseClipboardOptions = {
+	clear?: boolean
 	timeout?: number
 }
 
-export function useClipboard({ timeout = 2000 }: UseClipboardOptions = {}) {
+export function useClipboard({
+	clear = false,
+	timeout = 2000
+}: UseClipboardOptions = {}) {
 	const [copied, setCopied] = useState(false)
 	const [error, setError] = useState<Error | null>(null)
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const requestRef = useRef(0)
+	const pendingClear = useRef(false)
+
+	const clearClipboard = useCallback(() => {
+		if (!pendingClear.current) return
+		pendingClear.current = false
+		navigator.clipboard.writeText("").catch(() => undefined)
+	}, [])
 
 	const clearTimer = useCallback(() => {
 		if (timeoutRef.current === null) return
@@ -16,7 +27,13 @@ export function useClipboard({ timeout = 2000 }: UseClipboardOptions = {}) {
 		timeoutRef.current = null
 	}, [])
 
-	useEffect(() => clearTimer, [clearTimer])
+	useEffect(
+		() => () => {
+			clearTimer()
+			clearClipboard()
+		},
+		[clearClipboard, clearTimer]
+	)
 
 	const reset = useCallback(() => {
 		requestRef.current += 1
@@ -35,10 +52,12 @@ export function useClipboard({ timeout = 2000 }: UseClipboardOptions = {}) {
 
 				setError(null)
 				setCopied(true)
+				pendingClear.current = clear
 				clearTimer()
 				timeoutRef.current = setTimeout(() => {
 					if (requestId !== requestRef.current) return
 					setCopied(false)
+					clearClipboard()
 				}, timeout)
 			} catch (cause) {
 				if (requestId !== requestRef.current) return
@@ -48,7 +67,7 @@ export function useClipboard({ timeout = 2000 }: UseClipboardOptions = {}) {
 				setError(cause instanceof Error ? cause : new Error("Failed to copy"))
 			}
 		},
-		[clearTimer, timeout]
+		[clear, clearClipboard, clearTimer, timeout]
 	)
 
 	return { copied, error, copy, reset }
