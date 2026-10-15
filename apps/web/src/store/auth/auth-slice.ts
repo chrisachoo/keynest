@@ -2,9 +2,13 @@ import type { AuthSession } from "@keynest/shared"
 import { createSlice } from "@reduxjs/toolkit"
 
 import {
+	changePasswordAsync,
+	confirmTotpAsync,
+	deleteAccountAsync,
 	fetchMeAsync,
 	loginAsync,
 	logoutAsync,
+	recoverAsync,
 	signupAsync
 } from "@/store/auth/extra-reducers"
 import type { AuthState } from "@/types"
@@ -48,10 +52,26 @@ const authSlice = createSlice({
 				state.user = null
 			})
 			.addCase(loginAsync.fulfilled, (state, action) => {
+				if ("totpRequired" in action.payload) return
+				applySession(state, action.payload)
+			})
+			.addCase(confirmTotpAsync.fulfilled, (state, action) => {
 				applySession(state, action.payload)
 			})
 			.addCase(signupAsync.fulfilled, (state, action) => {
+				if (!("sessionExpiresAt" in action.payload)) return
 				applySession(state, action.payload)
+			})
+			.addCase(changePasswordAsync.fulfilled, (state, action) => {
+				applySession(state, action.payload)
+			})
+			.addCase(recoverAsync.fulfilled, (state, action) => {
+				applySession(state, action.payload)
+			})
+			.addCase(deleteAccountAsync.fulfilled, (state) => {
+				state.sessionExpiresAt = null
+				state.user = null
+				state.initialized = false
 			})
 			.addCase(logoutAsync.fulfilled, (state) => {
 				state.sessionExpiresAt = null
