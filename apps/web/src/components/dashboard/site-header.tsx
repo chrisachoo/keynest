@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
 import ToggleTheme from "@/components/ui/toggle-theme"
-import { useVault } from "@/lib/vault/vault"
+import { useVault } from "@/hooks/use-vault"
 import { useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 
