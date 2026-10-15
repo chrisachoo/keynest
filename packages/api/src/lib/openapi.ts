@@ -1,4 +1,4 @@
-import { apiError } from "@keynest/shared"
+import { ApiErrorSchema } from "@keynest/shared"
 import { resolver } from "hono-openapi"
 import type { GenericSchema } from "valibot"
 
@@ -26,26 +26,26 @@ export function jsonContent(
 }
 
 export const UNAUTHORIZED_RESPONSE: JsonContentResponse = jsonContent(
-	apiError,
+	ApiErrorSchema,
 	"Unauthorized"
 )
 
 export const INVALID_CREDENTIALS_RESPONSE: JsonContentResponse = jsonContent(
-	apiError,
+	ApiErrorSchema,
 	"Invalid email or password"
 )
 
 export const NOT_FOUND_RESPONSE: JsonContentResponse = jsonContent(
-	apiError,
+	ApiErrorSchema,
 	"Not found"
 )
 
 export const CONFLICT_RESPONSE: JsonContentResponse = jsonContent(
-	apiError,
+	ApiErrorSchema,
 	"Conflict"
 )
 
 export const INTERNAL_SERVER_ERROR: JsonContentResponse = jsonContent(
-	apiError,
+	ApiErrorSchema,
 	"Internal server error"
 )

@@ -14,12 +14,15 @@ function cookieSecret(c: Context<ApiEnv>): string {
 }
 
 function sessionCookieOptions(c: Context<ApiEnv>) {
+	const secure = new URL(c.req.url).protocol === "https:"
 	return {
 		httpOnly: true,
 		maxAge: SESSION_TTL_SECONDS,
 		path: "/",
-		sameSite: "Strict" as const,
-		secure: new URL(c.req.url).protocol === "https:"
+		// HTTPS deployments can put the site and API on different hosts.
+		// SameSite=None is only valid with Secure; local HTTP stays Lax.
+		sameSite: secure ? ("None" as const) : ("Lax" as const),
+		secure
 	}
 }
 

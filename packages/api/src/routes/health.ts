@@ -1,4 +1,4 @@
-import { healthResponse } from "@keynest/shared"
+import { HealthResponseSchema } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 
@@ -10,7 +10,7 @@ export const healthRoutes = new Hono<ApiEnv>().get(
 	describeRoute({
 		description: "Service liveness check.",
 		responses: {
-			200: jsonContent(healthResponse, "API is running")
+			200: jsonContent(HealthResponseSchema, "API is running")
 		},
 		summary: "Health check",
 		tags: ["Health"]
