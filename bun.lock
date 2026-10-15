@@ -105,6 +105,7 @@
     "packages/infra": {
       "name": "@keynest/infra",
       "devDependencies": {
+        "@cloudflare/workers-types": "catalog:",
         "@effect/platform-bun": "^4.0.0-rc.118",
         "@effect/platform-node": "^4.0.0-rc.118",
         "alchemy": "^2.0.0-beta.79",
@@ -124,6 +125,8 @@
     "packages/utils": {
       "name": "@keynest/utils",
       "dependencies": {
+        "@keynest/shared": "workspace:*",
+        "hash-wasm": "^4.12.0",
         "valibot": "catalog:",
       },
       "devDependencies": {
@@ -937,6 +940,8 @@
     "graphmatch": ["graphmatch@1.1.1", "", {}, "sha512-5ykVn/EXM1hF0XCaWh05VbYvEiOL2lY1kBxZtaYsyvjp7cmWOU1XsAdfQBwClraEofXDT197lFbXOEVMHpvQOg=="],
 
     "graphql": ["graphql@16.11.0", "", {}, "sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw=="],
+
+    "hash-wasm": ["hash-wasm@4.12.0", "", {}, "sha512-+/2B2rYLb48I/evdOIhP+K/DD2ca2fgBjp6O+GBEnCDk2e4rpeXIK8GvIyRPjTezgmWn9gmKwkQjjx6BtqDHVQ=="],
 
     "hono": ["hono@4.13.12", "", {}, "sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw=="],
 
