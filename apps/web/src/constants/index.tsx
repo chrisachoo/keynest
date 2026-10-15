@@ -164,6 +164,18 @@ export const authCopy = {
 		switchTo: "/login",
 		passwordAutoComplete: "new-password",
 		showForgotPassword: false
+	},
+	recover: {
+		title: "Recover your vault",
+		subtitle:
+			"Your recovery code unwraps the vault key. Choose a new password to wrap it again. The recovery code stays the same.",
+		submit: "Recover vault",
+		pending: "Recovering...",
+		switchPrompt: "Remembered it?",
+		switchLink: "Log in",
+		switchTo: "/login",
+		passwordAutoComplete: "new-password",
+		showForgotPassword: false
 	}
 } as const
 
