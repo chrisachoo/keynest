@@ -9,6 +9,8 @@
 		"check-types": "tsc -b"
 	},
 	"dependencies": {
+		"@keynest/shared": "workspace:*",
+		"hash-wasm": "^4.12.0",
 		"valibot": "catalog:"
 	},
 	"devDependencies": {
