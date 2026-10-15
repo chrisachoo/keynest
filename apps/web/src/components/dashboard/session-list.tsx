@@ -8,6 +8,7 @@ import { client } from "@/lib/client"
 async function loadSessions() {
 	const response = await client.sessions.$get()
 	if (!response.ok) throw new Error(await response.text())
+
 	const body = await response.json()
 
 	return body.sessions
@@ -45,11 +46,14 @@ function SessionRows({
 					Sign out other sessions
 				</Button>
 			</div>
+
 			<p className="mt-2 max-w-2xl text-sm text-base-content/70">
 				Password changes, recovery, and turning off two-factor authentication
 				also sign out the other sessions.
 			</p>
+
 			{error ? <p className="mt-3 text-sm text-error">{error}</p> : null}
+
 			<ul className="mt-4 space-y-3">
 				{sessions.map((item) => (
 					<li
@@ -93,12 +97,27 @@ function SessionRows({
 	)
 }
 
+function SessionSkeletonLoader() {
+	return (
+		<div className="flex w-full flex-col gap-4">
+			<div className="flex items-center justify-between">
+				<div className="h-10 w-full max-w-3xl skeleton"></div>
+				<div className="h-10 w-30 skeleton"></div>
+			</div>
+
+			<div className="h-6 w-full skeleton"></div>
+			<div className="h-3 w-full max-w-3xl skeleton"></div>
+			<div className="h-4 w-full max-w-3xs skeleton"></div>
+		</div>
+	)
+}
+
 export default function SessionList() {
 	const [promise] = useState(loadSessions)
 
 	return (
 		<section className="rounded-box border border-base-300 bg-base-100 p-5">
-			<Suspense fallback={<p className="text-sm">Loading sessions...</p>}>
+			<Suspense fallback={<SessionSkeletonLoader />}>
 				<SessionRows promise={promise} />
 			</Suspense>
 		</section>
