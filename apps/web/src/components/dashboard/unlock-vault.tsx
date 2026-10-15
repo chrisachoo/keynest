@@ -1,15 +1,10 @@
-import { PasswordSchema } from "@keynest/shared"
+import { UnlockInputSchema } from "@keynest/shared"
 import { useForm } from "@tanstack/react-form"
 import { useFetcher } from "react-router"
-import * as v from "valibot"
 
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
-import { DASHBOARD_ACTION, type VaultActionData } from "@/lib/vault/vault"
-
-const unlockSchema = v.object({
-	password: PasswordSchema
-})
+import { DASHBOARD_ACTION, type VaultActionData } from "@/hooks/use-vault"
 
 export default function UnlockVault() {
 	const fetcher = useFetcher<VaultActionData>()
@@ -30,7 +25,7 @@ export default function UnlockVault() {
 			)
 		},
 		validators: {
-			onSubmit: unlockSchema
+			onSubmit: UnlockInputSchema
 		}
 	})
 

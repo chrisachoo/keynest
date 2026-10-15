@@ -1,4 +1,8 @@
-import { TYPE_NAMES } from "@keynest/shared"
+import {
+	TYPE_NAMES,
+	type OpenVaultItem,
+	type VaultItemView
+} from "@keynest/shared"
 import { getInitials } from "@keynest/utils"
 import { Search, Star } from "lucide-react"
 import { useEffect, useState, type KeyboardEvent } from "react"
@@ -7,11 +11,7 @@ import { useNavigate } from "react-router"
 import { Avatar, getAvatarColor } from "@/components/ui/avatar"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { useDialog } from "@/hooks/use-dialog"
-import {
-	useVault,
-	type OpenVaultItem,
-	type VaultItemView
-} from "@/lib/vault/vault"
+import { useVault } from "@/hooks/use-vault"
 
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"

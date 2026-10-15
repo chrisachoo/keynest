@@ -14,8 +14,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { useDialog } from "@/hooks/use-dialog"
 import { usePasswordGenerator } from "@/hooks/use-password-generator"
+import { DASHBOARD_ACTION, type VaultActionData } from "@/hooks/use-vault"
 import { cn } from "@/lib/cn"
-import { DASHBOARD_ACTION, type VaultActionData } from "@/lib/vault/vault"
 
 const itemTypeLabels = {
 	login: "Login",

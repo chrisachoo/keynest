@@ -1,7 +1,7 @@
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import PasswordGenerator from "@/components/password-generator"
 import { Button } from "@/components/ui/button"
-import { useOpenComposer, useVault } from "@/lib/vault/vault"
+import { useOpenComposer, useVault } from "@/hooks/use-vault"
 
 export function Component() {
 	const vault = useVault()

@@ -1,9 +1,15 @@
 import {
-	UnlockSchema,
+	UnlockInputSchema,
 	VAULT_IDLE_MS,
+	VaultDraftSchema,
 	type VaultItemType
 } from "@keynest/shared"
-import { message } from "@keynest/utils"
+import {
+	draftPayload,
+	message,
+	openVaultRecords,
+	sealPayload
+} from "@keynest/utils"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Outlet, useFetcher, type ActionFunctionArgs } from "react-router"
 import * as v from "valibot"
@@ -15,33 +21,26 @@ import SiteHeader from "@/components/dashboard/site-header"
 import VaultSearch from "@/components/dashboard/vault-search"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { useDisclosure } from "@/hooks/use-disclosure"
-import { useVaultSearchShortcut } from "@/hooks/use-vault-search-shortcut"
-import { requireAuth } from "@/lib/guards"
 import {
 	DASHBOARD_ACTION,
-	openVaultRecords,
 	useVault,
 	type DashboardOutletContext,
 	type VaultActionData
-} from "@/lib/vault/vault"
+} from "@/hooks/use-vault"
+import { useVaultSearchShortcut } from "@/hooks/use-vault-search-shortcut"
+import { requireAuth } from "@/lib/guards"
 import {
-	confirmVaultPassword,
 	createVaultItem,
 	deleteVaultItem,
 	listVaultItems,
 	setVaultItemFavorite
-} from "@/lib/vault/vault-api"
-import {
-	draftPayload,
-	sealPayload,
-	type VaultDraft
-} from "@/lib/vault/vault-crypto"
+} from "@/lib/vault-api"
 import {
 	getVaultGeneration,
 	getVaultKey,
 	installVaultKey,
 	lockVault
-} from "@/lib/vault/vault-session"
+} from "@/lib/vault-session"
 import { store } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 
@@ -57,22 +56,18 @@ function isIntent(value: string): value is (typeof intents)[number] {
 }
 
 async function unlockVault(formData: FormData): Promise<VaultActionData> {
-	const parsed = v.safeParse(UnlockSchema, {
+	const parsed = v.safeParse(UnlockInputSchema, {
 		password: field(formData, "password")
 	})
 	if (!parsed.success)
 		return { error: "Enter your password.", intent: "unlock" }
 
+	const user = selectUser(store.getState())
+	if (!user) return { error: "Log in again.", intent: "unlock" }
+
 	const stamp = getVaultGeneration()
-	await confirmVaultPassword(parsed.output.password)
-	if (stamp !== getVaultGeneration()) return { intent: "unlock" }
-
-	const vaultSalt = selectUser(store.getState())?.vaultSalt
-	if (!vaultSalt) {
-		return { error: "This account is missing a vault salt.", intent: "unlock" }
-	}
-
-	await installVaultKey(parsed.output.password, vaultSalt)
+	const key = await installVaultKey(parsed.output.password, user)
+	if (stamp !== getVaultGeneration() || !key) return { intent: "unlock" }
 	return { intent: "unlock" }
 }
 
@@ -81,12 +76,17 @@ async function createItem(formData: FormData): Promise<VaultActionData> {
 	if (!key)
 		return { error: "Unlock the vault before saving.", intent: "create" }
 
-	const payload = draftPayload({
+	const type = field(formData, "type")
+	const parsed = v.safeParse(VaultDraftSchema, {
 		name: field(formData, "name"),
 		secret: field(formData, "secret"),
-		type: field(formData, "type"),
-		username: field(formData, "username")
-	} as VaultDraft)
+		type,
+		username: type === "secure_note" ? "" : field(formData, "username")
+	})
+	if (!parsed.success)
+		return { error: "Check the item details.", intent: "create" }
+
+	const payload = draftPayload(parsed.output)
 	const id = crypto.randomUUID()
 	const sealed = await sealPayload(key, id, payload)
 	await createVaultItem({

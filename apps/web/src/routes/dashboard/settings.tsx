@@ -2,11 +2,13 @@ import { VAULT_IDLE_MS } from "@keynest/shared"
 import { useFetcher } from "react-router"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
+import SessionList from "@/components/dashboard/session-list"
 import UnlockVault from "@/components/dashboard/unlock-vault"
+import VaultSecurity from "@/components/dashboard/vault-security"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Countdown } from "@/components/ui/countdown"
-import { DASHBOARD_ACTION, useVault } from "@/lib/vault/vault"
+import { DASHBOARD_ACTION, useVault } from "@/hooks/use-vault"
 
 const idleMinutes = VAULT_IDLE_MS / 60_000
 
@@ -30,7 +32,7 @@ export function Component() {
 
 	return (
 		<DashboardWrapper
-			description="Your password derives the key for this tab. The server stores ciphertext only."
+			description="Your password unwraps the vault key in this tab. The server stores ciphertext only."
 			title="Settings"
 		>
 			<div className="rounded-box border border-base-300 bg-base-100 p-5">
@@ -56,6 +58,8 @@ export function Component() {
 					)}
 				</div>
 			</div>
+			<SessionList />
+			<VaultSecurity />
 		</DashboardWrapper>
 	)
 }

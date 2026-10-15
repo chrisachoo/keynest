@@ -1,9 +1,9 @@
-import { isoDateTime, UserPublicSchema } from "@keynest/shared"
+import { IsoDateTimeSchema, UserPublicSchema } from "@keynest/shared"
 import * as v from "valibot"
 
 export const AuthStateSchema = v.object({
 	initialized: v.boolean("A boolean is required"),
-	sessionExpiresAt: v.nullable(isoDateTime),
+	sessionExpiresAt: v.nullable(IsoDateTimeSchema),
 	user: v.nullable(UserPublicSchema)
 })
 

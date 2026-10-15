@@ -1,4 +1,4 @@
-import type { VaultItemType } from "@keynest/shared"
+import type { VaultItemType, VaultItemView } from "@keynest/shared"
 import { Plus } from "lucide-react"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
@@ -6,11 +6,7 @@ import { ListItem, ListRow } from "@/components/dashboard/list-item"
 import UnlockVault from "@/components/dashboard/unlock-vault"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import {
-	useOpenComposer,
-	useVault,
-	type VaultItemView
-} from "@/lib/vault/vault"
+import { useOpenComposer, useVault } from "@/hooks/use-vault"
 
 export default function VaultBrowser({
 	addLabel,

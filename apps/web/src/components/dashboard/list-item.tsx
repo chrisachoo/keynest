@@ -3,7 +3,9 @@ import {
 	DRAWER_HIDE_TIMEOUT,
 	FIELD_LABELS,
 	SECRET_LABELS,
-	TYPE_NAMES
+	TYPE_NAMES,
+	type OpenVaultItem,
+	type VaultItemView
 } from "@keynest/shared"
 import { getInitials } from "@keynest/utils"
 import { Check, Copy, Eye, EyeOff, Star, Trash, X } from "lucide-react"
@@ -24,13 +26,9 @@ import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
+import { DASHBOARD_ACTION, type VaultActionData } from "@/hooks/use-vault"
 import { cn } from "@/lib/cn"
-import {
-	DASHBOARD_ACTION,
-	type OpenVaultItem,
-	type VaultActionData,
-	type VaultItemView
-} from "@/lib/vault/vault"
+import { readItemSecret } from "@/lib/vault-session"
 
 type VaultListContextValue = {
 	activeId: string | null
@@ -275,7 +273,10 @@ function RowCopyButton({ item }: Readonly<{ item: OpenVaultItem }>) {
 			aria-label={copied ? "Copied" : `Copy ${label}`}
 			onClick={(event) => {
 				event.stopPropagation()
-				void copySecret(item.id, item.secret)
+				void readItemSecret(item).then(
+					(secret) => copySecret(item.id, secret),
+					() => undefined
+				)
 			}}
 			shape="square"
 			type="button"
@@ -381,7 +382,13 @@ function ItemDrawerHeader({
 	)
 }
 
-function OpenItemFields({ item }: Readonly<{ item: OpenVaultItem }>) {
+function OpenItemFields({
+	item,
+	secret
+}: Readonly<{
+	item: OpenVaultItem
+	secret: string | null
+}>) {
 	return (
 		<div className="space-y-4">
 			{item.type === "login" ? (
@@ -397,7 +404,7 @@ function OpenItemFields({ item }: Readonly<{ item: OpenVaultItem }>) {
 					{FIELD_LABELS[item.type]}
 				</h3>
 				<p className="mt-2 rounded-box bg-base-200 p-3 font-mono text-sm break-all whitespace-pre-wrap">
-					{item.secret}
+					{secret ?? "Revealing..."}
 				</p>
 			</div>
 		</div>
@@ -505,8 +512,25 @@ function DeleteChoice({
 function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
 	const { close, copiedId, copySecret } = useVaultList()
 	const [confirming, setConfirming] = useState(false)
+	const [secret, setSecret] = useState<string | null>(null)
+	const [secretError, setSecretError] = useState<string | null>(null)
 	const deletion = useDeleteItem(item.id, close)
 	const label = SECRET_LABELS[item.type]
+
+	useEffect(() => {
+		let active = true
+		readItemSecret(item).then(
+			(value) => {
+				if (active) setSecret(value)
+			},
+			() => {
+				if (active) setSecretError("Could not reveal this item.")
+			}
+		)
+		return () => {
+			active = false
+		}
+	}, [item])
 
 	return (
 		<div className="flex h-full flex-1 flex-col gap-6 p-5">
@@ -522,12 +546,18 @@ function OpenItemDrawer({ item }: Readonly<{ item: OpenVaultItem }>) {
 				</Badge>
 				<RowFavoriteButton item={item} />
 			</div>
-			<OpenItemFields item={item} />
+			<OpenItemFields item={item} secret={secret} />
 			<div className="mt-auto flex flex-col gap-2">
+				{secretError ? (
+					<p className="text-sm text-error">{secretError}</p>
+				) : null}
 				<CopySecretButton
 					copied={copiedId === item.id}
 					label={label}
-					onCopy={() => void copySecret(item.id, item.secret)}
+					onCopy={() => {
+						if (!secret) return
+						void copySecret(item.id, secret)
+					}}
 				/>
 				{deletion.error ? (
 					<p className="text-sm text-error">{deletion.error}</p>
