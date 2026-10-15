@@ -2,9 +2,10 @@ import { VAULT_IDLE_MS } from "@keynest/shared"
 import { useFetcher } from "react-router"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
+import RoutingTabs from "@/components/dashboard/routing-tabs"
 import SessionList from "@/components/dashboard/session-list"
 import UnlockVault from "@/components/dashboard/unlock-vault"
-import VaultSecurity from "@/components/dashboard/vault-security"
+import VaultDataSettings from "@/components/dashboard/vault-settings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Countdown } from "@/components/ui/countdown"
@@ -32,12 +33,20 @@ export function Component() {
 
 	return (
 		<DashboardWrapper
-			description="Your password unwraps the vault key in this tab. The server stores ciphertext only."
+			description="Manage your active vault session, devices, and encrypted data."
 			title="Settings"
 		>
+			<RoutingTabs />
+
 			<div className="rounded-box border border-base-300 bg-base-100 p-5">
 				<div className="flex flex-wrap items-center justify-between gap-3">
-					<h2 className="font-semibold">Session</h2>
+					<div>
+						<h2 className="font-semibold">Vault session</h2>
+						<p className="mt-1 text-sm text-base-content/70">
+							Your password unwraps the vault key in this tab. The server stores
+							ciphertext only.
+						</p>
+					</div>
 					<Badge variant={locked ? "warning" : "success"}>
 						{locked ? "Locked" : "Unlocked"}
 					</Badge>
@@ -59,7 +68,7 @@ export function Component() {
 				</div>
 			</div>
 			<SessionList />
-			<VaultSecurity />
+			<VaultDataSettings />
 		</DashboardWrapper>
 	)
 }
