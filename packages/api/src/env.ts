@@ -3,6 +3,8 @@ import type { AuthSession } from "@keynest/shared"
 
 export type ApiEnv = {
 	Bindings: {
+		AUTH_ACCOUNT: RateLimit
+		AUTH_IP: RateLimit
 		COOKIE_SECRET: string
 		CORS_ORIGIN: string
 		DB: D1Database

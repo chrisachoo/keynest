@@ -24,6 +24,10 @@ export function conflict(message = "Conflict") {
 	return new HTTPException(409, { message })
 }
 
+export function tooManyRequests(message = "Too many requests") {
+	return new HTTPException(429, { message })
+}
+
 export function internalError(message = "Internal server error") {
 	return new HTTPException(500, { message })
 }

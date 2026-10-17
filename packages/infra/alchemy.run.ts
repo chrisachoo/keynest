@@ -16,6 +16,14 @@ export const server = Cloudflare.Worker("server", {
 		port: 8080
 	},
 	env: {
+		AUTH_ACCOUNT: Cloudflare.RateLimit("AUTH_ACCOUNT", {
+			namespaceId: 1002,
+			simple: { limit: 5, period: 60 }
+		}),
+		AUTH_IP: Cloudflare.RateLimit("AUTH_IP", {
+			namespaceId: 1001,
+			simple: { limit: 20, period: 60 }
+		}),
 		COOKIE_SECRET: Config.String("COOKIE_SECRET"),
 		CORS_ORIGIN: Config.String("CORS_ORIGIN"),
 		DB: db,
@@ -31,7 +39,8 @@ function securityHeaders(apiOrigin: string) {
 	const policy = [
 		"default-src 'self'",
 		"script-src 'self'",
-		"style-src 'self' 'unsafe-inline'",
+		"style-src 'self'",
+		"style-src-attr 'unsafe-inline'",
 		"img-src 'self' data:",
 		"font-src 'self'",
 		`connect-src 'self' ${apiOrigin}`,
@@ -44,7 +53,9 @@ function securityHeaders(apiOrigin: string) {
 	return [
 		"/*",
 		`  Content-Security-Policy: ${policy}`,
+		"  Cross-Origin-Opener-Policy: same-origin",
 		"  Referrer-Policy: no-referrer",
+		"  Strict-Transport-Security: max-age=15552000; includeSubDomains",
 		"  X-Content-Type-Options: nosniff",
 		"  X-Frame-Options: DENY",
 		"  Permissions-Policy: camera=(), microphone=(), geolocation=()"
@@ -59,6 +70,7 @@ export default Alchemy.Stack(
 	},
 	Effect.gen(function* () {
 		const serverWorker = yield* server
+
 		// `url.asEffect()` reads RuntimeContext, which exists only inside a
 		// running Worker. Map the output so plan/`alchemy dev` can resolve it.
 		const apiOrigin = Output.map(

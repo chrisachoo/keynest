@@ -49,3 +49,8 @@ export const INTERNAL_SERVER_ERROR: JsonContentResponse = jsonContent(
 	ApiErrorSchema,
 	"Internal server error"
 )
+
+export const TOO_MANY_REQUESTS: JsonContentResponse = jsonContent(
+	ApiErrorSchema,
+	"Too many requests"
+)

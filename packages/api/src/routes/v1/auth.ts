@@ -36,9 +36,11 @@ import {
 	INTERNAL_SERVER_ERROR,
 	INVALID_CREDENTIALS_RESPONSE,
 	jsonContent,
+	TOO_MANY_REQUESTS,
 	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
 import { hashVerifier, verifierMatches } from "../../lib/password"
+import { enforceAuthAccount, enforceAuthIp } from "../../lib/rate-limit"
 import {
 	placeholderPrelogin,
 	readPrelogin,
@@ -196,13 +198,19 @@ export const authRoutes = new Hono<ApiEnv>()
 			description:
 				"Return the KDF parameters and recovery wrap for an email. Unknown emails receive placeholder material.",
 			responses: {
-				200: jsonContent(PreloginResultSchema, "KDF parameters")
+				200: jsonContent(PreloginResultSchema, "KDF parameters"),
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", PreloginSchema),
 		async (c) => {
 			const { email } = c.req.valid("json")
+			await enforceAuthAccount(c, email)
 			const [row] = await c
 				.get("db")
 				.select()
@@ -225,13 +233,19 @@ export const authRoutes = new Hono<ApiEnv>()
 					"Accepted. When email delivery is configured, confirm the address before signing in."
 				),
 				201: jsonContent(AuthSessionSchema, "Account created"),
+				429: TOO_MANY_REQUESTS,
 				500: INTERNAL_SERVER_ERROR
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", SignupInputSchema),
 		async (c) => {
 			const input = c.req.valid("json")
+			await enforceAuthAccount(c, input.email)
 			const db = c.get("db")
 			const deliverMail = mailConfigured(c.env)
 
@@ -318,13 +332,19 @@ export const authRoutes = new Hono<ApiEnv>()
 				200: jsonContent(AuthSessionSchema, "Authenticated user"),
 				400: jsonContent(ApiErrorSchema, "Account is missing vault keys"),
 				401: INVALID_CREDENTIALS_RESPONSE,
-				403: jsonContent(ApiErrorSchema, "Email is not confirmed")
+				403: jsonContent(ApiErrorSchema, "Email is not confirmed"),
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", LoginInputSchema),
 		async (c) => {
 			const { email, verifier } = c.req.valid("json")
+			await enforceAuthAccount(c, email)
 			const db = c.get("db")
 
 			const [row] = await db
@@ -370,10 +390,15 @@ export const authRoutes = new Hono<ApiEnv>()
 			description: "Finish login with an authenticator code or recovery code.",
 			responses: {
 				200: jsonContent(AuthSessionSchema, "Authenticated user"),
-				401: INVALID_CREDENTIALS_RESPONSE
+				401: INVALID_CREDENTIALS_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", TotpConfirmLoginInputSchema),
 		async (c) => {
 			const { code, ticket } = c.req.valid("json")
@@ -462,13 +487,19 @@ export const authRoutes = new Hono<ApiEnv>()
 				"Rewrap the vault data key with a new password using the recovery verifier.",
 			responses: {
 				200: jsonContent(AuthSessionSchema, "Vault recovered"),
-				401: INVALID_CREDENTIALS_RESPONSE
+				401: INVALID_CREDENTIALS_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", RecoverInputSchema),
 		async (c) => {
 			const input = c.req.valid("json")
+			await enforceAuthAccount(c, input.email)
 			const db = c.get("db")
 			const [row] = await db
 				.select()
@@ -535,10 +566,15 @@ export const authRoutes = new Hono<ApiEnv>()
 				"Confirm a new account or finish an email change. The link signs you in.",
 			responses: {
 				200: jsonContent(AuthSessionSchema, "Email confirmed"),
-				401: INVALID_CREDENTIALS_RESPONSE
+				401: INVALID_CREDENTIALS_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", VerifyEmailSchema),
 		async (c) => {
 			const db = c.get("db")
@@ -596,13 +632,19 @@ export const authRoutes = new Hono<ApiEnv>()
 		describeRoute({
 			description: "Send another email confirmation link when one is pending.",
 			responses: {
-				200: jsonContent(AcceptedSchema, "Accepted")
+				200: jsonContent(AcceptedSchema, "Accepted"),
+				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
 		}),
+		async (c, next) => {
+			await enforceAuthIp(c)
+			await next()
+		},
 		validator("json", ResendVerificationSchema),
 		async (c) => {
 			const { email } = c.req.valid("json")
+			await enforceAuthAccount(c, email)
 			const [row] = await c
 				.get("db")
 				.select({ emailVerified: user.emailVerified, id: user.id })
