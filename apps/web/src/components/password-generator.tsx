@@ -3,8 +3,7 @@ import {
 	PASSWORD_MODES,
 	PASSWORD_SEPARATORS,
 	RANDOM_PASSWORD_LIMITS,
-	SEPARATOR_EXAMPLE_WORDS,
-	type MemorablePasswordOptions
+	SEPARATOR_EXAMPLE_WORDS
 } from "@keynest/utils"
 import { cn } from "cn"
 import { Check, Copy, Lightbulb, Shuffle, WandSparkles } from "lucide-react"
@@ -15,39 +14,88 @@ import { MEMORABLE_TOGGLES, RANDOM_TOGGLES } from "@/constants"
 import { useClipboard } from "@/hooks/use-clipboard"
 import { usePasswordGenerator } from "@/hooks/use-password-generator"
 
+export function ValueBar({
+	empty = "No password",
+	label,
+	value
+}: Readonly<{
+	empty?: string
+	label: string
+	value: string
+}>) {
+	const { copied, copy } = useClipboard({ timeout: 500 })
+
+	return (
+		<div className="flex items-center gap-2 rounded-full bg-base-200 p-1">
+			<p className="flex-1 px-4 text-center font-mono font-medium break-all">
+				{value || empty}
+			</p>
+			<Button
+				aria-label={label}
+				disabled={!value}
+				onClick={() => void copy(value)}
+				shape="square"
+				type="button"
+			>
+				{copied ? <Check className="size-5" /> : <Copy className="size-5" />}
+			</Button>
+		</div>
+	)
+}
+
+export function CheckboxField(props: {
+	checked: boolean
+	label: string
+	onChange: (checked: boolean) => void
+}) {
+	return (
+		<label className="label">
+			<input
+				checked={props.checked}
+				className="checkbox"
+				onChange={(event) => props.onChange(event.target.checked)}
+				type="checkbox"
+			/>
+			{props.label}
+		</label>
+	)
+}
+
+export function OptionField(props: {
+	legend: string
+	onChange: (value: string) => void
+	options: ReadonlyArray<{ label: string; value: string }>
+	value: string
+}) {
+	return (
+		<fieldset className="fieldset">
+			<legend className="fieldset-legend pt-0">{props.legend}</legend>
+			<select
+				className="select w-full font-mono"
+				onChange={(event) => props.onChange(event.target.value)}
+				value={props.value}
+			>
+				{props.options.map((option) => (
+					<option key={option.value} value={option.value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+		</fieldset>
+	)
+}
+
 function PasswordPreview(
 	props: Readonly<ReturnType<typeof usePasswordGenerator>>
 ) {
-	const { copied: hasCopied, copy: copyToClipboard } = useClipboard({
-		timeout: 500
-	})
-
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center gap-2 rounded-full bg-base-200 p-1">
-				<p className="flex-1 px-4 text-center font-mono font-medium break-all">
-					{props.password || "No password"}
-				</p>
-				<Button
-					type="button"
-					shape="square"
-					aria-label="Copy password"
-					disabled={!props.password}
-					onClick={() => copyToClipboard(props.password)}
-				>
-					{hasCopied ? (
-						<Check className="size-5" />
-					) : (
-						<Copy className="size-5" />
-					)}
-				</Button>
-			</div>
-
+			<ValueBar label="Copy password" value={props.password} />
 			<div className="flex items-center gap-4">
 				<progress
 					className={cn("progress w-full", props.meter)}
-					value={props.value}
 					max="100"
+					value={props.value}
 				/>
 				<p className={cn("w-24 font-bold capitalize", props.text)}>
 					{props.strength}
@@ -57,98 +105,29 @@ function PasswordPreview(
 	)
 }
 
-function RangeField(props: {
-	label: string
-	value: number
-	min: number
-	max: number
-	onChange: (value: number) => void
-}) {
-	return (
-		<div className="space-y-2">
-			<p>
-				{props.value} {props.label}
-			</p>
-			<input
-				type="range"
-				className="range w-full"
-				min={props.min}
-				max={props.max}
-				value={props.value}
-				onChange={(event) => props.onChange(Number(event.target.value))}
-			/>
-		</div>
-	)
-}
-
-function CheckboxField(props: {
-	label: string
-	checked: boolean
-	onChange: (checked: boolean) => void
-}) {
-	return (
-		<label className="label">
-			<input
-				type="checkbox"
-				className="checkbox"
-				checked={props.checked}
-				onChange={(event) => props.onChange(event.target.checked)}
-			/>
-			{props.label}
-		</label>
-	)
-}
-
-function SeparatorField(props: {
-	value: MemorablePasswordOptions["separator"]
-	onChange: (separator: MemorablePasswordOptions["separator"]) => void
-}) {
-	return (
-		<fieldset className="fieldset">
-			<legend className="fieldset-legend pt-0">Separator</legend>
-			<select
-				className="select w-full font-mono"
-				value={props.value}
-				onChange={(event) => {
-					const selected = PASSWORD_SEPARATORS.find(
-						(separator) => separator === event.target.value
-					)
-					if (selected) props.onChange(selected)
-				}}
-			>
-				{PASSWORD_SEPARATORS.map((separator) => (
-					<option key={separator} value={separator}>
-						{SEPARATOR_EXAMPLE_WORDS.join(separator)}
-					</option>
-				))}
-			</select>
-		</fieldset>
-	)
-}
-
 function RandomOptionsForm(
 	props: Pick<
 		ReturnType<typeof usePasswordGenerator>,
 		"randomOptions" | "changeRandomOption"
 	>
 ) {
-	const { randomOptions, changeRandomOption } = props
+	const { changeRandomOption, randomOptions } = props
 
 	return (
 		<>
 			<RangeField
 				label="characters"
-				min={RANDOM_PASSWORD_LIMITS.minLength}
 				max={RANDOM_PASSWORD_LIMITS.maxLength}
-				value={randomOptions.length}
+				min={RANDOM_PASSWORD_LIMITS.minLength}
 				onChange={(length) => changeRandomOption("length", length)}
+				value={randomOptions.length}
 			/>
-			<div className="grid grid-cols-2 gap-4">
+			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				{RANDOM_TOGGLES.map(({ key, label }) => (
 					<CheckboxField
+						checked={randomOptions[key]}
 						key={key}
 						label={label}
-						checked={randomOptions[key]}
 						onChange={(checked) => changeRandomOption(key, checked)}
 					/>
 				))}
@@ -163,36 +142,66 @@ function MemorableOptionsForm(
 		"memorableOptions" | "changeMemorableOption"
 	>
 ) {
-	const { memorableOptions, changeMemorableOption } = props
+	const { changeMemorableOption, memorableOptions } = props
 
 	return (
 		<>
 			<RangeField
 				label="words"
-				min={MEMORABLE_PASSWORD_LIMITS.minWords}
 				max={MEMORABLE_PASSWORD_LIMITS.maxWords}
-				value={memorableOptions.wordCount}
+				min={MEMORABLE_PASSWORD_LIMITS.minWords}
 				onChange={(wordCount) => changeMemorableOption("wordCount", wordCount)}
+				value={memorableOptions.wordCount}
 			/>
-			<div className="grid grid-cols-2 gap-4">
+			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div className="flex flex-col gap-4">
 					{MEMORABLE_TOGGLES.map(({ key, label }) => (
 						<CheckboxField
+							checked={memorableOptions[key]}
 							key={key}
 							label={label}
-							checked={memorableOptions[key]}
 							onChange={(checked) => changeMemorableOption(key, checked)}
 						/>
 					))}
 				</div>
-				<SeparatorField
+				<OptionField
+					legend="Separator"
+					onChange={(value) => {
+						const separator = PASSWORD_SEPARATORS.find((item) => item === value)
+						if (separator) changeMemorableOption("separator", separator)
+					}}
+					options={PASSWORD_SEPARATORS.map((separator) => ({
+						label: SEPARATOR_EXAMPLE_WORDS.join(separator),
+						value: separator
+					}))}
 					value={memorableOptions.separator}
-					onChange={(separator) =>
-						changeMemorableOption("separator", separator)
-					}
 				/>
 			</div>
 		</>
+	)
+}
+
+function RangeField(props: {
+	label: string
+	max: number
+	min: number
+	onChange: (value: number) => void
+	value: number
+}) {
+	return (
+		<div className="space-y-2">
+			<p>
+				{props.value} {props.label}
+			</p>
+			<input
+				className="range w-full"
+				max={props.max}
+				min={props.min}
+				onChange={(event) => props.onChange(Number(event.target.value))}
+				type="range"
+				value={props.value}
+			/>
+		</div>
 	)
 }
 
@@ -200,8 +209,8 @@ export default function PasswordGenerator() {
 	const generator = usePasswordGenerator()
 
 	return (
-		<div className="card w-full max-w-4xl bg-base-200">
-			<div className="card-body gap-6">
+		<div className="card w-full max-w-4xl md:bg-base-200">
+			<div className="card-body gap-6 p-0 md:p-6">
 				<h2 className="card-title">Choose password type</h2>
 
 				<div className="tabs tabs-lift">
@@ -210,10 +219,10 @@ export default function PasswordGenerator() {
 
 						return (
 							<TabPanel
-								key={id}
-								label={label}
 								icon={<Icon className="me-2 size-4" />}
 								isActive={generator.mode === id}
+								key={id}
+								label={label}
 								onSelect={() => generator.selectMode(id)}
 							>
 								<PasswordPreview {...generator} />
@@ -239,9 +248,9 @@ export default function PasswordGenerator() {
 
 				<div className="card-actions justify-end">
 					<Button
+						onClick={generator.regeneratePassword}
 						type="button"
 						variant="primary"
-						onClick={generator.regeneratePassword}
 					>
 						<WandSparkles className="size-5" />
 						Regenerate password
@@ -253,20 +262,20 @@ export default function PasswordGenerator() {
 }
 
 function TabPanel(props: {
-	label: string
+	children: ReactNode
 	icon: ReactNode
 	isActive: boolean
+	label: string
 	onSelect: () => void
-	children: ReactNode
 }) {
 	return (
 		<>
 			<label className="tab">
 				<input
-					type="radio"
-					name="password-generator"
 					checked={props.isActive}
+					name="password-generator"
 					onChange={props.onSelect}
+					type="radio"
 				/>
 				{props.icon}
 				{props.label}
