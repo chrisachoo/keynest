@@ -29,6 +29,22 @@ export const routes = [
 		}
 	},
 	{
+		path: "/password-generator",
+		HydrateFallback,
+		lazy: async () => {
+			const { Component } = await import("./routes/password-generator")
+			return { Component }
+		}
+	},
+	{
+		path: "/username-generator",
+		HydrateFallback,
+		lazy: async () => {
+			const { Component } = await import("./routes/username-generator")
+			return { Component }
+		}
+	},
+	{
 		path: "/verify-email",
 		HydrateFallback,
 		lazy: async () => {

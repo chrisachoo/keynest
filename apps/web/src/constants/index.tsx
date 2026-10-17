@@ -84,9 +84,8 @@ export const marketingCopy = {
 		{ title: "FAQ", url: "#faq" }
 	],
 	privacy: [
-		{ title: "Privacy Policy", url: "/privacy" },
-		{ title: "Term & Condition", url: "/terms" },
-		{ title: "About", url: "/about" }
+		{ title: "Username generator", url: "/username-generator" },
+		{ title: "Password generator", url: "/password-generator" }
 	],
 	preview: {
 		eyebrow: "Your vault",
@@ -196,5 +195,26 @@ export const MEMORABLE_TOGGLES = [
 	{ key: "capitalize", label: "Uppercase letters" },
 	{ key: "numbers", label: "Numbers" }
 ] as const
+
+export const USERNAME_SEPARATORS = [
+	{ label: "hyphen (-)", value: "-" },
+	{ label: "underscore (_)", value: "_" },
+	{ label: "period (.)", value: "." }
+] as const
+
+export const toolCopy = {
+	password: {
+		description:
+			"Generate a strong random password or memorable passphrase in your browser. Nothing is saved to your account.",
+		title: "Password generator",
+		vaultDescription:
+			"Create a password or passphrase, then save it as a login."
+	},
+	username: {
+		description:
+			"Create a memorable username from random words. Choose a separator and whether to add a number.",
+		title: "Username generator"
+	}
+} as const
 
 export type AuthMode = keyof typeof authCopy
