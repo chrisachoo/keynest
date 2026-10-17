@@ -1,9 +1,8 @@
 import {
 	MEMORABLE_PASSWORD_LIMITS,
 	PASSWORD_MODES,
-	PASSWORD_SEPARATORS,
 	RANDOM_PASSWORD_LIMITS,
-	SEPARATOR_EXAMPLE_WORDS
+	SEPARATORS
 } from "@keynest/utils"
 import { cn } from "cn"
 import { Check, Copy, Lightbulb, Shuffle, WandSparkles } from "lucide-react"
@@ -43,11 +42,13 @@ export function ValueBar({
 	)
 }
 
-export function CheckboxField(props: {
-	checked: boolean
-	label: string
-	onChange: (checked: boolean) => void
-}) {
+export function CheckboxField(
+	props: Readonly<{
+		checked: boolean
+		label: string
+		onChange: (checked: boolean) => void
+	}>
+) {
 	return (
 		<label className="label">
 			<input
@@ -61,12 +62,14 @@ export function CheckboxField(props: {
 	)
 }
 
-export function OptionField(props: {
-	legend: string
-	onChange: (value: string) => void
-	options: ReadonlyArray<{ label: string; value: string }>
-	value: string
-}) {
+export function OptionField(
+	props: Readonly<{
+		legend: string
+		onChange: (value: string) => void
+		options: ReadonlyArray<{ label: string; value: string }>
+		value: string
+	}>
+) {
 	return (
 		<fieldset className="fieldset">
 			<legend className="fieldset-legend pt-0">{props.legend}</legend>
@@ -106,9 +109,11 @@ function PasswordPreview(
 }
 
 function RandomOptionsForm(
-	props: Pick<
-		ReturnType<typeof usePasswordGenerator>,
-		"randomOptions" | "changeRandomOption"
+	props: Readonly<
+		Pick<
+			ReturnType<typeof usePasswordGenerator>,
+			"randomOptions" | "changeRandomOption"
+		>
 	>
 ) {
 	const { changeRandomOption, randomOptions } = props
@@ -137,9 +142,11 @@ function RandomOptionsForm(
 }
 
 function MemorableOptionsForm(
-	props: Pick<
-		ReturnType<typeof usePasswordGenerator>,
-		"memorableOptions" | "changeMemorableOption"
+	props: Readonly<
+		Pick<
+			ReturnType<typeof usePasswordGenerator>,
+			"memorableOptions" | "changeMemorableOption"
+		>
 	>
 ) {
 	const { changeMemorableOption, memorableOptions } = props
@@ -167,13 +174,10 @@ function MemorableOptionsForm(
 				<OptionField
 					legend="Separator"
 					onChange={(value) => {
-						const separator = PASSWORD_SEPARATORS.find((item) => item === value)
-						if (separator) changeMemorableOption("separator", separator)
+						const separator = SEPARATORS.find((item) => item.value === value)
+						if (separator) changeMemorableOption("separator", separator.value)
 					}}
-					options={PASSWORD_SEPARATORS.map((separator) => ({
-						label: SEPARATOR_EXAMPLE_WORDS.join(separator),
-						value: separator
-					}))}
+					options={SEPARATORS}
 					value={memorableOptions.separator}
 				/>
 			</div>
@@ -181,13 +185,15 @@ function MemorableOptionsForm(
 	)
 }
 
-function RangeField(props: {
-	label: string
-	max: number
-	min: number
-	onChange: (value: number) => void
-	value: number
-}) {
+function RangeField(
+	props: Readonly<{
+		label: string
+		max: number
+		min: number
+		onChange: (value: number) => void
+		value: number
+	}>
+) {
 	return (
 		<div className="space-y-2">
 			<p>
@@ -261,13 +267,15 @@ export default function PasswordGenerator() {
 	)
 }
 
-function TabPanel(props: {
-	children: ReactNode
-	icon: ReactNode
-	isActive: boolean
-	label: string
-	onSelect: () => void
-}) {
+function TabPanel(
+	props: Readonly<{
+		children: ReactNode
+		icon: ReactNode
+		isActive: boolean
+		label: string
+		onSelect: () => void
+	}>
+) {
 	return (
 		<>
 			<label className="tab">

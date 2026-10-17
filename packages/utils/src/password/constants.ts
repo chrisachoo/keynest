@@ -24,9 +24,20 @@ export const MEMORABLE_PASSWORD_LIMITS = {
 	maxWords: 10
 } as const
 
-export const PASSWORD_SEPARATORS = ["-", "_", ".", "!", "@"] as const
+export const SEPARATORS = [
+	{ label: "Hyphen (-)", value: "-" },
+	{ label: "Underscore (_)", value: "_" },
+	{ label: "Period (.)", value: "." },
+	{ label: "Exclamation (!)", value: "!" },
+	{ label: "At sign (@)", value: "@" }
+] as const
 
-export const SEPARATOR_EXAMPLE_WORDS = ["waffle", "eat", "waffle"] as const
+export const PASSWORD_SEPARATORS = SEPARATORS.map(
+	(separator) => separator.value
+) as [
+	(typeof SEPARATORS)[number]["value"],
+	...(typeof SEPARATORS)[number]["value"][]
+]
 
 export const PASSWORD_MODES = [
 	{ id: "random", label: "Random" },

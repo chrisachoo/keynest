@@ -140,15 +140,15 @@ export function generateMemorablePassword(
 
 	const words = Array.from({ length: parsed.output.wordCount }, () => {
 		const word = WORD_LIST[randomInt(WORD_LIST.length)] ?? ""
-		return parsed.output.capitalize ? capitalizeWord(word) : word
+		const formatted = parsed.output.capitalize ? capitalizeWord(word) : word
+		return parsed.output.numbers ? `${formatted}${randomInt(10)}` : formatted
 	})
-	const digits = parsed.output.numbers ? `${randomInt(10)}${randomInt(10)}` : ""
 	const entropyBits =
 		parsed.output.wordCount * Math.log2(WORD_LIST.length) +
-		(parsed.output.numbers ? Math.log2(100) : 0)
+		(parsed.output.numbers ? parsed.output.wordCount * Math.log2(10) : 0)
 
 	return {
-		password: [...words, digits].filter(Boolean).join(parsed.output.separator),
+		password: words.join(parsed.output.separator),
 		entropyBits,
 		message: null
 	}
