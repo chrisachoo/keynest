@@ -1,17 +1,68 @@
 import { VAULT_IDLE_MS } from "@keynest/shared"
-import { useFetcher } from "react-router"
+import { errorMessage, message } from "@keynest/utils"
+import { useFetcher, type ActionFunctionArgs } from "react-router"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import RoutingTabs from "@/components/dashboard/routing-tabs"
-import SessionList from "@/components/dashboard/session-list"
+import SessionList, {
+	type SettingsActionData,
+	type SettingsLoaderData
+} from "@/components/dashboard/session-list"
 import UnlockVault from "@/components/dashboard/unlock-vault"
 import VaultDataSettings from "@/components/dashboard/vault-settings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Countdown } from "@/components/ui/countdown"
 import { DASHBOARD_ACTION, useVault } from "@/hooks/use-vault"
+import { client } from "@/lib/client"
 
 const idleMinutes = VAULT_IDLE_MS / 60_000
+
+function field(formData: FormData, key: string) {
+	const value = formData.get(key)
+	return typeof value === "string" ? value : ""
+}
+
+export async function loader(): Promise<SettingsLoaderData> {
+	const response = await client.sessions.$get()
+	if (!response.ok) throw new Error(await errorMessage(response))
+	const body = await response.json()
+	return { sessions: body.sessions }
+}
+
+export async function action({
+	request
+}: ActionFunctionArgs): Promise<SettingsActionData> {
+	const formData = await request.formData()
+	const intent = field(formData, "intent")
+
+	try {
+		if (intent === "revoke-others") {
+			const response = await client.sessions["revoke-others"].$post()
+			if (!response.ok) throw new Error(await errorMessage(response))
+			return { intent: "revoke-others" }
+		}
+
+		if (intent === "revoke") {
+			const id = field(formData, "id")
+			if (!id) return { error: "Missing session.", intent: "revoke" }
+			const response = await client.sessions[":id"].$delete({
+				param: { id }
+			})
+			if (!response.ok) throw new Error(await errorMessage(response))
+			return { intent: "revoke" }
+		}
+
+		return { error: "Unknown action." }
+	} catch (error) {
+		if (error instanceof Response) throw error
+		return {
+			error: message(error),
+			intent:
+				intent === "revoke" || intent === "revoke-others" ? intent : undefined
+		}
+	}
+}
 
 function LockButton({ disabled }: Readonly<{ disabled: boolean }>) {
 	const fetcher = useFetcher()
