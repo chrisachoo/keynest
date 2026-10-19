@@ -11,6 +11,7 @@ import {
 	type KdfParams,
 	type PreloginResult,
 	type RecoverInput,
+	type RotateRecoveryInput,
 	type SignupInput,
 	type StoredVaultItem,
 	type VaultExport,
@@ -174,6 +175,51 @@ export async function changePasswordSecrets(
 		}
 	} finally {
 		wipe(currentKey)
+	}
+}
+
+export async function rotateRecoverySecrets(
+	password: string,
+	material: VaultWrap
+): Promise<{ phrase: string; request: RotateRecoveryInput }> {
+	const masterKey = await stretchMasterKey(password, material)
+	try {
+		await verifyKeyCheck(masterKey, material)
+		const dataKey = await unwrapDataKey(masterKey, material, WRAP_INFO)
+		try {
+			const recoverySalt = bytesToBase64Url(randomBytes(SALT_BYTES))
+			const phrase = generateRecoveryPhrase()
+			const recoveryKey = await stretchMasterKey(
+				normalizePhrase(phrase),
+				defaultKdf(recoverySalt, material)
+			)
+			try {
+				const wrapped = await wrapDataKey(
+					recoveryKey,
+					dataKey,
+					RECOVERY_WRAP_INFO
+				)
+				return {
+					phrase,
+					request: {
+						recoverySalt,
+						recoveryVerifier: await deriveVerifier(
+							recoveryKey,
+							RECOVERY_AUTH_INFO
+						),
+						recoveryWrappedKey: wrapped.wrappedKey,
+						recoveryWrappedKeyNonce: wrapped.wrappedKeyNonce,
+						verifier: await deriveVerifier(masterKey, AUTH_INFO)
+					}
+				}
+			} finally {
+				wipe(recoveryKey)
+			}
+		} finally {
+			wipe(dataKey)
+		}
+	} finally {
+		wipe(masterKey)
 	}
 }
 
