@@ -1,6 +1,7 @@
 import { VaultExportSchema } from "@keynest/shared"
 import { buildVaultExport, downloadVaultExport, message } from "@keynest/utils"
 import { useState } from "react"
+import { useRevalidator } from "react-router"
 import * as v from "valibot"
 
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,7 @@ import { useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 
 function ImportVault() {
+	const { revalidate } = useRevalidator()
 	const [error, setError] = useState<string | null>(null)
 	const [notice, setNotice] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
@@ -34,6 +36,7 @@ function ImportVault() {
 						.then(async (raw) => {
 							const parsed = v.parse(VaultExportSchema, JSON.parse(raw))
 							const result = await importVaultItems(parsed.items)
+							await revalidate()
 							setNotice(
 								`Imported ${result.imported}. Skipped ${result.skipped} already stored.`
 							)
