@@ -21,10 +21,11 @@ function hashToken(token: string): string {
 export async function createSession(
 	db: Database,
 	userId: string,
-	client: SessionClient
+	client: SessionClient,
+	ttlSeconds = SESSION_TTL_SECONDS
 ): Promise<{ expiresAt: Date; token: string }> {
 	const token = generateSessionToken()
-	const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000)
+	const expiresAt = new Date(Date.now() + ttlSeconds * 1000)
 
 	await db.insert(session).values({
 		expiresAt,

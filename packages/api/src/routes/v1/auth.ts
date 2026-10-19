@@ -6,6 +6,7 @@ import {
 	ChangePasswordInputSchema,
 	CREDENTIAL_PROVIDER,
 	DeleteAccountInputSchema,
+	EMAIL_CONFIRM_SESSION_SECONDS,
 	EMAIL_TOKEN_TTL_MS,
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
@@ -15,6 +16,8 @@ import {
 	PreloginSchema,
 	RecoverInputSchema,
 	ResendVerificationSchema,
+	RotateRecoveryInputSchema,
+	SESSION_TTL_SECONDS,
 	SignupInputSchema,
 	TOTP_MAX_ATTEMPTS,
 	TOTP_TICKET_TTL_MS,
@@ -40,7 +43,11 @@ import {
 	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
 import { hashVerifier, verifierMatches } from "../../lib/password"
-import { enforceAuthAccount, enforceAuthIp } from "../../lib/rate-limit"
+import {
+	enforceAuthAccount,
+	enforceAuthIp,
+	limitAuthSession
+} from "../../lib/rate-limit"
 import {
 	placeholderPrelogin,
 	readPrelogin,
@@ -103,13 +110,22 @@ async function sendVerification(
 	)
 }
 
-async function startSession(c: Context<ApiEnv>, userId: string): Promise<Date> {
+async function startSession(
+	c: Context<ApiEnv>,
+	userId: string,
+	ttlSeconds = SESSION_TTL_SECONDS
+): Promise<Date> {
 	const db = c.get("db")
 	const existingSessionId = c.get("sessionId")
 	if (existingSessionId) await destroySession(db, existingSessionId)
 
-	const { expiresAt, token } = await createSession(db, userId, clientMeta(c))
-	await setSessionCookie(c, token)
+	const { expiresAt, token } = await createSession(
+		db,
+		userId,
+		clientMeta(c),
+		ttlSeconds
+	)
+	await setSessionCookie(c, token, ttlSeconds)
 	return expiresAt
 }
 
@@ -446,12 +462,14 @@ export const authRoutes = new Hono<ApiEnv>()
 			responses: {
 				200: jsonContent(AuthSessionSchema, "Password updated"),
 				400: INCORRECT_PASSWORD,
-				401: UNAUTHORIZED_RESPONSE
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
 		requireAuth,
+		limitAuthSession,
 		validator("json", ChangePasswordInputSchema),
 		async (c) => {
 			const current = getAuthUser(c)
@@ -478,6 +496,51 @@ export const authRoutes = new Hono<ApiEnv>()
 			if (sessionId) await destroyUserSessions(db, current.id, sessionId)
 
 			return c.json(toAuthSession(stored, new Date(current.sessionExpiresAt)))
+		}
+	)
+	.post(
+		"/recovery",
+		describeRoute({
+			description:
+				"Replace the recovery wrap after the current password verifier matches. The password wrap is left unchanged. The previous recovery code stops working only when this update is stored.",
+			responses: {
+				204: { description: "Recovery code replaced" },
+				400: INCORRECT_PASSWORD,
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
+			},
+			security: [{ SessionCookie: [] }],
+			summary: "Issue a new recovery code",
+			tags: ["Auth"]
+		}),
+		requireAuth,
+		limitAuthSession,
+		validator("json", RotateRecoveryInputSchema),
+		async (c) => {
+			const current = getAuthUser(c)
+			const input = c.req.valid("json")
+			const db = c.get("db")
+			const credentials = await credentialAccount(c, current.id)
+			const matches = verifierMatches(
+				input.verifier,
+				credentials?.password ?? null
+			)
+			if (!credentials?.password || !matches)
+				throw badRequest("Incorrect password")
+
+			const [updated] = await db
+				.update(user)
+				.set({
+					recoverySalt: input.recoverySalt,
+					recoveryVerifier: hashVerifier(input.recoveryVerifier),
+					recoveryWrappedKey: input.recoveryWrappedKey,
+					recoveryWrappedKeyNonce: input.recoveryWrappedKeyNonce
+				})
+				.where(eq(user.id, current.id))
+				.returning({ id: user.id })
+
+			if (!updated) throw internalError("Failed to update recovery code")
+			return c.body(null, 204)
 		}
 	)
 	.post(
@@ -540,12 +603,14 @@ export const authRoutes = new Hono<ApiEnv>()
 			responses: {
 				204: { description: "Account deleted" },
 				400: INCORRECT_PASSWORD,
-				401: UNAUTHORIZED_RESPONSE
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
 		requireAuth,
+		limitAuthSession,
 		validator("json", DeleteAccountInputSchema),
 		async (c) => {
 			const current = getAuthUser(c)
@@ -623,7 +688,11 @@ export const authRoutes = new Hono<ApiEnv>()
 				throw invalidCredentials(
 					"This confirmation link is invalid or expired."
 				)
-			const expiresAt = await startSession(c, stored.id)
+			const expiresAt = await startSession(
+				c,
+				stored.id,
+				EMAIL_CONFIRM_SESSION_SECONDS
+			)
 			return c.json(toAuthSession(stored, expiresAt))
 		}
 	)

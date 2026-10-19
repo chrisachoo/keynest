@@ -13,29 +13,39 @@ function cookieSecret(c: Context<ApiEnv>): string {
 	return secret
 }
 
-function sessionCookieOptions(c: Context<ApiEnv>) {
-	const secure = new URL(c.req.url).protocol === "https:"
+function sameSiteFor(hostname: string, secure: boolean) {
+	if (!secure) return "Lax" as const
+	if (hostname === "keynest.me" || hostname.endsWith(".keynest.me"))
+		return "Lax" as const
+	return "None" as const
+}
+
+function sessionCookieOptions(
+	c: Context<ApiEnv>,
+	maxAge = SESSION_TTL_SECONDS
+) {
+	const url = new URL(c.req.url)
+	const secure = url.protocol === "https:"
 	return {
 		httpOnly: true,
-		maxAge: SESSION_TTL_SECONDS,
+		maxAge,
 		path: "/",
-		// HTTPS deployments can put the site and API on different hosts.
-		// SameSite=None is only valid with Secure; local HTTP stays Lax.
-		sameSite: secure ? ("None" as const) : ("Lax" as const),
+		sameSite: sameSiteFor(url.hostname, secure),
 		secure
 	}
 }
 
 export async function setSessionCookie(
 	c: Context<ApiEnv>,
-	token: string
+	token: string,
+	maxAge = SESSION_TTL_SECONDS
 ): Promise<void> {
 	await setSignedCookie(
 		c,
 		SESSION_COOKIE,
 		token,
 		cookieSecret(c),
-		sessionCookieOptions(c)
+		sessionCookieOptions(c, maxAge)
 	)
 }
 
