@@ -1,4 +1,4 @@
-import { HealthResponseSchema } from "@keynest/shared"
+import { disconnected, HealthResponseSchema } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute } from "hono-openapi"
 
@@ -15,7 +15,16 @@ export const healthRoutes = new Hono<ApiEnv>().get(
 		summary: "Health check",
 		tags: ["Health"]
 	}),
-	(c) => {
+	async (c) => {
+		try {
+			await c.env.DB.prepare("SELECT 1").run()
+		} catch {
+			return c.json(
+				disconnected(HealthResponseSchema, "Database is unavailable"),
+				503
+			)
+		}
+
 		return c.json({
 			message: "API is running",
 			ok: true as const,
