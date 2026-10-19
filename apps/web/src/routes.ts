@@ -29,6 +29,14 @@ export const routes = [
 		}
 	},
 	{
+		path: "/terms",
+		HydrateFallback,
+		lazy: async () => {
+			const { Component } = await import("./routes/terms")
+			return { Component }
+		}
+	},
+	{
 		path: "/password-generator",
 		HydrateFallback,
 		lazy: async () => {
@@ -140,16 +148,20 @@ export const routes = [
 				path: "account",
 				HydrateFallback,
 				lazy: async () => {
-					const { Component } = await import("./routes/dashboard/account")
-					return { Component }
+					const route = await import("./routes/dashboard/account")
+					return { Component: route.Component, action: route.action }
 				}
 			},
 			{
 				path: "settings",
 				HydrateFallback,
 				lazy: async () => {
-					const { Component } = await import("./routes/dashboard/settings")
-					return { Component }
+					const route = await import("./routes/dashboard/settings")
+					return {
+						Component: route.Component,
+						action: route.action,
+						loader: route.loader
+					}
 				}
 			},
 			{
