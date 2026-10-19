@@ -1,7 +1,8 @@
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import { isRouteErrorResponse, Link, useRouteError } from "react-router"
 
 import { Button } from "@/components/ui/button"
+import { reportClientError } from "@/lib/report-error"
 
 function ErrorCard({
 	title,
@@ -38,6 +39,15 @@ function ErrorCard({
 export function ErrorBoundary() {
 	const error = useRouteError()
 
+	useEffect(() => {
+		if (error instanceof Error) {
+			reportClientError(error)
+			return
+		}
+		if (isRouteErrorResponse(error) && error.status >= 500)
+			reportClientError(new Error(`${error.status} ${error.statusText}`))
+	}, [error])
+
 	if (isRouteErrorResponse(error)) {
 		return (
 			<ErrorCard
@@ -54,7 +64,7 @@ export function ErrorBoundary() {
 	if (error instanceof Error) {
 		return (
 			<ErrorCard title="Something went wrong" message={error.message}>
-				{error.stack && (
+				{import.meta.env.DEV && error.stack && (
 					<details className="collapse-arrow collapse border border-base-300 bg-base-200">
 						<summary className="collapse-title text-sm font-medium">
 							Stack trace
