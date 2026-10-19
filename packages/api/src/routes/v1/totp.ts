@@ -14,9 +14,11 @@ import { badRequest, internalError } from "../../lib/http"
 import {
 	INVALID_CREDENTIALS_RESPONSE,
 	jsonContent,
+	TOO_MANY_REQUESTS,
 	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
 import { hashVerifier, verifierMatches } from "../../lib/password"
+import { limitAuthSession } from "../../lib/rate-limit"
 import { openString, sealString } from "../../lib/secret-box"
 import {
 	generateRecoveryCodes,
@@ -38,12 +40,14 @@ export const totpRoutes = new Hono<ApiEnv>()
 				"Start authenticator setup. The factor is off until confirmed.",
 			responses: {
 				200: jsonContent(TotpSetupResultSchema, "Authenticator secret"),
-				401: UNAUTHORIZED_RESPONSE
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
 		requireAuth,
+		limitAuthSession,
 		async (c) => {
 			const current = getAuthUser(c)
 			if (current.totpEnabled)
@@ -73,12 +77,14 @@ export const totpRoutes = new Hono<ApiEnv>()
 			responses: {
 				200: jsonContent(RecoveryCodesResultSchema, "Recovery codes"),
 				400: jsonContent(ApiErrorSchema, "Incorrect code"),
-				401: UNAUTHORIZED_RESPONSE
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
 		requireAuth,
+		limitAuthSession,
 		validator("json", TotpCodeSchema),
 		async (c) => {
 			const current = getAuthUser(c)
@@ -122,12 +128,14 @@ export const totpRoutes = new Hono<ApiEnv>()
 			responses: {
 				204: { description: "Authenticator disabled" },
 				400: INVALID_CREDENTIALS_RESPONSE,
-				401: UNAUTHORIZED_RESPONSE
+				401: UNAUTHORIZED_RESPONSE,
+				429: TOO_MANY_REQUESTS
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
 		requireAuth,
+		limitAuthSession,
 		validator("json", DisableTotpInputSchema),
 		async (c) => {
 			const current = getAuthUser(c)
