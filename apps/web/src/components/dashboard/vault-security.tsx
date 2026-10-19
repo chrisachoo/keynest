@@ -1,20 +1,32 @@
-import { EmailSchema, PasswordSchema } from "@keynest/shared"
-import { accountVerifier, changePasswordSecrets, message } from "@keynest/utils"
+import { EmailSchema, PasswordSchema, TotpCodeSchema } from "@keynest/shared"
 import { useForm } from "@tanstack/react-form"
-import { useRef, useState } from "react"
-import { useNavigate } from "react-router"
+import { useEffect, useRef, useState } from "react"
+import { useFetcher } from "react-router"
 import * as v from "valibot"
 
+import RecoveryKit from "@/components/auth/recovery-kit"
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
-import { client } from "@/lib/client"
-import { useAppDispatch, useAppSelector } from "@/store"
+import { useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
-import {
-	changePasswordAsync,
-	deleteAccountAsync,
-	fetchMeAsync
-} from "@/store/auth/extra-reducers"
+
+export const ACCOUNT_ACTION = "/dashboard/account"
+
+export type AccountActionData = {
+	error?: string
+	intent?:
+		| "delete"
+		| "email"
+		| "password"
+		| "recovery"
+		| "totp-confirm"
+		| "totp-disable"
+		| "totp-setup"
+	otpauthUrl?: string
+	phrase?: string
+	recoveryCodes?: string[]
+	secret?: string
+}
 
 const PasswordChangeFormSchema = v.object({
 	confirmPassword: PasswordSchema,
@@ -38,11 +50,31 @@ function FieldError({
 	})
 }
 
+function actionError(
+	fetcher: { data: AccountActionData | undefined; state: string },
+	intent: NonNullable<AccountActionData["intent"]>
+) {
+	if (fetcher.state !== "idle" || fetcher.data?.intent !== intent) return null
+	return fetcher.data.error ?? null
+}
+
+function actionOk(
+	fetcher: { data: AccountActionData | undefined; state: string },
+	intent: NonNullable<AccountActionData["intent"]>
+) {
+	return (
+		fetcher.state === "idle" &&
+		fetcher.data?.intent === intent &&
+		!fetcher.data.error
+	)
+}
+
 function ChangePassword() {
-	const dispatch = useAppDispatch()
 	const user = useAppSelector(selectUser)
-	const [error, setError] = useState<string | null>(null)
-	const [saved, setSaved] = useState(false)
+	const fetcher = useFetcher<AccountActionData>()
+	const pending = fetcher.state !== "idle"
+	const error = actionError(fetcher, "password")
+	const saved = actionOk(fetcher, "password")
 
 	const form = useForm({
 		defaultValues: {
@@ -51,37 +83,33 @@ function ChangePassword() {
 			newPassword: ""
 		},
 		onSubmit: async ({ value }) => {
-			if (!user) return
-			setError(null)
-			setSaved(false)
-			if (value.newPassword !== value.confirmPassword) {
-				setError("Passwords do not match.")
-				return
-			}
-
-			try {
-				const input = await changePasswordSecrets(
-					value.currentPassword,
-					value.newPassword,
-					user
-				)
-				await dispatch(changePasswordAsync(input)).unwrap()
-				form.reset()
-				setSaved(true)
-			} catch (cause) {
-				setError(typeof cause === "string" ? cause : message(cause))
-			}
+			await fetcher.submit(
+				{ ...value, intent: "password" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
 		},
 		validators: {
 			onSubmit: PasswordChangeFormSchema
 		}
 	})
 
+	const savedOnce = useRef(false)
+	useEffect(() => {
+		if (!saved) {
+			savedOnce.current = false
+			return
+		}
+		if (savedOnce.current) return
+		savedOnce.current = true
+		form.reset()
+	}, [form, saved])
+
 	return (
 		<form
 			className="mt-4 max-w-sm space-y-3"
 			onSubmit={(event) => {
 				event.preventDefault()
+				event.stopPropagation()
 				void form.handleSubmit()
 			}}
 		>
@@ -138,54 +166,50 @@ function ChangePassword() {
 			{error ? <p className="text-sm text-error">{error}</p> : null}
 			{saved ? <p className="text-sm text-success">Password updated.</p> : null}
 
-			<form.Subscribe selector={(state) => state.isSubmitting}>
-				{(isSubmitting) => (
-					<Button
-						disabled={!user || isSubmitting}
-						type="submit"
-						variant="outline"
-					>
-						{isSubmitting ? "Updating..." : "Change password"}
-					</Button>
-				)}
-			</form.Subscribe>
+			<Button disabled={!user || pending} type="submit" variant="outline">
+				{pending ? "Updating..." : "Change password"}
+			</Button>
 		</form>
 	)
 }
 
 function ChangeEmail() {
 	const user = useAppSelector(selectUser)
-	const [error, setError] = useState<string | null>(null)
-	const [saved, setSaved] = useState(false)
+	const fetcher = useFetcher<AccountActionData>()
+	const pending = fetcher.state !== "idle"
+	const error = actionError(fetcher, "email")
+	const saved = actionOk(fetcher, "email")
 
 	const form = useForm({
 		defaultValues: { email: "", password: "" },
 		onSubmit: async ({ value }) => {
-			if (!user) return
-			setError(null)
-			setSaved(false)
-			try {
-				const verifier = await accountVerifier(value.password, user)
-				const response = await client.users.email.$post({
-					json: { email: value.email, verifier }
-				})
-				if (!response.ok) throw new Error(await response.text())
-				form.reset()
-				setSaved(true)
-			} catch (cause) {
-				setError(typeof cause === "string" ? cause : message(cause))
-			}
+			await fetcher.submit(
+				{ ...value, intent: "email" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
 		},
 		validators: {
 			onSubmit: v.object({ email: EmailSchema, password: PasswordSchema })
 		}
 	})
 
+	const savedOnce = useRef(false)
+	useEffect(() => {
+		if (!saved) {
+			savedOnce.current = false
+			return
+		}
+		if (savedOnce.current) return
+		savedOnce.current = true
+		form.reset()
+	}, [form, saved])
+
 	return (
 		<form
 			className="mt-4 max-w-sm space-y-3"
 			onSubmit={(event) => {
 				event.preventDefault()
+				event.stopPropagation()
 				void form.handleSubmit()
 			}}
 		>
@@ -227,32 +251,62 @@ function ChangeEmail() {
 					If that address is available, a confirmation link was sent.
 				</p>
 			) : null}
-			<form.Subscribe selector={(state) => state.isSubmitting}>
-				{(isSubmitting) => (
-					<Button
-						disabled={!user || isSubmitting}
-						type="submit"
-						variant="outline"
-					>
-						{isSubmitting ? "Sending..." : "Change email"}
-					</Button>
-				)}
-			</form.Subscribe>
+			<Button disabled={!user || pending} type="submit" variant="outline">
+				{pending ? "Sending..." : "Change email"}
+			</Button>
 		</form>
 	)
 }
 
 function TwoFactor() {
-	const dispatch = useAppDispatch()
 	const user = useAppSelector(selectUser)
+	const setup = useFetcher<AccountActionData>()
+	const confirm = useFetcher<AccountActionData>()
+	const disable = useFetcher<AccountActionData>()
+	const setupPending = setup.state !== "idle"
+	const confirmPending = confirm.state !== "idle"
+	const disablePending = disable.state !== "idle"
+	const error =
+		actionError(setup, "totp-setup") ??
+		actionError(confirm, "totp-confirm") ??
+		actionError(disable, "totp-disable")
+	const secret =
+		setup.data?.intent === "totp-setup" && !setup.data.error
+			? setup.data.secret
+			: null
+	const recoveryCodes =
+		confirm.data?.intent === "totp-confirm" && !confirm.data.error
+			? confirm.data.recoveryCodes
+			: null
 
-	const [secret, setSecret] = useState<string | null>(null)
-	const [otpauthUrl, setOtpauthUrl] = useState<string | null>(null)
-	const [code, setCode] = useState("")
-	const [password, setPassword] = useState("")
-	const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
-	const [error, setError] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
+	const confirmForm = useForm({
+		defaultValues: { code: "" },
+		onSubmit: async ({ value }) => {
+			await confirm.submit(
+				{ ...value, intent: "totp-confirm" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
+		},
+		validators: {
+			onSubmit: TotpCodeSchema
+		}
+	})
+
+	const disableForm = useForm({
+		defaultValues: { code: "", password: "" },
+		onSubmit: async ({ value }) => {
+			await disable.submit(
+				{ ...value, intent: "totp-disable" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
+		},
+		validators: {
+			onSubmit: v.object({
+				code: v.pipe(v.string(), v.trim(), v.minLength(6), v.maxLength(44)),
+				password: PasswordSchema
+			})
+		}
+	})
 
 	if (!user) return null
 
@@ -277,42 +331,42 @@ function TwoFactor() {
 					className="space-y-3"
 					onSubmit={(event) => {
 						event.preventDefault()
-						setPending(true)
-						setError(null)
-						void accountVerifier(password, user)
-							.then(async (verifier) => {
-								const response = await client.auth.totp.disable.$post({
-									json: { code, verifier }
-								})
-								if (!response.ok) throw new Error(await response.text())
-								setCode("")
-								setPassword("")
-								await dispatch(fetchMeAsync())
-							})
-							.catch((cause: unknown) => setError(message(cause)))
-							.finally(() => setPending(false))
+						event.stopPropagation()
+						void disableForm.handleSubmit()
 					}}
 				>
-					<Fieldset className="p-0">
-						<Legend>Password</Legend>
-						<Input
-							autoComplete="current-password"
-							onChange={(event) => setPassword(event.target.value)}
-							required
-							type="password"
-							value={password}
-						/>
-					</Fieldset>
-					<Fieldset className="p-0">
-						<Legend>Authentication code</Legend>
-						<Input
-							onChange={(event) => setCode(event.target.value)}
-							required
-							value={code}
-						/>
-					</Fieldset>
-					<Button disabled={pending} type="submit" variant="outline">
-						{pending ? "Turning off..." : "Turn off authenticator"}
+					<disableForm.Field name="password">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Password</Legend>
+								<Input
+									autoComplete="current-password"
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									required
+									type="password"
+									value={field.state.value}
+								/>
+								<FieldError errors={field.state.meta.errors} />
+							</Fieldset>
+						)}
+					</disableForm.Field>
+					<disableForm.Field name="code">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Authentication code</Legend>
+								<Input
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									required
+									value={field.state.value}
+								/>
+								<FieldError errors={field.state.meta.errors} />
+							</Fieldset>
+						)}
+					</disableForm.Field>
+					<Button disabled={disablePending} type="submit" variant="outline">
+						{disablePending ? "Turning off..." : "Turn off authenticator"}
 					</Button>
 				</form>
 			) : secret ? (
@@ -320,60 +374,47 @@ function TwoFactor() {
 					className="space-y-3"
 					onSubmit={(event) => {
 						event.preventDefault()
-						setPending(true)
-						setError(null)
-						void client.auth.totp.confirm
-							.$post({ json: { code } })
-							.then(async (response) => {
-								if (!response.ok) throw new Error(await response.text())
-								const body = await response.json()
-								await dispatch(fetchMeAsync())
-								setSecret(null)
-								setRecoveryCodes(body.recoveryCodes)
-							})
-							.catch((cause: unknown) => setError(message(cause)))
-							.finally(() => setPending(false))
+						event.stopPropagation()
+						void confirmForm.handleSubmit()
 					}}
 				>
 					<p className="font-mono text-sm wrap-break-word">{secret}</p>
-					{otpauthUrl ? (
+					{setup.data?.otpauthUrl ? (
 						<p className="text-xs break-all text-base-content/60">
-							{otpauthUrl}
+							{setup.data.otpauthUrl}
 						</p>
 					) : null}
-					<Fieldset className="p-0">
-						<Legend>Code from the app</Legend>
-						<Input
-							onChange={(event) => setCode(event.target.value)}
-							required
-							value={code}
-						/>
-					</Fieldset>
-					<Button disabled={pending} type="submit" variant="outline">
-						{pending ? "Checking..." : "Enable authenticator"}
+					<confirmForm.Field name="code">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Code from the app</Legend>
+								<Input
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									required
+									value={field.state.value}
+								/>
+								<FieldError errors={field.state.meta.errors} />
+							</Fieldset>
+						)}
+					</confirmForm.Field>
+					<Button disabled={confirmPending} type="submit" variant="outline">
+						{confirmPending ? "Checking..." : "Enable authenticator"}
 					</Button>
 				</form>
 			) : (
 				<Button
-					disabled={pending}
+					disabled={setupPending}
 					onClick={() => {
-						setPending(true)
-						setError(null)
-						void client.auth.totp.setup
-							.$post()
-							.then(async (response) => {
-								if (!response.ok) throw new Error(await response.text())
-								const body = await response.json()
-								setSecret(body.secret)
-								setOtpauthUrl(body.otpauthUrl)
-							})
-							.catch((cause: unknown) => setError(message(cause)))
-							.finally(() => setPending(false))
+						void setup.submit(
+							{ intent: "totp-setup" },
+							{ action: ACCOUNT_ACTION, method: "post" }
+						)
 					}}
 					type="button"
 					variant="outline"
 				>
-					{pending ? "Preparing..." : "Set up authenticator"}
+					{setupPending ? "Preparing..." : "Set up authenticator"}
 				</Button>
 			)}
 		</div>
@@ -381,33 +422,25 @@ function TwoFactor() {
 }
 
 function DeleteAccount() {
-	const dispatch = useAppDispatch()
-	const navigate = useNavigate()
 	const user = useAppSelector(selectUser)
+	const fetcher = useFetcher<AccountActionData>()
+	const pending = fetcher.state !== "idle"
 	const [confirming, setConfirming] = useState(false)
 	const confirmingRef = useRef(false)
-	const [error, setError] = useState<string | null>(null)
-	const [pending, setPending] = useState(false)
+	const error = actionError(fetcher, "delete")
 
 	const form = useForm({
 		defaultValues: { password: "" },
 		onSubmit: async ({ value }) => {
-			if (!user) return
 			if (!confirmingRef.current) {
 				confirmingRef.current = true
 				setConfirming(true)
 				return
 			}
-			setError(null)
-			setPending(true)
-			try {
-				const verifier = await accountVerifier(value.password, user)
-				await dispatch(deleteAccountAsync({ verifier })).unwrap()
-				await navigate("/login", { replace: true })
-			} catch (cause) {
-				setError(typeof cause === "string" ? cause : message(cause))
-				setPending(false)
-			}
+			await fetcher.submit(
+				{ ...value, intent: "delete" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
 		},
 		validators: {
 			onSubmit: v.object({ password: PasswordSchema })
@@ -419,6 +452,7 @@ function DeleteAccount() {
 			className="mt-4 max-w-sm space-y-3"
 			onSubmit={(event) => {
 				event.preventDefault()
+				event.stopPropagation()
 				void form.handleSubmit()
 			}}
 		>
@@ -455,7 +489,11 @@ function DeleteAccount() {
 						>
 							Keep account
 						</Button>
-						<Button disabled={pending} type="submit" variant="destructive">
+						<Button
+							disabled={!user || pending}
+							type="submit"
+							variant="destructive"
+						>
 							{pending ? "Deleting..." : "Delete account"}
 						</Button>
 					</div>
@@ -476,6 +514,76 @@ function DeleteAccount() {
 	)
 }
 
+function IssueRecovery() {
+	const user = useAppSelector(selectUser)
+	const fetcher = useFetcher<AccountActionData>()
+	const pending = fetcher.state !== "idle"
+	const [dismissed, setDismissed] = useState<AccountActionData | undefined>()
+	const error = actionError(fetcher, "recovery")
+	const phrase =
+		actionOk(fetcher, "recovery") && fetcher.data !== dismissed
+			? fetcher.data?.phrase
+			: null
+
+	const form = useForm({
+		defaultValues: { password: "" },
+		onSubmit: async ({ value }) => {
+			await fetcher.submit(
+				{ ...value, intent: "recovery" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
+		},
+		validators: {
+			onSubmit: v.object({ password: PasswordSchema })
+		}
+	})
+
+	if (phrase) {
+		return (
+			<RecoveryKit
+				note="Your previous recovery code no longer works. Save this one before you continue. Keynest cannot show it again."
+				onContinue={() => {
+					setDismissed(fetcher.data)
+					form.reset()
+				}}
+				phrase={phrase}
+			/>
+		)
+	}
+
+	return (
+		<form
+			className="mt-4 max-w-sm space-y-3"
+			onSubmit={(event) => {
+				event.preventDefault()
+				event.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			<form.Field name="password">
+				{(field) => (
+					<Fieldset className="p-0">
+						<Legend>Current password</Legend>
+						<Input
+							autoComplete="current-password"
+							onBlur={field.handleBlur}
+							onChange={(event) => field.handleChange(event.target.value)}
+							required
+							type="password"
+							value={field.state.value}
+						/>
+						<FieldError errors={field.state.meta.errors} />
+					</Fieldset>
+				)}
+			</form.Field>
+			{error ? <p className="text-sm text-error">{error}</p> : null}
+			<Button disabled={!user || pending} type="submit">
+				{pending ? "Issuing..." : "Issue a new recovery code"}
+			</Button>
+		</form>
+	)
+}
+
 export function AccountSecurity() {
 	return (
 		<div className="space-y-4">
@@ -483,9 +591,20 @@ export function AccountSecurity() {
 				<h2 className="font-semibold">Password</h2>
 				<p className="mt-2 max-w-2xl text-sm text-base-content/70">
 					Changing your password rewraps the vault key and signs out every other
-					session. Saved items stay encrypted.
+					session. Saved items stay encrypted. The current recovery code still
+					opens the vault until you issue a new one.
 				</p>
 				<ChangePassword />
+			</section>
+
+			<section className="rounded-box border border-base-300 bg-base-100 p-5">
+				<h2 className="font-semibold">Recovery code</h2>
+				<p className="mt-2 max-w-2xl text-sm text-base-content/70">
+					The code from signup keeps working until a new one is saved. If this
+					request fails, the existing code is unchanged. After it succeeds, the
+					previous code cannot open the vault.
+				</p>
+				<IssueRecovery />
 			</section>
 
 			<section className="rounded-box border border-base-300 bg-base-100 p-5">
