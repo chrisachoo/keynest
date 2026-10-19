@@ -116,6 +116,18 @@ export const ChangePasswordInputSchema = v.object({
 	...VaultWrapFields
 })
 
+export const RotateRecoveryInputSchema = v.object({
+	recoverySalt: SaltFieldSchema,
+	recoveryVerifier: VerifierFieldSchema,
+	recoveryWrappedKey: SealedFieldSchema,
+	recoveryWrappedKeyNonce: SealedFieldSchema,
+	verifier: VerifierFieldSchema
+})
+
+export const ErrorReportInputSchema = v.object({
+	message: v.pipe(v.string(), v.minLength(1), v.maxLength(500))
+})
+
 export const DeleteAccountInputSchema = v.object({
 	verifier: VerifierFieldSchema
 })
@@ -200,6 +212,10 @@ export type PreloginResult = v.InferOutput<typeof PreloginResultSchema>
 export type ChangePasswordInput = v.InferOutput<
 	typeof ChangePasswordInputSchema
 >
+export type RotateRecoveryInput = v.InferOutput<
+	typeof RotateRecoveryInputSchema
+>
+export type ErrorReportInput = v.InferOutput<typeof ErrorReportInputSchema>
 export type DeleteAccountInput = v.InferOutput<typeof DeleteAccountInputSchema>
 export type RecoverInput = v.InferOutput<typeof RecoverInputSchema>
 export type Accepted = v.InferOutput<typeof AcceptedSchema>

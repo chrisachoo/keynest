@@ -3,6 +3,7 @@ export const CREDENTIAL_PROVIDER = "credential"
 export const SESSION_COOKIE = "session"
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+export const EMAIL_CONFIRM_SESSION_SECONDS = 15 * 60
 export const VAULT_IDLE_MS = 5 * 60 * 1000
 export const EMAIL_TOKEN_TTL_MS = 24 * 60 * 60 * 1000
 export const TOTP_TICKET_TTL_MS = 5 * 60 * 1000
