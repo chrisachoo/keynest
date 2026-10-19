@@ -67,7 +67,12 @@ async function unlockVault(formData: FormData): Promise<VaultActionData> {
 
 	const stamp = getVaultGeneration()
 	const key = await installVaultKey(parsed.output.password, user)
-	if (stamp !== getVaultGeneration() || !key) return { intent: "unlock" }
+	if (stamp !== getVaultGeneration() || !key) {
+		return {
+			error: "Vault was locked again. Try once more.",
+			intent: "unlock"
+		}
+	}
 	return { intent: "unlock" }
 }
 
@@ -139,7 +144,7 @@ export async function loader() {
 			return {
 				itemCount: 0,
 				items: [],
-				notice: null,
+				notice: "Could not load vault items.",
 				status: "locked" as const
 			}
 		}
