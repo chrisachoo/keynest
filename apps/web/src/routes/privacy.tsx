@@ -50,8 +50,12 @@ export function Component() {
 						<h2 className="text-xl font-semibold">Your controls</h2>
 						<p className="text-base-content/80">
 							You can export the encrypted vault, sign out other sessions,
-							change your password, and delete the account. Deleting the account
-							removes the user, sessions, and vault rows.
+							change your password, issue a new recovery code, and delete the
+							account. Deleting the account removes the user, sessions, and
+							vault rows. Changing the password does not invalidate the recovery
+							code. A new recovery code replaces the previous one only after it
+							is saved. Keynest cannot recover a forgotten password or a lost
+							code, and it cannot show a recovery code again.
 						</p>
 					</section>
 				</main>
