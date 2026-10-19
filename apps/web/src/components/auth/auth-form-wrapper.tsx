@@ -63,6 +63,20 @@ export default function AuthFormWrapper({
 				</Link>
 			</div>
 
+			{authCopyKey === "signup" ? (
+				<p className="text-muted-foreground text-center text-xs">
+					By creating an account you agree to the{" "}
+					<Link className="link" to="/terms">
+						Terms
+					</Link>{" "}
+					and{" "}
+					<Link className="link" to="/privacy">
+						Privacy
+					</Link>{" "}
+					pages.
+				</p>
+			) : null}
+
 			<div className="text-muted-foreground flex items-center justify-center gap-2 text-xs">
 				<LockKeyhole className="size-3.5" />
 				{authAssurance}
