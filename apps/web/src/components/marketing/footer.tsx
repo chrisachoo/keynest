@@ -21,6 +21,9 @@ export default function SiteFooter() {
 				<Link to="/privacy" className="link link-hover">
 					Privacy
 				</Link>
+				<Link to="/terms" className="link link-hover">
+					Terms
+				</Link>
 				{privacy.map(({ title, url }) => (
 					<Link key={url} to={url} className="link link-hover">
 						{title}

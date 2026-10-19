@@ -44,7 +44,7 @@ export function MarketingDrawer({
 						))}
 					</ul>
 
-					<h2 className="menu-title">Privacy & Policy</h2>
+					<h2 className="menu-title">Tools</h2>
 					<ul>
 						{privacy.map(({ title, url }) => (
 							<li key={url}>
@@ -53,6 +53,20 @@ export function MarketingDrawer({
 								</NavLink>
 							</li>
 						))}
+					</ul>
+
+					<h2 className="menu-title">Legal</h2>
+					<ul>
+						<li>
+							<NavLink to="/privacy" discover="render" end>
+								Privacy
+							</NavLink>
+						</li>
+						<li>
+							<NavLink to="/terms" discover="render" end>
+								Terms
+							</NavLink>
+						</li>
 					</ul>
 				</li>
 			</ul>
@@ -78,8 +92,8 @@ export function MarketingDrawer({
 }
 
 export default function Navbar() {
-	const { account, footer, nav } = marketingCopy
 	const [isScrolled, setIsScrolled] = useState(false)
+	const { account, footer, nav } = marketingCopy
 
 	useEffect(() => {
 		const handleScroll = () => {
