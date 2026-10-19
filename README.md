@@ -52,7 +52,7 @@ Vault rows store ciphertext only. Plaintext secrets never belong in this schema.
 
 Signup signs you in immediately. Set both `EMAIL_FROM` and `RESEND_API_KEY` on the API Worker when you want confirmation mail: signup then returns the same accepted response whether or not the address is already registered, and the link opens `{CORS_ORIGIN}/verify-email`. Without those two values, nothing is emailed.
 
-The session cookie is `HttpOnly`. On local HTTP it is `SameSite=Lax`. On HTTPS it is `SameSite=None; Secure`, so the site and API can live on different hosts. Put them on one registrable domain when you deploy, and set `CORS_ORIGIN` to the web origin.
+The session cookie is `HttpOnly`. On `keynest.me` it is `SameSite=Lax; Secure`. Other HTTPS hosts, such as `workers.dev`, use `SameSite=None; Secure`. Local HTTP stays `Lax`. Production `CORS_ORIGIN` is `https://keynest.me`.
 
 Changing the password or recovering the vault signs out every other session. Settings can list sessions and sign them out. Authenticator setup is in Settings; recovery codes are shown once and stored only as hashes.
 

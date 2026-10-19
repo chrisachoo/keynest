@@ -1,0 +1,27 @@
+---
+description: How web forms load data and submit in this app
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Web forms
+
+This app uses React Router data mode (`createBrowserRouter`), not framework mode.
+
+- A form with inputs uses TanStack `useForm`. Submit with `useFetcher().submit` to the route action. Do not type the handler as `FormEvent`.
+- A submit with no inputs is only a route action, through `useFetcher` or `fetcher.Form`.
+- Data the page reads comes from a route `loader` and `useLoaderData`.
+- Pending UI reads `fetcher.state` or `useNavigation().state`. Do not keep a `useState` flag for a request.
+- Use `useFetcher` when the result must stay on the page. `useSubmit` navigates and adds a history entry.
+- Local state is only for UI that is not a request, such as a confirm step.
+
+```tsx
+const fetcher = useFetcher<ActionData>()
+const pending = fetcher.state !== "idle"
+
+const form = useForm({
+  onSubmit: async ({ value }) => {
+    await fetcher.submit(value, { action: "/dashboard/account", method: "post" })
+  }
+})
+```
