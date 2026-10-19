@@ -5,6 +5,7 @@ import { openAPIRouteHandler } from "hono-openapi"
 import { HTTPException } from "hono/http-exception"
 
 import type { ApiEnv } from "./env"
+import { recordError } from "./lib/report"
 import { withDb } from "./middleware/db"
 import { healthRoutes } from "./routes/health"
 import { v1 } from "./routes/v1"
@@ -12,6 +13,14 @@ import { v1 } from "./routes/v1"
 export const api = new Hono<ApiEnv>()
 
 api.onError((err, c) => {
+	if (!(err instanceof HTTPException) || err.status >= 500) {
+		const message = err instanceof Error ? err.message : "Internal server error"
+		const write = recordError(c.env.DB, "server", message).catch(
+			() => undefined
+		)
+		c.executionCtx?.waitUntil(write)
+	}
+
 	if (err instanceof HTTPException)
 		return c.json({ message: err.message }, err.status)
 
