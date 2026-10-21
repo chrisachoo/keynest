@@ -1,0 +1,23 @@
+{
+	"name": "@keynest/services",
+	"type": "module",
+	"exports": {
+		"./mail": "./src/mail.ts",
+		"./signup": "./src/signup.ts",
+		"./verification": "./src/verification.ts"
+	},
+	"scripts": {
+		"build": "tsc -b",
+		"check-types": "tsc -b"
+	},
+	"dependencies": {
+		"@keynest/db": "workspace:*",
+		"@keynest/shared": "workspace:*",
+		"valibot": "catalog:"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "catalog:",
+		"@types/bun": "catalog:",
+		"typescript": "catalog:"
+	}
+}
