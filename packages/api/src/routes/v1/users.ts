@@ -1,5 +1,14 @@
 import { eq, user } from "@keynest/db"
 import {
+	isLocalRequest,
+	mailConfigured,
+	sendMail
+} from "@keynest/services/mail"
+import {
+	emailChangeIdentifier,
+	issueToken
+} from "@keynest/services/verification"
+import {
 	AcceptedSchema,
 	AuthSessionSchema,
 	ChangeEmailInputSchema,
@@ -14,8 +23,6 @@ import { jsonContent, UNAUTHORIZED_RESPONSE } from "../../lib/openapi"
 import { verifierMatches } from "../../lib/password"
 import { storedVerifier } from "../../lib/user"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
-import { isLocalRequest, mailConfigured, sendMail } from "../../services/mail"
-import { emailChangeIdentifier, issueToken } from "../../services/verification"
 
 export const usersRoutes = new Hono<ApiEnv>()
 	.post(
@@ -50,13 +57,16 @@ export const usersRoutes = new Hono<ApiEnv>()
 				.from(user)
 				.where(eq(user.email, input.email))
 				.limit(1)
+
 			if (!taken) {
 				const token = await issueToken(
 					db,
 					emailChangeIdentifier(current.id, input.email),
 					EMAIL_TOKEN_TTL_MS
 				)
+
 				const link = `${c.env.CORS_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`
+
 				await sendMail(
 					c.env,
 					{

@@ -1,4 +1,16 @@
 import { account, and, eq, user, type Database } from "@keynest/db"
+import { mailConfigured } from "@keynest/services/mail"
+import {
+	enqueueSignupExisting,
+	enqueueUserSignedUp
+} from "@keynest/services/signup"
+import {
+	deleteToken,
+	issueToken,
+	parseEmailChange,
+	readToken,
+	replaceTokenIdentifier
+} from "@keynest/services/verification"
 import {
 	AcceptedSchema,
 	ApiErrorSchema,
@@ -7,7 +19,6 @@ import {
 	CREDENTIAL_PROVIDER,
 	DeleteAccountInputSchema,
 	EMAIL_CONFIRM_SESSION_SECONDS,
-	EMAIL_TOKEN_TTL_MS,
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
 	KDF_PARALLELISM,
@@ -57,7 +68,6 @@ import {
 } from "../../lib/user"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 import { clearSessionCookie, setSessionCookie } from "../../services/cookie"
-import { isLocalRequest, mailConfigured, sendMail } from "../../services/mail"
 import { confirmSecondFactor } from "../../services/second-factor"
 import {
 	createSession,
@@ -65,13 +75,6 @@ import {
 	destroyUserSessions,
 	type SessionClient
 } from "../../services/session"
-import {
-	deleteToken,
-	issueToken,
-	parseEmailChange,
-	readToken,
-	replaceTokenIdentifier
-} from "../../services/verification"
 
 const INCORRECT_PASSWORD = jsonContent(ApiErrorSchema, "Incorrect password")
 
@@ -85,29 +88,12 @@ function clientMeta(c: Context<ApiEnv>): SessionClient {
 
 const ACCEPTED = { status: "accepted" as const }
 
-function verifyLink(origin: string, token: string) {
-	return `${origin}/verify-email?token=${encodeURIComponent(token)}`
-}
-
 async function sendVerification(
 	c: Context<ApiEnv>,
 	userId: string,
 	email: string
 ) {
-	const token = await issueToken(
-		c.get("db"),
-		`verify-email:${userId}`,
-		EMAIL_TOKEN_TTL_MS
-	)
-	await sendMail(
-		c.env,
-		{
-			subject: "Confirm your Keynest email",
-			text: `Confirm this email for Keynest:\n${verifyLink(c.env.CORS_ORIGIN, token)}\n\nThis link expires in 24 hours.`,
-			to: email
-		},
-		isLocalRequest(c.req.url)
-	)
+	await enqueueUserSignedUp(c.env.EVENTS, c.get("db"), userId, email)
 }
 
 async function startSession(
@@ -274,17 +260,8 @@ export const authRoutes = new Hono<ApiEnv>()
 			if (existing) {
 				if (deliverMail && !existing.emailVerified)
 					await sendVerification(c, existing.id, input.email)
-				else if (deliverMail) {
-					await sendMail(
-						c.env,
-						{
-							subject: "Keynest sign-in",
-							text: "A Keynest account already uses this email. Sign in with your password. If you did not try to create an account, you can ignore this message.",
-							to: input.email
-						},
-						isLocalRequest(c.req.url)
-					)
-				}
+				else if (deliverMail)
+					await enqueueSignupExisting(c.env.EVENTS, existing.id, input.email)
 				return c.json(ACCEPTED)
 			}
 

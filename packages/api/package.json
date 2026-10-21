@@ -11,6 +11,7 @@
 	"dependencies": {
 		"@hono/standard-validator": "catalog:",
 		"@keynest/db": "workspace:*",
+		"@keynest/services": "workspace:*",
 		"@keynest/shared": "workspace:*",
 		"@scalar/hono-api-reference": "catalog:",
 		"@valibot/to-json-schema": "catalog:",

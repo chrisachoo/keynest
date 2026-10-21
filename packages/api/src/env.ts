@@ -1,5 +1,5 @@
 import type { Database } from "@keynest/db"
-import type { AuthSession } from "@keynest/shared"
+import type { AuthSession, SignupEvent } from "@keynest/shared"
 
 export type ApiEnv = {
 	Bindings: {
@@ -10,6 +10,7 @@ export type ApiEnv = {
 		CORS_ORIGIN: string
 		DB: D1Database
 		EMAIL_FROM?: string
+		EVENTS: Queue<SignupEvent>
 		RESEND_API_KEY?: string
 	}
 	Variables: {

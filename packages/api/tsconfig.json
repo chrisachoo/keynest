@@ -8,5 +8,15 @@
 		"outDir": "dist"
 	},
 	"include": ["src/**/*.ts"],
-	"references": [{ "path": "../db" }, { "path": "../shared" }]
+	"references": [
+		{
+			"path": "../db"
+		},
+		{
+			"path": "../services"
+		},
+		{
+			"path": "../shared"
+		}
+	]
 }

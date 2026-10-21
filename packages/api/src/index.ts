@@ -1,3 +1,4 @@
+import { MailDeliveryError } from "@keynest/services/mail"
 import { SESSION_COOKIE } from "@keynest/shared"
 import { Scalar } from "@scalar/hono-api-reference"
 import { Hono } from "hono"
@@ -23,6 +24,8 @@ api.onError((err, c) => {
 
 	if (err instanceof HTTPException)
 		return c.json({ message: err.message }, err.status)
+	if (err instanceof MailDeliveryError)
+		return c.json({ message: err.message }, 500)
 
 	return c.json({ message: "Internal server error" }, 500)
 })
