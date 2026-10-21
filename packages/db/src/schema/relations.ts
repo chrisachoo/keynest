@@ -1,14 +1,29 @@
 import { defineRelations } from "drizzle-orm"
 
 import { account, recoveryCode, session, user, verification } from "./auth"
+import { notification } from "./notification"
 import { vaultItem } from "./vault"
 
 export const dbRelations = defineRelations(
-	{ account, recoveryCode, session, user, verification, vaultItem },
+	{
+		account,
+		notification,
+		recoveryCode,
+		session,
+		user,
+		verification,
+		vaultItem
+	},
 	(r) => ({
 		account: {
 			user: r.one.user({
 				from: r.account.userId,
+				to: r.user.id
+			})
+		},
+		notification: {
+			user: r.one.user({
+				from: r.notification.userId,
 				to: r.user.id
 			})
 		},
@@ -28,6 +43,10 @@ export const dbRelations = defineRelations(
 			accounts: r.many.account({
 				from: r.user.id,
 				to: r.account.userId
+			}),
+			notifications: r.many.notification({
+				from: r.user.id,
+				to: r.notification.userId
 			}),
 			recoveryCodes: r.many.recoveryCode({
 				from: r.user.id,
