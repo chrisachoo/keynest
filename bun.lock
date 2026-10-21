@@ -69,11 +69,24 @@
         "vite": "^8.3.0",
       },
     },
+    "apps/worker": {
+      "name": "worker",
+      "dependencies": {
+        "@keynest/services": "workspace:*",
+      },
+      "devDependencies": {
+        "@cloudflare/workers-types": "catalog:",
+        "@keynest/infra": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/api": {
       "name": "@keynest/api",
       "dependencies": {
         "@hono/standard-validator": "catalog:",
         "@keynest/db": "workspace:*",
+        "@keynest/services": "workspace:*",
         "@keynest/shared": "workspace:*",
         "@scalar/hono-api-reference": "catalog:",
         "@valibot/to-json-schema": "catalog:",
@@ -110,6 +123,19 @@
         "@effect/platform-node": "^4.0.0-rc.118",
         "alchemy": "^2.0.0-beta.79",
         "effect": "^4.0.0-rc.118",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/services": {
+      "name": "@keynest/services",
+      "dependencies": {
+        "@keynest/db": "workspace:*",
+        "@keynest/shared": "workspace:*",
+        "valibot": "catalog:",
+      },
+      "devDependencies": {
+        "@cloudflare/workers-types": "catalog:",
+        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -428,6 +454,8 @@
     "@keynest/db": ["@keynest/db@workspace:packages/db"],
 
     "@keynest/infra": ["@keynest/infra@workspace:packages/infra"],
+
+    "@keynest/services": ["@keynest/services@workspace:packages/services"],
 
     "@keynest/shared": ["@keynest/shared@workspace:packages/shared"],
 
@@ -1168,6 +1196,8 @@
     "which": ["which@2.0.2", "", { "dependencies": { "isexe": "^2.0.0" }, "bin": { "node-which": "./bin/node-which" } }, "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA=="],
 
     "why-is-node-running": ["why-is-node-running@3.2.1", "", { "bin": { "why-is-node-running": "cli.js" } }, "sha512-Tb2FUhB4vUsGQlfSquQLYkApkuPAFQXGFzxWKHHumVz2dK+X1RUm/HnID4+TfIGYJ1kTcwOaCk/buYCEJr6YjQ=="],
+
+    "worker": ["worker@workspace:apps/worker"],
 
     "workerd": ["workerd@1.20260901.1", "", { "optionalDependencies": { "@cloudflare/workerd-darwin-64": "1.20260901.1", "@cloudflare/workerd-darwin-arm64": "1.20260901.1", "@cloudflare/workerd-linux-64": "1.20260901.1", "@cloudflare/workerd-linux-arm64": "1.20260901.1", "@cloudflare/workerd-windows-64": "1.20260901.1" }, "bin": { "workerd": "bin/workerd" } }, "sha512-Z5PVprrPRlV70+RzgbFpzoPpjCLGtErhsQ9Ahe96pe7hJGMsmexTU4+rhUPH+2Sguf7vRAxFFsqXpkIleRFSPA=="],
 
