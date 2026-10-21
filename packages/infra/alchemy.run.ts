@@ -22,7 +22,7 @@ function limitNamespace(stage: string, offset: number) {
 	return (stage === PRODUCTION_STAGE ? 1000 : 2000) + offset
 }
 
-function createServer(stage: string) {
+function createServer(stage: string, events: Cloudflare.Queues.Queue) {
 	return Cloudflare.Worker("server", {
 		compatibility: {
 			flags: ["nodejs_compat"]
@@ -51,6 +51,7 @@ function createServer(stage: string) {
 			CORS_ORIGIN: Config.String("CORS_ORIGIN"),
 			DB: db,
 			EMAIL_FROM: Config.String("EMAIL_FROM").pipe(Config.withDefault("")),
+			EVENTS: events,
 			RESEND_API_KEY: Config.String("RESEND_API_KEY").pipe(
 				Config.withDefault("")
 			)
@@ -58,6 +59,28 @@ function createServer(stage: string) {
 		main: "../../apps/server/src/index.ts"
 	})
 }
+
+function createEventsWorker() {
+	return Cloudflare.Worker("worker", {
+		compatibility: {
+			flags: ["nodejs_compat"]
+		},
+		env: {
+			CORS_ORIGIN: Config.String("CORS_ORIGIN"),
+			DB: db,
+			EMAIL_FROM: Config.String("EMAIL_FROM").pipe(Config.withDefault("")),
+			RESEND_API_KEY: Config.String("RESEND_API_KEY").pipe(
+				Config.withDefault("")
+			)
+		},
+		main: "../../apps/worker/src/index.ts",
+		workersDev: false
+	})
+}
+
+export type EventsWorkerEnv = Cloudflare.InferEnv<
+	ReturnType<typeof createEventsWorker>
+>
 
 export type ServerEnv = Cloudflare.InferEnv<ReturnType<typeof createServer>>
 
@@ -119,7 +142,13 @@ export default Alchemy.Stack(
 			}
 		}
 
-		const serverWorker = yield* createServer(stage)
+		const events = yield* Cloudflare.Queues.Queue("events")
+		const serverWorker = yield* createServer(stage, events)
+		const eventsWorker = yield* createEventsWorker()
+		yield* Cloudflare.Queues.Consumer("signup", {
+			queueId: events.queueId,
+			scriptName: eventsWorker.workerName
+		})
 
 		// `url.asEffect()` reads RuntimeContext, which exists only inside a
 		// running Worker. Map the output so plan/`alchemy dev` can resolve it.
