@@ -1,6 +1,7 @@
 export * from "./constants"
 export * from "./schemas/auth"
 export * from "./schemas/common"
+export * from "./schemas/events"
 export * from "./schemas/health"
 export * from "./schemas/response"
 export * from "./schemas/user"
