@@ -50,7 +50,7 @@ Vault rows store ciphertext only. Plaintext secrets never belong in this schema.
 
 ## Account
 
-Signup signs you in immediately. Set both `EMAIL_FROM` and `RESEND_API_KEY` on the API Worker when you want confirmation mail: signup then returns the same accepted response whether or not the address is already registered, and the link opens `{CORS_ORIGIN}/verify-email`. Without those two values, nothing is emailed.
+Signup signs you in immediately. Set both `EMAIL_FROM` and `RESEND_API_KEY` when you want confirmation mail. Signup then enqueues the message and returns the same accepted response whether or not the address is already registered. `apps/worker` sends the email and writes a notification. The link opens `{CORS_ORIGIN}/verify-email`. Without those two values, nothing is emailed.
 
 The session cookie is `HttpOnly`. On `keynest.me` it is `SameSite=Lax; Secure`. Other HTTPS hosts, such as `workers.dev`, use `SameSite=None; Secure`. Local HTTP stays `Lax`. Production `CORS_ORIGIN` is `https://keynest.me`.
 
@@ -62,14 +62,16 @@ Request logs, OpenAPI, and Scalar are served only when the API host is localhost
 
 Validated with `@t3-oss/env-core` + valibot. Bindings stay on `c.env`. Do not read `process.env` outside `env.ts` files.
 
-`COOKIE_SECRET` and `CORS_ORIGIN` are required. `EMAIL_FROM` and `RESEND_API_KEY` are optional and default to empty, which leaves email delivery off.
+`COOKIE_SECRET` and `CORS_ORIGIN` are required. `EMAIL_FROM` and `RESEND_API_KEY` are optional and default to empty, which leaves email delivery off. The events worker uses `CORS_ORIGIN`, `DB`, and the same email values.
 
 ## Layout
 
 ```
 apps/server         Cloudflare Worker entry (CORS, env, mount)
+apps/worker         Queue consumer (signup email and notification)
 apps/web            React Router + Vite (Alchemy Website)
-packages/api        Hono routes, OpenAPI, services
+packages/api        Hono routes and OpenAPI
+packages/services   Mail, verification tokens, and signup events
 packages/db         Drizzle schema + createDb
 packages/shared     Valibot schemas, inferred types, constants
 packages/ui         Shared UI (shadcn later)
