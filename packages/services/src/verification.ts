@@ -13,12 +13,21 @@ export async function issueToken(
 ) {
 	const token = Buffer.from(randomBytes(32)).toString("base64url")
 	await db.delete(verification).where(eq(verification.identifier, identifier))
+	await saveToken(db, identifier, token, ttlMs)
+	return token
+}
+
+export async function saveToken(
+	db: Database,
+	identifier: string,
+	token: string,
+	ttlMs: number
+) {
 	await db.insert(verification).values({
 		expiresAt: new Date(Date.now() + ttlMs),
 		identifier,
 		value: hashToken(token)
 	})
-	return token
 }
 
 export async function readToken(db: Database, token: string) {
