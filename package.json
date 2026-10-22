@@ -47,13 +47,13 @@
 		"typescript": "catalog:"
 	},
 	"overrides": {
-		"@effect/platform-bun": "4.0.0-rc.117",
-		"@effect/platform-node": "4.0.0-rc.117",
-		"@effect/platform-node-shared": "4.0.0-rc.117",
-		"@effect/sql-d1": "4.0.0-rc.117",
-		"@effect/sql-sqlite-do": "4.0.0-rc.117",
-		"@effect/vitest": "4.0.0-rc.117",
-		"effect": "4.0.0-rc.117"
+		"@effect/platform-bun": "4.0.5",
+		"@effect/platform-node": "4.0.5",
+		"@effect/platform-node-shared": "4.0.5",
+		"@effect/sql-d1": "4.0.5",
+		"@effect/sql-sqlite-do": "4.0.5",
+		"@effect/vitest": "4.0.5",
+		"effect": "4.0.5"
 	},
 	"lint-staged": {
 		"*": [

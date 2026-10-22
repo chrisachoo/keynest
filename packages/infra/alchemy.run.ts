@@ -24,9 +24,6 @@ function limitNamespace(stage: string, offset: number) {
 
 function createServer(stage: string, events: Cloudflare.Queues.Queue) {
 	return Cloudflare.Worker("server", {
-		compatibility: {
-			flags: ["nodejs_compat"]
-		},
 		dev: {
 			port: 8080
 		},
@@ -62,9 +59,6 @@ function createServer(stage: string, events: Cloudflare.Queues.Queue) {
 
 function createEventsWorker() {
 	return Cloudflare.Worker("worker", {
-		compatibility: {
-			flags: ["nodejs_compat"]
-		},
 		env: {
 			CORS_ORIGIN: Config.String("CORS_ORIGIN"),
 			DB: db,
@@ -164,7 +158,6 @@ export default Alchemy.Stack(
 				headers: Output.map(apiOrigin, securityHeaders),
 				notFoundHandling: "single-page-application"
 			},
-			compatibility: { flags: ["nodejs_compat"] },
 			dev: { port: 5173 },
 			domain:
 				stage === PRODUCTION_STAGE

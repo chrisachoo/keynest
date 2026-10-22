@@ -14,10 +14,10 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "catalog:",
-		"@effect/platform-bun": "^4.0.0-rc.118",
-		"@effect/platform-node": "^4.0.0-rc.118",
-		"alchemy": "^2.0.0-beta.79",
-		"effect": "^4.0.0-rc.118",
+		"@effect/platform-bun": "^4.0.5",
+		"@effect/platform-node": "^4.0.5",
+		"alchemy": "^2.0.0-beta.83",
+		"effect": "^4.0.5",
 		"typescript": "catalog:"
 	}
 }
