@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit"
 
 import {
 	changePasswordAsync,
+	completeOAuthAsync,
 	confirmTotpAsync,
 	deleteAccountAsync,
 	fetchMeAsync,
@@ -60,6 +61,9 @@ const authSlice = createSlice({
 			})
 			.addCase(signupAsync.fulfilled, (state, action) => {
 				if (!("sessionExpiresAt" in action.payload)) return
+				applySession(state, action.payload)
+			})
+			.addCase(completeOAuthAsync.fulfilled, (state, action) => {
 				applySession(state, action.payload)
 			})
 			.addCase(changePasswordAsync.fulfilled, (state, action) => {

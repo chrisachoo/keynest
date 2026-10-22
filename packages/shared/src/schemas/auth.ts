@@ -2,6 +2,14 @@ import * as v from "valibot"
 
 import { IdSchema, IsoDateTimeSchema } from "./common"
 
+export const SocialProviderSchema = v.picklist([
+	"discord",
+	"github",
+	"google",
+	"microsoft"
+])
+export const NullableSocialProviderSchema = v.nullable(SocialProviderSchema)
+
 export const EmailSchema = v.pipe(
 	v.string(),
 	v.nonEmpty("Email is required."),
@@ -82,6 +90,16 @@ export const SignupInputSchema = v.object({
 	recoveryWrappedKeyNonce: SealedFieldSchema,
 	verifier: VerifierFieldSchema,
 	...VaultWrapFields
+})
+
+export const OAuthCompleteInputSchema = v.omit(SignupInputSchema, [
+	"email",
+	"name"
+])
+
+export const OAuthPendingProfileSchema = v.object({
+	email: EmailSchema,
+	name: NameSchema
 })
 
 export const LoginFormSchema = v.object({
@@ -205,6 +223,10 @@ export type KdfParams = v.InferOutput<typeof KdfParamsSchema>
 export type VaultWrap = v.InferOutput<typeof VaultWrapSchema>
 export type SignupForm = v.InferOutput<typeof SignupFormSchema>
 export type SignupInput = v.InferOutput<typeof SignupInputSchema>
+export type OAuthCompleteInput = v.InferOutput<typeof OAuthCompleteInputSchema>
+export type OAuthPendingProfile = v.InferOutput<
+	typeof OAuthPendingProfileSchema
+>
 export type LoginForm = v.InferOutput<typeof LoginFormSchema>
 export type LoginInput = v.InferOutput<typeof LoginInputSchema>
 export type UnlockInput = v.InferOutput<typeof UnlockInputSchema>
@@ -227,3 +249,7 @@ export type TotpConfirmLoginInput = v.InferOutput<
 export type DisableTotpInput = v.InferOutput<typeof DisableTotpInputSchema>
 export type SessionInfo = v.InferOutput<typeof SessionInfoSchema>
 export type SessionIdParam = v.InferOutput<typeof SessionIdParamSchema>
+export type SocialProvider = v.InferOutput<typeof SocialProviderSchema>
+export type NullableSocialProvider = v.InferOutput<
+	typeof NullableSocialProviderSchema
+>
