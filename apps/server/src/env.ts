@@ -8,7 +8,11 @@ export function createServerEnv(runtimeEnv: {
 		emptyStringAsUndefined: true,
 		runtimeEnv,
 		server: {
-			CORS_ORIGIN: v.pipe(v.string(), v.url())
+			CORS_ORIGIN: v.pipe(
+				v.string(),
+				v.url(),
+				v.transform((url) => new URL(url).origin)
+			)
 		}
 	})
 }
