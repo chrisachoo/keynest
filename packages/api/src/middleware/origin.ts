@@ -11,7 +11,8 @@ export const requireSameOrigin = createMiddleware<ApiEnv>(async (c, next) => {
 		return
 	}
 
-	if (c.req.header("origin") !== c.env.CORS_ORIGIN) throw forbidden()
+	const allowed = new URL(c.env.CORS_ORIGIN).origin
+	if (c.req.header("origin") !== allowed) throw forbidden()
 
 	await next()
 })
