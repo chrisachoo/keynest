@@ -19,7 +19,6 @@ import {
 } from "../../lib/openapi"
 import { hashVerifier, verifierMatches } from "../../lib/password"
 import { limitAuthSession } from "../../lib/rate-limit"
-import { openString, sealString } from "../../lib/secret-box"
 import {
 	generateRecoveryCodes,
 	generateTotpSecret,
@@ -27,6 +26,7 @@ import {
 	otpauthUrl,
 	verifyTotp
 } from "../../lib/totp"
+import { openTotpSecret, sealTotpSecret } from "../../lib/totp-secret"
 import { storedVerifier } from "../../lib/user"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 import { confirmSecondFactor } from "../../services/second-factor"
@@ -59,7 +59,7 @@ export const totpRoutes = new Hono<ApiEnv>()
 				.update(user)
 				.set({
 					totpEnabled: false,
-					totpSecret: sealString(secret, c.env.COOKIE_SECRET)
+					totpSecret: sealTotpSecret(secret, c.env.TOTP_ENCRYPTION_KEY)
 				})
 				.where(eq(user.id, current.id))
 
@@ -98,7 +98,7 @@ export const totpRoutes = new Hono<ApiEnv>()
 
 			let secret: string
 			try {
-				secret = openString(row.totpSecret, c.env.COOKIE_SECRET)
+				secret = openTotpSecret(row.totpSecret, c.env.TOTP_ENCRYPTION_KEY)
 			} catch {
 				throw internalError("Authenticator secret could not be read")
 			}

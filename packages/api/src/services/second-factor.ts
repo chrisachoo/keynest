@@ -3,8 +3,8 @@ import type { Context } from "hono"
 
 import type { ApiEnv } from "../env"
 import { verifierMatches } from "../lib/password"
-import { openString } from "../lib/secret-box"
 import { normalizeRecoveryCode, verifyTotp } from "../lib/totp"
+import { openTotpSecret } from "../lib/totp-secret"
 
 type UserRow = typeof user.$inferSelect
 
@@ -17,7 +17,7 @@ export async function confirmSecondFactor(
 
 	let secret: string
 	try {
-		secret = openString(row.totpSecret, c.env.COOKIE_SECRET)
+		secret = openTotpSecret(row.totpSecret, c.env.TOTP_ENCRYPTION_KEY)
 	} catch {
 		return false
 	}

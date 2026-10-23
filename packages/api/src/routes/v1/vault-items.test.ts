@@ -67,6 +67,10 @@ function session(id: string): AuthSession {
 	}
 }
 
+const testEnv = {
+	AUTH_SESSION: { limit: async () => ({ success: true }) }
+} as unknown as ApiEnv["Bindings"]
+
 function appFor(userId: string) {
 	const app = new Hono<ApiEnv>()
 	app.use("*", async (c, next) => {
@@ -78,13 +82,17 @@ function appFor(userId: string) {
 	return app.route("/", vaultItemRoutes)
 }
 
+function request(app: Hono<ApiEnv>, path: string, init?: RequestInit) {
+	return app.request(path, init, testEnv)
+}
+
 test("one user cannot read, list, update, or delete another user's vault item", async () => {
 	const reader = appFor("user-a")
 
-	const hidden = await reader.request("/item-b")
+	const hidden = await request(reader, "/item-b")
 	expect(hidden.status).toBe(404)
 
-	const own = await reader.request("/item-a")
+	const own = await request(reader, "/item-a")
 	expect(own.status).toBe(200)
 	expect(await own.json()).toMatchObject({
 		ciphertext: "cipher-a",
@@ -92,22 +100,22 @@ test("one user cannot read, list, update, or delete another user's vault item", 
 		userId: "user-a"
 	})
 
-	const list = await reader.request("/")
+	const list = await request(reader, "/")
 	expect(list.status).toBe(200)
 	const body = (await list.json()) as { items: { id: string }[] }
 	expect(body.items.map((item) => item.id)).toEqual(["item-a"])
 
-	const patched = await reader.request("/item-b", {
+	const patched = await request(reader, "/item-b", {
 		body: JSON.stringify({ favorite: true }),
 		headers: { "content-type": "application/json" },
 		method: "PATCH"
 	})
 	expect(patched.status).toBe(404)
 
-	const removed = await reader.request("/item-b", { method: "DELETE" })
+	const removed = await request(reader, "/item-b", { method: "DELETE" })
 	expect(removed.status).toBe(404)
 
-	const owner = await appFor("user-b").request("/item-b")
+	const owner = await request(appFor("user-b"), "/item-b")
 	expect(owner.status).toBe(200)
 	expect(await owner.json()).toMatchObject({ ciphertext: "cipher-b" })
 })
