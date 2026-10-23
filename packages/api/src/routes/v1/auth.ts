@@ -40,12 +40,7 @@ import { describeRoute, validator } from "hono-openapi"
 import { getConnInfo } from "hono/cloudflare-workers"
 
 import type { ApiEnv } from "../../env"
-import {
-	badRequest,
-	forbidden,
-	internalError,
-	invalidCredentials
-} from "../../lib/http"
+import { badRequest, internalError, invalidCredentials } from "../../lib/http"
 import {
 	INTERNAL_SERVER_ERROR,
 	INVALID_CREDENTIALS_RESPONSE,
@@ -325,7 +320,6 @@ export const authRoutes = new Hono<ApiEnv>()
 				200: jsonContent(AuthSessionSchema, "Authenticated user"),
 				400: jsonContent(ApiErrorSchema, "Account is missing vault keys"),
 				401: INVALID_CREDENTIALS_RESPONSE,
-				403: jsonContent(ApiErrorSchema, "Email is not confirmed"),
 				429: TOO_MANY_REQUESTS
 			},
 			tags: ["Auth"]
@@ -355,8 +349,7 @@ export const authRoutes = new Hono<ApiEnv>()
 
 			const matches = verifierMatches(verifier, row?.account.password ?? null)
 			if (!row?.account.password || !matches) throw invalidCredentials()
-			if (!row.user.emailVerified)
-				throw forbidden("Confirm your email, then sign in.")
+			if (!row.user.emailVerified) throw invalidCredentials()
 
 			const stored = readVaultUser(row.user)
 			if (!stored)
