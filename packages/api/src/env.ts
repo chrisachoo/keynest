@@ -8,6 +8,8 @@ export type ApiEnv = {
 		AUTH_SESSION: RateLimit
 		COOKIE_SECRET: string
 		CORS_ORIGIN: string
+		ERROR_REPORT: RateLimit
+		TOTP_ENCRYPTION_KEY: string
 		DB: D1Database
 		EMAIL_FROM?: string
 		EVENTS: Queue<SignupEvent>
