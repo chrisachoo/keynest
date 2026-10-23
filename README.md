@@ -46,23 +46,11 @@ Request/response shapes live in `@keynest/shared` (Valibot schemas). Do not dupl
 
 One SQLite schema in `packages/db`. The Worker uses the `DB` D1 binding (Alchemy local D1 is already a SQLite file). `DATABASE_URL=file:./local.db` is only for Drizzle Kit. Alchemy applies `packages/db/src/migrations` on deploy.
 
-Vault rows store ciphertext only. Plaintext secrets never belong in this schema. Item lists are paginated, and ciphertext is size-capped. An encrypted export from the same account can be imported from Settings.
-
-## Account
-
-Signup signs you in immediately. Set both `EMAIL_FROM` and `RESEND_API_KEY` when you want confirmation mail. Signup then enqueues the message and returns the same accepted response whether or not the address is already registered. `apps/worker` sends the email and writes a notification. The link opens `{CORS_ORIGIN}/verify-email`. Without those two values, nothing is emailed.
-
-The session cookie is `HttpOnly`. On `keynest.me` it is `SameSite=Lax; Secure`. Other HTTPS hosts, such as `workers.dev`, use `SameSite=None; Secure`. Local HTTP stays `Lax`. Production `CORS_ORIGIN` is `https://keynest.me`.
-
-Changing the password or recovering the vault signs out every other session. Settings can list sessions and sign them out. Authenticator setup is in Settings; recovery codes are shown once and stored only as hashes.
-
-Request logs, OpenAPI, and Scalar are served only when the API host is localhost.
+Vault rows store ciphertext only. Plaintext secrets never belong in this schema. Item lists are paginated, and ciphertext is size-capped.
 
 ## Env
 
-Validated with `@t3-oss/env-core` + valibot. Bindings stay on `c.env`. Do not read `process.env` outside `env.ts` files.
-
-`COOKIE_SECRET` and `CORS_ORIGIN` are required. `EMAIL_FROM` and `RESEND_API_KEY` are optional and default to empty, which leaves email delivery off. The events worker uses `CORS_ORIGIN`, `DB`, and the same email values.
+Runtime config uses `@t3-oss/env-core` + valibot on `c.env`. Alchemy deploy vars live in `packages/infra/.env.example`.
 
 ## Layout
 
