@@ -6,12 +6,13 @@ import { describeRoute, validator } from "hono-openapi"
 import type { ApiEnv } from "../../env"
 import { notFound } from "../../lib/http"
 import { jsonContent, UNAUTHORIZED_RESPONSE } from "../../lib/openapi"
+import { limitAuthSession } from "../../lib/rate-limit"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 import { clearSessionCookie } from "../../services/cookie"
 import { destroyUserSessions, listSessions } from "../../services/session"
 
 export const sessionRoutes = new Hono<ApiEnv>()
-	.use("*", requireAuth)
+	.use("*", requireAuth, limitAuthSession)
 	.get(
 		"/",
 		describeRoute({
