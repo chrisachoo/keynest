@@ -2,8 +2,9 @@ import { LoginFormSchema } from "@keynest/shared"
 import { loginSecrets, message, wipe } from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
-import { useRef, useState, type FormEvent } from "react"
+import { useRef, useState } from "react"
 import { Link, useNavigate } from "react-router"
+import * as v from "valibot"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
@@ -11,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { authCopy } from "@/constants"
 import { fetchPrelogin } from "@/lib/auth-api"
-import { client } from "@/lib/client"
 import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import {
@@ -28,8 +28,6 @@ export function Component() {
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
 	const [ticket, setTicket] = useState<string | null>(null)
-	const [code, setCode] = useState("")
-	const [confirming, setConfirming] = useState(false)
 	const pendingKey = useRef<Uint8Array | null>(null)
 
 	async function finishLogin(
@@ -69,13 +67,10 @@ export function Component() {
 					wipe(secrets.masterKey)
 					lockVault()
 					if (signedIn) await dispatch(logoutAsync())
-					setServerError(
-						signedIn
-							? "Could not unlock the vault."
-							: typeof error === "string"
-								? error
-								: message(error)
-					)
+					let loginError = message(error)
+					if (signedIn) loginError = "Could not unlock the vault."
+					else if (typeof error === "string") loginError = error
+					setServerError(loginError)
 				}
 			} catch (error) {
 				setServerError(message(error))
@@ -86,58 +81,98 @@ export function Component() {
 		}
 	})
 
-	async function submitCode(event: FormEvent) {
-		event.preventDefault()
-		const masterKey = pendingKey.current
-		if (!ticket || !masterKey) return
-		setServerError(null)
-		setConfirming(true)
-		let signedIn = false
-		try {
-			const session = await dispatch(
-				confirmTotpAsync({ code, ticket })
-			).unwrap()
-			signedIn = true
-			pendingKey.current = null
-			await finishLogin(masterKey, session)
-		} catch (error) {
-			const text = typeof error === "string" ? error : message(error)
-			if (!signedIn && text === "Incorrect authentication code") {
-				setServerError(text)
-				return
+	const totpForm = useForm({
+		defaultValues: {
+			code: ""
+		},
+		onSubmit: async ({ value }) => {
+			const masterKey = pendingKey.current
+
+			if (!ticket || !masterKey) return
+
+			setServerError(null)
+			let signedIn = false
+
+			try {
+				const session = await dispatch(
+					confirmTotpAsync({ code: value.code, ticket })
+				).unwrap()
+
+				signedIn = true
+				pendingKey.current = null
+
+				await finishLogin(masterKey, session)
+			} catch (error) {
+				const text = typeof error === "string" ? error : message(error)
+				if (!signedIn && text === "Incorrect authentication code") {
+					setServerError(text)
+					return
+				}
+
+				wipe(masterKey)
+				pendingKey.current = null
+				lockVault()
+
+				if (signedIn) await dispatch(logoutAsync())
+
+				setTicket(null)
+				let totpError = text
+
+				if (signedIn) totpError = "Could not unlock the vault."
+				setServerError(totpError)
 			}
-			wipe(masterKey)
-			pendingKey.current = null
-			lockVault()
-			if (signedIn) await dispatch(logoutAsync())
-			setTicket(null)
-			setServerError(signedIn ? "Could not unlock the vault." : text)
-		} finally {
-			setConfirming(false)
+		},
+		validators: {
+			onSubmit: v.object({
+				code: v.pipe(v.string(), v.trim(), v.minLength(6), v.maxLength(44))
+			})
 		}
-	}
+	})
 
 	if (ticket) {
 		return (
 			<AuthFormWrapper authCopyKey="login" serverError={serverError}>
 				<form
 					className="space-y-4"
-					onSubmit={(event) => void submitCode(event)}
+					onSubmit={(event) => {
+						event.preventDefault()
+						event.stopPropagation()
+						void totpForm.handleSubmit()
+					}}
 				>
-					<Fieldset className="p-0">
-						<Legend>Authentication code</Legend>
-						<Input
-							autoComplete="one-time-code"
-							inputMode="text"
-							onChange={(event) => setCode(event.target.value)}
-							placeholder="123456 or recovery code"
-							required
-							value={code}
-						/>
-					</Fieldset>
-					<Button className="w-full" disabled={confirming} type="submit">
-						{confirming ? "Checking..." : "Continue"}
-					</Button>
+					<totpForm.Field name="code">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Authentication code</Legend>
+								<Input
+									autoComplete="one-time-code"
+									inputMode="text"
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									placeholder="123456 or recovery code"
+									required
+									value={field.state.value}
+								/>
+							</Fieldset>
+						)}
+					</totpForm.Field>
+
+					<totpForm.Subscribe
+						selector={(state) => ({
+							canSubmit: state.canSubmit,
+							isSubmitting: state.isSubmitting
+						})}
+					>
+						{({ canSubmit, isSubmitting }) => (
+							<Button
+								className="w-full"
+								disabled={!canSubmit || isSubmitting}
+								type="submit"
+							>
+								{isSubmitting ? "Checking..." : "Continue"}
+							</Button>
+						)}
+					</totpForm.Subscribe>
 				</form>
 			</AuthFormWrapper>
 		)
@@ -193,24 +228,6 @@ export function Component() {
 						/>
 					)}
 				</form.Field>
-
-				{serverError?.includes("Confirm your email") ? (
-					<Button
-						className="h-auto px-0 text-xs"
-						onClick={() => {
-							const email = form.getFieldValue("email")
-							void client.auth.verification.$post({ json: { email } })
-							setServerError(
-								"If an account is waiting, a new link is on its way."
-							)
-						}}
-						size="sm"
-						type="button"
-						variant="link"
-					>
-						Resend confirmation
-					</Button>
-				) : null}
 
 				{copy.showForgotPassword && (
 					<div className="flex justify-end">

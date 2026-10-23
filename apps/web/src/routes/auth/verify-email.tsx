@@ -1,6 +1,6 @@
 import { message } from "@keynest/utils"
 import { useEffect, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router"
+import { useNavigate } from "react-router"
 
 import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
@@ -8,10 +8,19 @@ import { lockVault } from "@/lib/vault-session"
 import { store } from "@/store"
 import { fetchMeAsync } from "@/store/auth/extra-reducers"
 
+function readEmailToken() {
+	if (globalThis.location === undefined) return null
+	const params = new URLSearchParams(globalThis.location.search)
+	const value = params.get("token")
+	if (value) {
+		globalThis.history.replaceState({}, "", globalThis.location.pathname)
+	}
+	return value
+}
+
 export function Component() {
-	const [params] = useSearchParams()
 	const navigate = useNavigate()
-	const token = params.get("token")
+	const [token] = useState(readEmailToken)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
