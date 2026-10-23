@@ -24,7 +24,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          COOKIE_SECRET: ${{ secrets.STAGING_COOKIE_SECRET }}
           CORS_ORIGIN: ${{ secrets.STAGING_CORS_ORIGIN }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
