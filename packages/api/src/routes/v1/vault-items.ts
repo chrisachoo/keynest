@@ -18,6 +18,7 @@ import {
 	NOT_FOUND_RESPONSE,
 	UNAUTHORIZED_RESPONSE
 } from "../../lib/openapi"
+import { limitAuthSession } from "../../lib/rate-limit"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 
 function decodeCursor(cursor: string) {
@@ -43,7 +44,7 @@ function toVaultItem(row: typeof vaultItemTable.$inferSelect) {
 }
 
 export const vaultItemRoutes = new Hono<ApiEnv>()
-	.use("*", requireAuth)
+	.use("*", requireAuth, limitAuthSession)
 	.get(
 		"/",
 		describeRoute({
