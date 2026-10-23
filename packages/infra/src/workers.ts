@@ -23,7 +23,12 @@ export function createServer(stage: string, events: Cloudflare.Queues.Queue) {
 				namespaceId: limitNamespace(stage, 3),
 				simple: { limit: 10, period: 60 }
 			}),
+			ERROR_REPORT: Cloudflare.RateLimit("ERROR_REPORT", {
+				namespaceId: limitNamespace(stage, 4),
+				simple: { limit: 5, period: 60 }
+			}),
 			COOKIE_SECRET: Config.String("COOKIE_SECRET"),
+			TOTP_ENCRYPTION_KEY: Config.String("TOTP_ENCRYPTION_KEY"),
 			CORS_ORIGIN: Config.String("CORS_ORIGIN"),
 			DB: db,
 			EMAIL_FROM: Config.String("EMAIL_FROM").pipe(Config.withDefault("")),

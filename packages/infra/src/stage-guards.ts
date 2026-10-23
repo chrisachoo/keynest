@@ -8,8 +8,32 @@ import {
 	STAGING_STAGE
 } from "./constants"
 
+const MIN_SECRET_LENGTH = 32
+
+function assertSecretLength(name: string, value: string) {
+	if (value.length < MIN_SECRET_LENGTH) {
+		return Effect.die(
+			new Error(`${name} must be at least ${MIN_SECRET_LENGTH} characters.`)
+		)
+	}
+	return Effect.void
+}
+
+function requireDeploySecrets() {
+	return Effect.gen(function* () {
+		const cookie = yield* Config.String("COOKIE_SECRET")
+		const totp = yield* Config.String("TOTP_ENCRYPTION_KEY")
+		yield* assertSecretLength("COOKIE_SECRET", cookie)
+		yield* assertSecretLength("TOTP_ENCRYPTION_KEY", totp)
+	})
+}
+
 export function validateStageDeploy(stage: string) {
 	return Effect.gen(function* () {
+		if (stage === PRODUCTION_STAGE || stage === STAGING_STAGE) {
+			yield* requireDeploySecrets()
+		}
+
 		if (stage === PRODUCTION_STAGE) {
 			const emailFrom = yield* Config.String("EMAIL_FROM").pipe(
 				Config.withDefault("")
