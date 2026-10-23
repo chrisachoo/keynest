@@ -20,7 +20,7 @@ export async function enforceAuthAccount(c: Context<ApiEnv>, email: string) {
 
 export async function enforceErrorIp(c: Context<ApiEnv>) {
 	const ip = c.req.header("cf-connecting-ip") || "unknown"
-	await consume(c.env.AUTH_IP, `error:${ip}`)
+	await consume(c.env.ERROR_REPORT, `error:${ip}`)
 }
 
 export const limitAuthSession = createMiddleware<ApiEnv>(async (c, next) => {
