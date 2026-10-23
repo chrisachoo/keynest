@@ -3,7 +3,6 @@ import {
 	type ChangePasswordInput,
 	type DeleteAccountInput,
 	type LoginInput,
-	type OAuthCompleteInput,
 	type RecoverInput,
 	type SignupInput,
 	type TotpConfirmLoginInput
@@ -67,19 +66,6 @@ export const signupAsync = createAsyncThunk(
 
 			if (!response.ok) return rejectWithValue(await errorMessage(response))
 
-			return await response.json()
-		} catch (error) {
-			return rejectWithValue(message(error))
-		}
-	}
-)
-
-export const completeOAuthAsync = createAsyncThunk(
-	"auth/completeOAuthAsync",
-	async (input: OAuthCompleteInput, { rejectWithValue }) => {
-		try {
-			const response = await client.auth.oauth.complete.$post({ json: input })
-			if (!response.ok) return rejectWithValue(await errorMessage(response))
 			return await response.json()
 		} catch (error) {
 			return rejectWithValue(message(error))
