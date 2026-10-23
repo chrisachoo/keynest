@@ -26,6 +26,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
           CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
