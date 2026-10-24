@@ -21,7 +21,7 @@ jobs:
       - run: bun run check
       - run: bun run check-types -- --ui=stream
       - run: bun run test
-      - run: bun --cwd packages/infra run deploy -- --yes --stage production
+      - run: bun run --cwd packages/infra deploy -- --yes --stage production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
