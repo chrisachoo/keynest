@@ -4,8 +4,8 @@ export const marketingCopy = {
 		signIn: { title: "Sign in", to: "/login" }
 	},
 	brand: {
-		name: "keynest",
-		tagline: "A private password manager for everyday life."
+		name: "Keynest",
+		tagline: "Your digital life, secured."
 	},
 	cta: {
 		action: "Create your free vault",
@@ -139,8 +139,13 @@ export const marketingCopy = {
 	},
 	seo: {
 		description:
-			"Keynest is a private password manager for logins, secure notes, and Wi-Fi passwords. Your vault is encrypted before it leaves your device.",
-		title: "Keynest | Private password manager"
+			"Secure your passwords, notes, and 2FA codes with Keynest. A simple, private, and modern password manager for individuals and teams.",
+		keywords:
+			"password manager, digital vault, 2FA, secure passwords, online security, privacy, keynest",
+		ogImage: "https://keynest.me/og-image.png",
+		siteName: "Keynest",
+		siteUrl: "https://keynest.me",
+		title: "Keynest — Your Password Manager & Digital Vault"
 	}
 } as const
 

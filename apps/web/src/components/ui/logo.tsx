@@ -1,41 +1,41 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
-import { KeyRound } from "lucide-react"
 import type { MouseEvent } from "react"
 import { Link, useLocation } from "react-router"
 
 import { marketingCopy } from "@/constants"
 
-const logoVariants = cva(
-	"flex items-center justify-center rounded-full bg-primary text-primary-content",
-	{
-		defaultVariants: {
-			size: "xs"
-		},
-		variants: {
-			size: {
-				xs: "size-8 [&_svg]:size-4",
-				sm: "size-10 [&_svg]:size-5",
-				md: "size-12 [&_svg]:size-6"
-			}
+import KeynestMark from "./keynest-mark"
+
+const wordmarkVariants = cva("font-semibold tracking-tight", {
+	defaultVariants: {
+		size: "xs"
+	},
+	variants: {
+		size: {
+			xs: "text-base",
+			sm: "text-base",
+			md: "text-lg"
 		}
 	}
-)
+})
 
 type LogoProps = {
 	"aria-label"?: string
 	className?: string
 	logoClassName?: string
+	markVariant?: "dark" | "light" | "mark"
 	name?: boolean
 	onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 	to?: string
-} & VariantProps<typeof logoVariants>
+} & VariantProps<typeof wordmarkVariants>
 
 export default function Logo({
 	name = false,
 	size,
 	className,
 	logoClassName,
+	markVariant = "dark",
 	to,
 	onClick,
 	"aria-label": ariaLabel
@@ -44,20 +44,22 @@ export default function Logo({
 
 	const mark = (
 		<>
-			<div className={cn(logoVariants({ size }), logoClassName)}>
-				<KeyRound />
-			</div>
-			{name && (
-				<span className="text-base font-semibold tracking-tight">
+			<KeynestMark
+				size={size ?? "xs"}
+				variant={markVariant}
+				className={logoClassName}
+			/>
+			{name ? (
+				<span className={wordmarkVariants({ size })}>
 					{marketingCopy.brand.name}
 				</span>
-			)}
+			) : null}
 		</>
 	)
 
 	if (!to) {
 		return (
-			<div className={cn("flex items-center gap-2", className)}>{mark}</div>
+			<div className={cn("flex items-center gap-2.5", className)}>{mark}</div>
 		)
 	}
 
@@ -80,7 +82,7 @@ export default function Logo({
 			to={to}
 			aria-label={ariaLabel}
 			onClick={handleClick}
-			className={cn("flex items-center gap-2", className)}
+			className={cn("flex items-center gap-2.5", className)}
 		>
 			{mark}
 		</Link>

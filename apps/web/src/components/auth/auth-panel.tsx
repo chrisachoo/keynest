@@ -1,31 +1,35 @@
 import {
 	CheckCircle2,
 	Fingerprint,
-	KeyRound,
 	LockKeyhole,
-	ShieldCheck
+	ShieldCheck,
+	type LucideIcon
 } from "lucide-react"
 
 import { IconBadge } from "@/components/ui/icon-badge"
+import KeynestMark from "@/components/ui/keynest-mark"
 import { authAssurance } from "@/constants"
 
-const features = [
+const features: Array<
+	| { description: string; icon: LucideIcon; title: string }
+	| { description: string; mark: true; title: string }
+> = [
 	{
-		icon: KeyRound,
-		title: "Passwords",
-		description: "Your saved logins"
+		description: "Your saved logins",
+		mark: true,
+		title: "Passwords"
 	},
 	{
+		description: "Passwordless sign-in",
 		icon: Fingerprint,
-		title: "Passkeys",
-		description: "Passwordless sign-in"
+		title: "Passkeys"
 	},
 	{
+		description: "Two-factor codes",
 		icon: ShieldCheck,
-		title: "Authenticator",
-		description: "Two-factor codes"
+		title: "Authenticator"
 	}
-] as const
+]
 
 export default function AuthPanel() {
 	return (
@@ -60,18 +64,24 @@ export default function AuthPanel() {
 					</div>
 
 					<div className="space-y-1 border-t pt-3">
-						{features.map(({ icon: Icon, title, description }) => (
+						{features.map((feature) => (
 							<div
-								key={title}
+								key={feature.title}
 								className="flex items-center gap-3 rounded-xl p-3"
 							>
 								<IconBadge className="bg-background rounded-lg">
-									<Icon className="size-5 text-primary" />
+									{"mark" in feature ? (
+										<KeynestMark size="sm" variant="mark" className="size-5" />
+									) : (
+										<feature.icon className="size-5 text-primary" />
+									)}
 								</IconBadge>
 
 								<div className="min-w-0 flex-1">
-									<p className="text-sm font-medium">{title}</p>
-									<p className="text-muted-foreground text-xs">{description}</p>
+									<p className="text-sm font-medium">{feature.title}</p>
+									<p className="text-muted-foreground text-xs">
+										{feature.description}
+									</p>
 								</div>
 
 								<CheckCircle2 className="size-4 text-primary" />

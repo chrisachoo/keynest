@@ -5,6 +5,7 @@ import SiteFooter from "@/components/marketing/footer"
 import Navbar, { MarketingDrawer } from "@/components/marketing/navbar"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { useDisclosure } from "@/hooks/use-disclosure"
+import { applyPageMeta } from "@/lib/seo"
 
 export default function ToolLayout({
 	children,
@@ -18,10 +19,10 @@ export default function ToolLayout({
 	const [opened, { close, set: setMenuOpen }] = useDisclosure(false)
 
 	useEffect(() => {
-		document.title = `${title} | Keynest`
-
-		const descriptionMeta = document.querySelector('meta[name="description"]')
-		if (descriptionMeta) descriptionMeta.setAttribute("content", description)
+		applyPageMeta({
+			description,
+			title: `${title} | Keynest`
+		})
 	}, [description, title])
 
 	return (

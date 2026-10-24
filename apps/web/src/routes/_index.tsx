@@ -9,9 +9,9 @@ import HeroSection from "@/components/marketing/hero"
 import Navbar, { MarketingDrawer } from "@/components/marketing/navbar"
 import SecuritySection from "@/components/marketing/security"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
-import { marketingCopy } from "@/constants"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { fetchApiHealth } from "@/lib/api-health"
+import { applyPageMeta } from "@/lib/seo"
 
 export async function loader() {
 	return { apiHealth: await fetchApiHealth() }
@@ -22,12 +22,7 @@ export function Component() {
 	const [opened, { close, set: setMenuOpen }] = useDisclosure(false)
 
 	useEffect(() => {
-		document.title = marketingCopy.seo.title
-
-		const description = document.querySelector('meta[name="description"]')
-		if (description) {
-			description.setAttribute("content", marketingCopy.seo.description)
-		}
+		applyPageMeta()
 
 		const root = document.documentElement
 		const reduceMotion = globalThis.matchMedia(
