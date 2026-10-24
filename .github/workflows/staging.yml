@@ -6,7 +6,7 @@ on:
       confirm_deploy:
         description: Deploy to staging
         type: boolean
-        default: false
+        default: true
 
 concurrency:
   group: deploy-staging
