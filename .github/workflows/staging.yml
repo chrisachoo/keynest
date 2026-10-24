@@ -2,6 +2,11 @@ name: Deploy staging
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: Deploy to staging
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-staging
@@ -9,6 +14,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: inputs.confirm_deploy
     runs-on: ubuntu-24.04
     environment: staging
     steps:
