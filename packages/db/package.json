@@ -1,0 +1,26 @@
+{
+	"name": "@keynest/db",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./*": "./src/*.ts"
+	},
+	"scripts": {
+		"build": "tsc -b",
+		"check-types": "tsc -b",
+		"db:generate": "drizzle-kit generate",
+		"db:studio": "drizzle-kit studio"
+	},
+	"dependencies": {
+		"@keynest/shared": "workspace:*",
+		"@paralleldrive/cuid2": "^3.3.0",
+		"@t3-oss/env-core": "catalog:",
+		"drizzle-orm": "catalog:",
+		"valibot": "catalog:"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "catalog:",
+		"drizzle-kit": "1.0.0-rc.4",
+		"typescript": "catalog:"
+	}
+}

@@ -1,0 +1,37 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: Deploy to staging
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: inputs.confirm_deploy
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run check-types -- --ui=stream
+      - run: bun run test
+      - run: bun --cwd packages/infra run deploy -- --yes --stage staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          COOKIE_SECRET: ${{ secrets.STAGING_COOKIE_SECRET }}
+          TOTP_ENCRYPTION_KEY: ${{ secrets.STAGING_TOTP_ENCRYPTION_KEY }}
+          CORS_ORIGIN: ${{ secrets.STAGING_CORS_ORIGIN }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

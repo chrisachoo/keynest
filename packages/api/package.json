@@ -1,0 +1,27 @@
+{
+	"name": "@keynest/api",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "tsc --noEmit",
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@hono/standard-validator": "catalog:",
+		"@keynest/db": "workspace:*",
+		"@keynest/services": "workspace:*",
+		"@keynest/shared": "workspace:*",
+		"@scalar/hono-api-reference": "catalog:",
+		"@valibot/to-json-schema": "catalog:",
+		"hono": "catalog:",
+		"hono-openapi": "catalog:",
+		"valibot": "catalog:"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "catalog:",
+		"@types/bun": "catalog:",
+		"typescript": "catalog:"
+	}
+}
