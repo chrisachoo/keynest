@@ -4,8 +4,14 @@ import { Link } from "react-router"
 
 import Logo from "@/components/ui/logo"
 import { marketingCopy } from "@/constants"
+import type { ApiHealthState } from "@/lib/api-health"
 
 import SectionLink from "./section-link"
+
+const statusTone: Record<ApiHealthState, string> = {
+	healthy: "status-success",
+	unhealthy: "status-error"
+}
 
 const previewTones = {
 	github: "bg-neutral text-neutral-content",
@@ -14,7 +20,7 @@ const previewTones = {
 	wifi: "bg-warning text-warning-content"
 } as const
 
-function VaultPreview() {
+function VaultPreview({ apiHealth }: Readonly<{ apiHealth: ApiHealthState }>) {
 	const { preview } = marketingCopy
 
 	return (
@@ -30,7 +36,10 @@ function VaultPreview() {
 				<div className="flex items-center justify-between gap-3 border-b border-base-300 bg-base-100 px-4 py-3">
 					<Logo name size="xs" />
 					<div className="flex items-center gap-2 text-xs text-base-content/60">
-						<span className="status status-success status-sm" />
+						<span
+							className={cn("status status-sm", statusTone[apiHealth])}
+							aria-hidden
+						/>
 						{preview.status}
 					</div>
 				</div>
@@ -133,8 +142,11 @@ function VaultPreview() {
 	)
 }
 
-export default function HeroSection() {
+export default function HeroSection({
+	apiHealth
+}: Readonly<{ apiHealth: ApiHealthState }>) {
 	const { account, hero } = marketingCopy
+	console.log("apiHealth", apiHealth)
 
 	return (
 		<section className="hero overflow-x-clip bg-base-100">
@@ -176,7 +188,7 @@ export default function HeroSection() {
 					</ul>
 				</div>
 				<div className="mx-auto w-full max-w-xl min-w-0 lg:mx-0 lg:max-w-none lg:flex-1">
-					<VaultPreview />
+					<VaultPreview apiHealth={apiHealth} />
 				</div>
 			</div>
 		</section>

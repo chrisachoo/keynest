@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useLoaderData } from "react-router"
 
 import CtaSection from "@/components/marketing/cta"
 import FaqSection from "@/components/marketing/faq"
@@ -10,8 +11,14 @@ import SecuritySection from "@/components/marketing/security"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { marketingCopy } from "@/constants"
 import { useDisclosure } from "@/hooks/use-disclosure"
+import { fetchApiHealth } from "@/lib/api-health"
+
+export async function loader() {
+	return { apiHealth: await fetchApiHealth() }
+}
 
 export function Component() {
+	const { apiHealth } = useLoaderData<typeof loader>()
 	const [opened, { close, set: setMenuOpen }] = useDisclosure(false)
 
 	useEffect(() => {
@@ -40,7 +47,7 @@ export function Component() {
 			<DrawerContent className="min-h-screen bg-base-100">
 				<Navbar />
 				<main>
-					<HeroSection />
+					<HeroSection apiHealth={apiHealth} />
 					<FeaturesSection />
 					<SecuritySection />
 					<FaqSection />
