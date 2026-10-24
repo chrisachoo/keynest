@@ -146,7 +146,6 @@ export default function HeroSection({
 	apiHealth
 }: Readonly<{ apiHealth: ApiHealthState }>) {
 	const { account, hero } = marketingCopy
-	console.log("apiHealth", apiHealth)
 
 	return (
 		<section className="hero overflow-x-clip bg-base-100">
