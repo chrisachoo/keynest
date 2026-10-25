@@ -1,7 +1,7 @@
 export function securityHeaders(apiOrigin: string) {
 	const policy = [
 		"default-src 'self'",
-		"script-src 'self'",
+		"script-src 'self' 'wasm-unsafe-eval'",
 		"style-src 'self'",
 		"style-src-attr 'unsafe-inline'",
 		"img-src 'self' data:",
