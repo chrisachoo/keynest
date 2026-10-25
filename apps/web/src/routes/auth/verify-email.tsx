@@ -5,8 +5,6 @@ import { useNavigate } from "react-router"
 import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
 import { lockVault } from "@/lib/vault-session"
-import { store } from "@/store"
-import { fetchMeAsync } from "@/store/auth/extra-reducers"
 
 function readEmailToken() {
 	if (globalThis.location === undefined) return null
@@ -32,8 +30,7 @@ export function Component() {
 			.then(async (response) => {
 				if (!response.ok) throw new Error(await response.text())
 				lockVault()
-				await store.dispatch(fetchMeAsync())
-				if (!cancelled) await navigate("/dashboard", { replace: true })
+				if (!cancelled) await navigate("/login?verified=1", { replace: true })
 			})
 			.catch((cause: unknown) => {
 				if (!cancelled) setError(message(cause))
@@ -60,8 +57,8 @@ export function Component() {
 				</>
 			) : (
 				<p className="text-sm text-base-content/70">
-					Opening your account. The vault stays locked until you enter your
-					password.
+					Confirming your email. You will sign in next with your master password
+					to unlock the vault.
 				</p>
 			)}
 		</main>

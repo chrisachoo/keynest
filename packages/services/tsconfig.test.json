@@ -1,0 +1,17 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"composite": false,
+		"noEmit": true,
+		"rootDir": "src"
+	},
+	"include": ["src/**/*.test.ts"],
+	"references": [
+		{
+			"path": "../db"
+		},
+		{
+			"path": "../shared"
+		}
+	]
+}

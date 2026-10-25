@@ -161,6 +161,10 @@ export const AcceptedSchema = v.object({
 	status: v.literal("accepted")
 })
 
+export const EmailVerifiedSchema = v.object({
+	verified: v.literal(true)
+})
+
 export const VerifyEmailSchema = v.object({
 	token: v.pipe(v.string(), v.minLength(20), v.maxLength(200))
 })
