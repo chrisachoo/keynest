@@ -119,3 +119,10 @@ test("one user cannot read, list, update, or delete another user's vault item", 
 	expect(owner.status).toBe(200)
 	expect(await owner.json()).toMatchObject({ ciphertext: "cipher-b" })
 })
+
+test("a zero limit still returns at least one item", async () => {
+	const response = await request(appFor("user-a"), "/?limit=0")
+	expect(response.status).toBe(200)
+	const body = (await response.json()) as { items: { id: string }[] }
+	expect(body.items.map((item) => item.id)).toEqual(["item-a"])
+})
