@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"build": "tsc -b",
-		"check-types": "tsc -b"
+		"check-types": "tsc -b && tsc -p tsconfig.test.json"
 	},
 	"dependencies": {
 		"@keynest/db": "workspace:*",
