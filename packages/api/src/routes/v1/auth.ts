@@ -18,7 +18,6 @@ import {
 	ChangePasswordInputSchema,
 	CREDENTIAL_PROVIDER,
 	DeleteAccountInputSchema,
-	EMAIL_CONFIRM_SESSION_SECONDS,
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
 	KDF_PARALLELISM,
@@ -33,6 +32,7 @@ import {
 	TOTP_MAX_ATTEMPTS,
 	TOTP_TICKET_TTL_MS,
 	TotpConfirmLoginInputSchema,
+	EmailVerifiedSchema,
 	VerifyEmailSchema
 } from "@keynest/shared"
 import { Hono, type Context } from "hono"
@@ -598,9 +598,9 @@ export const authRoutes = new Hono<ApiEnv>()
 		"/verify-email",
 		describeRoute({
 			description:
-				"Confirm a new account or finish an email change. The link signs you in.",
+				"Confirm a new account or finish an email change. Sign in afterward with your master password.",
 			responses: {
-				200: jsonContent(AuthSessionSchema, "Email confirmed"),
+				200: jsonContent(EmailVerifiedSchema, "Email confirmed"),
 				401: INVALID_CREDENTIALS_RESPONSE,
 				429: TOO_MANY_REQUESTS
 			},
@@ -649,21 +649,20 @@ export const authRoutes = new Hono<ApiEnv>()
 			}
 
 			const [row] = await db
-				.select()
+				.select({ id: user.id })
 				.from(user)
 				.where(eq(user.id, userId))
 				.limit(1)
-			const stored = row ? readVaultUser(row) : null
-			if (!stored)
+			if (!row)
 				throw invalidCredentials(
 					"This confirmation link is invalid or expired."
 				)
-			const expiresAt = await startSession(
-				c,
-				stored.id,
-				EMAIL_CONFIRM_SESSION_SECONDS
-			)
-			return c.json(toAuthSession(stored, expiresAt))
+
+			const existingSessionId = c.get("sessionId")
+			if (existingSessionId) await destroySession(db, existingSessionId)
+			clearSessionCookie(c)
+
+			return c.json({ verified: true as const })
 		}
 	)
 	.post(

@@ -4,7 +4,6 @@ export const OAUTH_PENDING_COOKIE = "oauth_pending"
 export const OAUTH_STATE_COOKIE = "oauth_state"
 export const SESSION_COOKIE = "session"
 
-export const EMAIL_CONFIRM_SESSION_SECONDS = 15 * 60
 export const EMAIL_TOKEN_TTL_MS = 24 * 60 * 60 * 1000
 export const OAUTH_FLOW_TTL_SECONDS = 10 * 60
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7

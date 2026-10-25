@@ -6,6 +6,7 @@ import {
 } from "@keynest/shared"
 import * as v from "valibot"
 
+import { signupConfirmationEmail, signupExistingEmail } from "./email-template"
 import { sendMail, type MailEnv } from "./mail"
 import { issueToken } from "./verification"
 
@@ -81,15 +82,10 @@ export async function applySignupEvent(
 			"Confirm your email",
 			"We sent a confirmation link. It expires in 24 hours."
 		)
-		await sendMail(
-			env,
-			{
-				subject: "Confirm your Keynest email",
-				text: `Confirm this email for Keynest:\n${verifyLink(env.CORS_ORIGIN, event.token)}\n\nThis link expires in 24 hours.`,
-				to: event.email
-			},
-			false
+		const confirmation = signupConfirmationEmail(
+			verifyLink(env.CORS_ORIGIN, event.token)
 		)
+		await sendMail(env, { ...confirmation, to: event.email }, false)
 		return
 	}
 
@@ -101,15 +97,8 @@ export async function applySignupEvent(
 		"Sign-in attempt",
 		"Someone tried to create a Keynest account with your email. Sign in with your password."
 	)
-	await sendMail(
-		env,
-		{
-			subject: "Keynest sign-in",
-			text: "A Keynest account already uses this email. Sign in with your password. If you did not try to create an account, you can ignore this message.",
-			to: event.email
-		},
-		false
-	)
+	const notice = signupExistingEmail(env.CORS_ORIGIN)
+	await sendMail(env, { ...notice, to: event.email }, false)
 }
 
 export async function handleSignupEvent(

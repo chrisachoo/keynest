@@ -1,4 +1,5 @@
 import { eq, user } from "@keynest/db"
+import { emailChangeConfirmationEmail } from "@keynest/services/email"
 import {
 	isLocalRequest,
 	mailConfigured,
@@ -67,13 +68,10 @@ export const usersRoutes = new Hono<ApiEnv>()
 
 				const link = `${c.env.CORS_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`
 
+				const message = emailChangeConfirmationEmail(input.email, link)
 				await sendMail(
 					c.env,
-					{
-						subject: "Confirm your new Keynest email",
-						text: `Confirm ${input.email} for your Keynest account:\n${link}\n\nThis link expires in 24 hours. If you did not ask for this, ignore it.`,
-						to: input.email
-					},
+					{ ...message, to: input.email },
 					isLocalRequest(c.req.url)
 				)
 			}

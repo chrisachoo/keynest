@@ -2,13 +2,14 @@
 	"name": "@keynest/services",
 	"type": "module",
 	"exports": {
+		"./email": "./src/email-template.ts",
 		"./mail": "./src/mail.ts",
 		"./signup": "./src/signup.ts",
 		"./verification": "./src/verification.ts"
 	},
 	"scripts": {
 		"build": "tsc -b",
-		"check-types": "tsc -b"
+		"check-types": "tsc -b && tsc -p tsconfig.test.json"
 	},
 	"dependencies": {
 		"@keynest/db": "workspace:*",

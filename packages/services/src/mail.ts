@@ -16,17 +16,20 @@ export function isLocalRequest(url: string) {
 
 export async function sendMail(
 	env: MailEnv,
-	message: { subject: string; text: string; to: string },
+	message: { html?: string; subject: string; text: string; to: string },
 	dev: boolean
 ) {
 	if (env.EMAIL_FROM && env.RESEND_API_KEY) {
+		const payload: Record<string, string> = {
+			from: env.EMAIL_FROM,
+			subject: message.subject,
+			text: message.text,
+			to: message.to
+		}
+		if (message.html) payload.html = message.html
+
 		const response = await fetch("https://api.resend.com/emails", {
-			body: JSON.stringify({
-				from: env.EMAIL_FROM,
-				subject: message.subject,
-				text: message.text,
-				to: message.to
-			}),
+			body: JSON.stringify(payload),
 			headers: {
 				Authorization: `Bearer ${env.RESEND_API_KEY}`,
 				"Content-Type": "application/json"
