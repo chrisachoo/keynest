@@ -63,9 +63,9 @@ export const vaultItemRoutes = new Hono<ApiEnv>()
 			const user = getAuthUser(c)
 			const query = c.req.valid("query")
 			const db = c.get("db")
-			const limit = Math.min(
-				query.limit ? Number(query.limit) : VAULT_PAGE_SIZE,
-				100
+			const limit = Math.max(
+				1,
+				Math.min(query.limit ? Number(query.limit) : VAULT_PAGE_SIZE, 100)
 			)
 			const cursor = query.cursor ? decodeCursor(query.cursor) : null
 

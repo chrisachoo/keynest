@@ -119,3 +119,25 @@ test("one user cannot read, list, update, or delete another user's vault item", 
 	expect(owner.status).toBe(200)
 	expect(await owner.json()).toMatchObject({ ciphertext: "cipher-b" })
 })
+
+test("a zero limit still returns one item and a next cursor", async () => {
+	await db.insert(vaultItem).values({
+		ciphertext: "cipher-c",
+		createdAt: new Date(now.getTime() + 2),
+		favorite: false,
+		id: "item-c",
+		nonce: "nonce-c",
+		type: "login",
+		updatedAt: now,
+		userId: "user-a"
+	})
+
+	const res = await request(appFor("user-a"), "/?limit=0")
+	expect(res.status).toBe(200)
+	const body = (await res.json()) as {
+		items: { id: string }[]
+		nextCursor: string | null
+	}
+	expect(body.items.map((item) => item.id)).toEqual(["item-c"])
+	expect(body.nextCursor).not.toBeNull()
+})
