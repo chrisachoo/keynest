@@ -2,6 +2,7 @@
 	"name": "@keynest/services",
 	"type": "module",
 	"exports": {
+		"./email": "./src/email-template.ts",
 		"./mail": "./src/mail.ts",
 		"./signup": "./src/signup.ts",
 		"./verification": "./src/verification.ts"

@@ -1,13 +1,14 @@
 import { LoginFormSchema } from "@keynest/shared"
 import { loginSecrets, message, wipe } from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
-import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
+import { CircleCheck, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
 import { useRef, useState } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 import * as v from "valibot"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { authCopy } from "@/constants"
@@ -22,8 +23,10 @@ import {
 
 export function Component() {
 	const navigate = useNavigate()
+	const [searchParams] = useSearchParams()
 	const copy = authCopy["login"]
 	const dispatch = useAppDispatch()
+	const emailVerified = searchParams.get("verified") === "1"
 
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
@@ -180,6 +183,19 @@ export function Component() {
 
 	return (
 		<AuthFormWrapper authCopyKey="login" serverError={serverError}>
+			{emailVerified ? (
+				<Alert
+					className="mb-2"
+					icon={<CircleCheck className="size-5 shrink-0" />}
+					variant="success"
+				>
+					<AlertTitle>Email confirmed</AlertTitle>
+					<AlertDescription>
+						Sign in with your master password. Your vault stays locked until you
+						unlock it here.
+					</AlertDescription>
+				</Alert>
+			) : null}
 			<form
 				onSubmit={(event) => {
 					event.preventDefault()

@@ -70,6 +70,8 @@ test("signup event sends the confirmation and records one notification", async (
 	expect(bodies).toHaveLength(2)
 	expect(bodies[0]).toContain("confirm-token")
 	expect(bodies[0]).toContain("https://keynest.me/verify-email")
+	expect(bodies[0]).toContain('"html":')
+	expect(bodies[0]).toContain("Confirm email")
 })
 
 test("an invalid signup event is rejected before delivery", async () => {
