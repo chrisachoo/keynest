@@ -1,5 +1,11 @@
 import { SignupFormSchema } from "@keynest/shared"
-import { createAccountSecrets, message, wipe } from "@keynest/utils"
+import {
+	createAccountSecrets,
+	installMasterKey,
+	lockVault,
+	message,
+	wipe
+} from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react"
 import { useState } from "react"
@@ -10,7 +16,6 @@ import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
 import RecoveryKit from "@/components/auth/recovery-kit"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
-import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import { signupAsync } from "@/store/auth/extra-reducers"
 
@@ -23,6 +28,7 @@ export function Component() {
 	const [serverError, setServerError] = useState<string | null>(null)
 	const [recoveryPhrase, setRecoveryPhrase] = useState<string | null>(null)
 	const [awaitingEmail, setAwaitingEmail] = useState(false)
+	const [signupPendingNotice, setSignupPendingNotice] = useState(false)
 
 	const form = useForm({
 		defaultValues: {
@@ -46,6 +52,10 @@ export function Component() {
 					if (!("sessionExpiresAt" in session)) {
 						wipe(created.masterKey)
 						lockVault()
+						if (!session.created) {
+							setSignupPendingNotice(true)
+							return
+						}
 						setAwaitingEmail(true)
 						setRecoveryPhrase(created.recoveryPhrase)
 						return
@@ -70,6 +80,24 @@ export function Component() {
 			onSubmit: SignupFormSchema
 		}
 	})
+
+	if (signupPendingNotice) {
+		return (
+			<AuthFormWrapper authCopyKey="signup" serverError={null}>
+				<p className="text-sm text-base-content/80">
+					If this email is new, open the confirmation link we sent. If you
+					already have an account, sign in with your password.
+				</p>
+				<Button
+					className="w-full"
+					onClick={() => navigate("/login", { replace: true })}
+					type="button"
+				>
+					Go to sign in
+				</Button>
+			</AuthFormWrapper>
+		)
+	}
 
 	if (recoveryPhrase) {
 		return (
