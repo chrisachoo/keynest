@@ -1,10 +1,9 @@
-import { message } from "@keynest/utils"
+import { lockVault, message } from "@keynest/utils"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
 
 import { Button } from "@/components/ui/button"
 import { client } from "@/lib/client"
-import { lockVault } from "@/lib/vault-session"
 
 function readEmailToken() {
 	if (globalThis.location === undefined) return null

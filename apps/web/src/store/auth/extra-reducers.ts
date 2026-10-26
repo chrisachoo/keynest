@@ -7,11 +7,10 @@ import {
 	type SignupInput,
 	type TotpConfirmLoginInput
 } from "@keynest/shared"
-import { errorMessage, message } from "@keynest/utils"
+import { errorMessage, lockVault, message } from "@keynest/utils"
 import { createAsyncThunk } from "@reduxjs/toolkit"
 
 import { client } from "@/lib/client"
-import { lockVault } from "@/lib/vault-session"
 
 export const fetchMeAsync = createAsyncThunk(
 	"auth/fetchMeAsync",

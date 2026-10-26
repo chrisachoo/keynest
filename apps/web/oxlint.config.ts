@@ -22,6 +22,12 @@ export default defineConfig({
 			rules: {
 				"react/only-export-components": "off"
 			}
+		},
+		{
+			files: ["src/workers/**/*.ts", "src/lib/kdf-worker.ts"],
+			rules: {
+				"unicorn/require-post-message-target-origin": "off"
+			}
 		}
 	]
 })

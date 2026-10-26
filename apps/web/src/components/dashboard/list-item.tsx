@@ -7,7 +7,7 @@ import {
 	type OpenVaultItem,
 	type VaultItemView
 } from "@keynest/shared"
-import { getInitials } from "@keynest/utils"
+import { getInitials, readItemSecret } from "@keynest/utils"
 import { Check, Copy, Eye, EyeOff, Star, Trash, X } from "lucide-react"
 import {
 	createContext,
@@ -28,7 +28,6 @@ import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerSide } from "@/components/ui/drawer"
 import { DASHBOARD_ACTION, type VaultActionData } from "@/hooks/use-vault"
 import { cn } from "@/lib/cn"
-import { readItemSecret } from "@/lib/vault-session"
 
 type VaultListContextValue = {
 	activeId: string | null

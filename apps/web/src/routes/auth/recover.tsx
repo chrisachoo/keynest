@@ -1,5 +1,11 @@
 import { EmailSchema, PasswordSchema } from "@keynest/shared"
-import { message, recoverSecrets, wipe } from "@keynest/utils"
+import {
+	installMasterKey,
+	lockVault,
+	message,
+	recoverSecrets,
+	wipe
+} from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
 import { useState } from "react"
@@ -11,7 +17,6 @@ import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
 import { fetchPrelogin } from "@/lib/auth-api"
-import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import { logoutAsync, recoverAsync } from "@/store/auth/extra-reducers"
 
@@ -53,7 +58,7 @@ export function Component() {
 					signedIn = true
 					const key = await installMasterKey(recovered.masterKey, session)
 					if (!key) throw new Error("Could not unlock the vault.")
-					navigate("/dashboard", { replace: true })
+					await navigate("/dashboard", { replace: true })
 				} catch (error) {
 					wipe(recovered.masterKey)
 					lockVault()

@@ -1,21 +1,11 @@
 import type { StoredVaultItem, VaultWrap } from "@keynest/shared"
-import {
-	dataKeyFrom,
-	openPayload,
-	stretchMasterKey,
-	wipe
-} from "@keynest/utils"
+
+import { openPayload } from "./crypto"
+import { stretchMasterKey } from "./kdf"
+import { dataKeyFrom, wipe } from "./keys"
 
 let generation = 0
 let memoryKey: CryptoKey | null = null
-
-const LEGACY_STORAGE_KEY = "keynest.vault.session"
-
-try {
-	sessionStorage.removeItem(LEGACY_STORAGE_KEY)
-} catch {
-	// Private browsing can block storage. The key still stays in memory only.
-}
 
 export const getVaultKey = () => memoryKey
 export const getVaultGeneration = () => generation

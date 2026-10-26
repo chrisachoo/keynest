@@ -17,18 +17,17 @@ import {
 	type VaultExport,
 	type VaultWrap
 } from "@keynest/shared"
-import { argon2id } from "hash-wasm"
 import * as v from "valibot"
 
 import { WORD_LIST } from "../password"
 import {
-	base64UrlToBytes,
 	byteSource,
 	bytesToBase64Url,
 	openBytes,
 	randomBytes,
 	sealBytes
 } from "./crypto"
+import { stretchMasterKey } from "./kdf"
 
 const KEY_CHECK = "keynest.keycheck.v1"
 const HKDF_SALT = "keynest.hkdf.v1"
@@ -47,22 +46,7 @@ export function wipe(bytes: Uint8Array) {
 	bytes.fill(0)
 }
 
-export async function stretchMasterKey(password: string, params: KdfParams) {
-	const salt = base64UrlToBytes(params.vaultSalt)
-	if (salt.byteLength !== SALT_BYTES) throw new Error("Invalid vault salt")
-
-	const hash = await argon2id({
-		hashLength: KDF_HASH_BYTES,
-		iterations: params.kdfIterations,
-		memorySize: params.kdfMemory,
-		outputType: "binary",
-		parallelism: params.kdfParallelism,
-		password,
-		salt
-	})
-
-	return new Uint8Array(hash)
-}
+export { stretchMasterKey } from "./kdf"
 
 export async function createAccountSecrets(password: string): Promise<{
 	masterKey: Uint8Array

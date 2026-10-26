@@ -6,6 +6,10 @@ import {
 } from "@keynest/shared"
 import {
 	draftPayload,
+	getVaultGeneration,
+	getVaultKey,
+	installVaultKey,
+	lockVault,
 	message,
 	openVaultRecords,
 	sealPayload
@@ -35,12 +39,6 @@ import {
 	listVaultItems,
 	setVaultItemFavorite
 } from "@/lib/vault-api"
-import {
-	getVaultGeneration,
-	getVaultKey,
-	installVaultKey,
-	lockVault
-} from "@/lib/vault-session"
 import { store } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
 
