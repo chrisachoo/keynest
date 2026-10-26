@@ -124,7 +124,12 @@ export async function action({
 				return { intent, phrase: rotated.phrase }
 			}
 			case "totp-setup": {
-				const response = await client.auth.totp.setup.$post()
+				const parsed = v.safeParse(PasswordSchema, field(formData, "password"))
+				if (!parsed.success) return failure("Enter your password.", intent)
+				const verifier = await accountVerifier(parsed.output, user)
+				const response = await client.auth.totp.setup.$post({
+					json: { verifier }
+				})
 				if (!response.ok) await readError(response)
 				const body = await response.json()
 				return {

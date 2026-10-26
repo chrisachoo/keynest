@@ -6,6 +6,7 @@ import {
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
 	KDF_PARALLELISM,
+	normalizeEmail,
 	type AuthSession,
 	type PreloginResult
 } from "@keynest/shared"
@@ -92,23 +93,39 @@ export function toAuthSession(row: VaultUser, expiresAt: Date): AuthSession {
 	}
 }
 
+/** AES-GCM wrap of the 32-byte data key: 48 bytes ciphertext, standard base64. */
+const PLACEHOLDER_WRAP_BYTES = 48
+/** GCM nonce length used by vault crypto. */
+const PLACEHOLDER_NONCE_BYTES = 12
+
 export function placeholderPrelogin(
 	secret: string,
 	email: string
 ): PreloginResult {
+	const normalized = normalizeEmail(email)
 	return {
 		kdfIterations: KDF_ITERATIONS,
 		kdfMemory: KDF_MEMORY_KIB,
 		kdfParallelism: KDF_PARALLELISM,
-		recoverySalt: digest(secret, `recovery-salt:${email}`, 16, "base64url"),
-		recoveryWrappedKey: digest(secret, `recovery-key:${email}`, 32, "base64"),
-		recoveryWrappedKeyNonce: digest(
+		recoverySalt: digest(
 			secret,
-			`recovery-nonce:${email}`,
-			12,
+			`recovery-salt:${normalized}`,
+			16,
+			"base64url"
+		),
+		recoveryWrappedKey: digest(
+			secret,
+			`recovery-key:${normalized}`,
+			PLACEHOLDER_WRAP_BYTES,
 			"base64"
 		),
-		vaultSalt: digest(secret, `vault-salt:${email}`, 16, "base64url")
+		recoveryWrappedKeyNonce: digest(
+			secret,
+			`recovery-nonce:${normalized}`,
+			PLACEHOLDER_NONCE_BYTES,
+			"base64"
+		),
+		vaultSalt: digest(secret, `vault-salt:${normalized}`, 16, "base64url")
 	}
 }
 
@@ -133,9 +150,19 @@ function digest(
 	size: number,
 	encoding: "base64" | "base64url"
 ) {
-	const bytes = createHmac("sha256", secret)
-		.update(label)
-		.digest()
-		.subarray(0, size)
-	return Buffer.from(bytes).toString(encoding)
+	const bytes = Buffer.alloc(size)
+	let offset = 0
+	let counter = 0
+
+	while (offset < size) {
+		const block = createHmac("sha256", secret)
+			.update(`${label}:${counter}`)
+			.digest()
+		const take = Math.min(block.length, size - offset)
+		bytes.set(block.subarray(0, take), offset)
+		offset += take
+		counter += 1
+	}
+
+	return bytes.toString(encoding)
 }
