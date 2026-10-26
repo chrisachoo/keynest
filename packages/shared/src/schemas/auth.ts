@@ -180,6 +180,11 @@ export const AcceptedSchema = v.object({
 	status: v.literal("accepted")
 })
 
+export const SignupAcceptedSchema = v.object({
+	created: v.boolean(),
+	status: v.literal("accepted")
+})
+
 export const EmailVerifiedSchema = v.object({
 	verified: v.literal(true)
 })
@@ -209,6 +214,10 @@ export const TotpConfirmLoginInputSchema = v.object({
 
 export const TotpCodeSchema = v.object({
 	code: v.pipe(v.string(), v.trim(), v.length(6))
+})
+
+export const TotpSetupInputSchema = v.object({
+	verifier: VerifierFieldSchema
 })
 
 export const TotpSetupResultSchema = v.object({
@@ -242,6 +251,10 @@ export const SessionIdParamSchema = v.object({
 	id: IdSchema
 })
 
+export const RevokeOthersInputSchema = v.object({
+	verifier: VerifierFieldSchema
+})
+
 export type KdfParams = v.InferOutput<typeof KdfParamsSchema>
 export type KdfRequest = v.InferOutput<typeof KdfRequestSchema>
 export type KdfResponse = v.InferOutput<typeof KdfResponseSchema>
@@ -266,11 +279,14 @@ export type ErrorReportInput = v.InferOutput<typeof ErrorReportInputSchema>
 export type DeleteAccountInput = v.InferOutput<typeof DeleteAccountInputSchema>
 export type RecoverInput = v.InferOutput<typeof RecoverInputSchema>
 export type Accepted = v.InferOutput<typeof AcceptedSchema>
+export type SignupAccepted = v.InferOutput<typeof SignupAcceptedSchema>
+export type RevokeOthersInput = v.InferOutput<typeof RevokeOthersInputSchema>
 export type ChangeEmailInput = v.InferOutput<typeof ChangeEmailInputSchema>
 export type TotpChallenge = v.InferOutput<typeof TotpChallengeSchema>
 export type TotpConfirmLoginInput = v.InferOutput<
 	typeof TotpConfirmLoginInputSchema
 >
+export type TotpSetupInput = v.InferOutput<typeof TotpSetupInputSchema>
 export type DisableTotpInput = v.InferOutput<typeof DisableTotpInputSchema>
 export type SessionInfo = v.InferOutput<typeof SessionInfoSchema>
 export type SessionIdParam = v.InferOutput<typeof SessionIdParamSchema>

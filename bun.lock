@@ -98,6 +98,7 @@
       },
       "devDependencies": {
         "@cloudflare/workers-types": "catalog:",
+        "@keynest/utils": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
