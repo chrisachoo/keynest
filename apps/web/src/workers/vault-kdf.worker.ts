@@ -16,7 +16,7 @@ function postKdfResponse(response: KdfResponse) {
 globalThis.addEventListener(
 	"message",
 	async (event: MessageEvent<KdfRequest>) => {
-		if (event.origin !== globalThis.location.origin) return
+		if (event.origin && event.origin !== globalThis.location.origin) return
 
 		const { id, params, password } = event.data
 
