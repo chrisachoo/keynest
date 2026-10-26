@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useFetcher, useLoaderData } from "react-router"
 
 import { Button } from "@/components/ui/button"
+import { Fieldset, Input, Legend } from "@/components/ui/input"
 
 export const SETTINGS_ACTION = "/dashboard/settings"
 
@@ -20,6 +21,7 @@ export default function SessionList() {
 	const revokeOthers = useFetcher<SettingsActionData>()
 	const revoke = useFetcher<SettingsActionData>()
 	const [confirming, setConfirming] = useState(false)
+	const [password, setPassword] = useState("")
 	const [baseline, setBaseline] = useState<SettingsActionData | undefined>()
 	const othersPending = revokeOthers.state !== "idle"
 	const error = revokeOthers.data?.error ?? revoke.data?.error
@@ -34,33 +36,50 @@ export default function SessionList() {
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<h2 className="font-semibold">Other devices</h2>
 				{showConfirm ? (
-					<div className="flex flex-wrap gap-2">
-						<Button
-							disabled={othersPending}
-							onClick={() => {
-								void revokeOthers.submit(
-									{ intent: "revoke-others" },
-									{ action: SETTINGS_ACTION, method: "post" }
-								)
-							}}
-							type="button"
-							variant="outline"
-						>
-							{othersPending ? "Signing out..." : "Sign out other devices"}
-						</Button>
-						<Button
-							disabled={othersPending}
-							onClick={() => setConfirming(false)}
-							type="button"
-							variant="ghost"
-						>
-							Cancel
-						</Button>
+					<div className="flex w-full max-w-sm flex-col gap-3">
+						<Fieldset className="p-0">
+							<Legend>Password</Legend>
+							<Input
+								autoComplete="current-password"
+								disabled={othersPending}
+								onChange={(event) => setPassword(event.target.value)}
+								required
+								type="password"
+								value={password}
+							/>
+						</Fieldset>
+						<div className="flex flex-wrap gap-2">
+							<Button
+								disabled={othersPending || !password}
+								onClick={() => {
+									void revokeOthers.submit(
+										{ intent: "revoke-others", password },
+										{ action: SETTINGS_ACTION, method: "post" }
+									)
+								}}
+								type="button"
+								variant="outline"
+							>
+								{othersPending ? "Signing out..." : "Sign out other devices"}
+							</Button>
+							<Button
+								disabled={othersPending}
+								onClick={() => {
+									setConfirming(false)
+									setPassword("")
+								}}
+								type="button"
+								variant="ghost"
+							>
+								Cancel
+							</Button>
+						</div>
 					</div>
 				) : (
 					<Button
 						onClick={() => {
 							setBaseline(revokeOthers.data)
+							setPassword("")
 							setConfirming(true)
 						}}
 						type="button"
