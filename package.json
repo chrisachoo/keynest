@@ -31,7 +31,7 @@
 		"db:studio": "turbo run db:studio -F @keynest/db --",
 		"deploy": "turbo run deploy -F @keynest/infra --",
 		"destroy": "turbo run destroy -F @keynest/infra --",
-		"test": "bun test packages/utils packages/api packages/services",
+		"test": "bun test packages/utils packages/api packages/services && bun run --cwd apps/web test",
 		"check": "oxlint && oxfmt --check",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix && oxfmt --write",

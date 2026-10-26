@@ -1,5 +1,11 @@
 import { SignupFormSchema } from "@keynest/shared"
-import { createAccountSecrets, message, wipe } from "@keynest/utils"
+import {
+	createAccountSecrets,
+	installMasterKey,
+	lockVault,
+	message,
+	wipe
+} from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { Eye, EyeOff, LockKeyhole, Mail, User } from "lucide-react"
 import { useState } from "react"
@@ -10,7 +16,6 @@ import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
 import RecoveryKit from "@/components/auth/recovery-kit"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
-import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import { signupAsync } from "@/store/auth/extra-reducers"
 
