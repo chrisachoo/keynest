@@ -1,5 +1,5 @@
 import type { KdfParams, KdfRequest, KdfResponse } from "@keynest/shared"
-import { setStretchMasterKeyRunner } from "@keynest/utils"
+import { runArgon2Kdf, setStretchMasterKeyRunner } from "@keynest/utils"
 
 import VaultKdfWorker from "@/workers/vault-kdf.worker?worker"
 
@@ -12,20 +12,44 @@ type WorkerPostScope = {
 	postMessage(message: KdfRequest): void
 }
 
+export const VAULT_KDF_WORKER_FAILED = "Vault KDF worker failed"
+export const VAULT_KDF_MESSAGE_FAILED = "Vault KDF worker message failed"
+
 function postKdfRequest(worker: Worker, request: KdfRequest) {
 	;(worker as WorkerPostScope).postMessage(request)
 }
 
 let worker: Worker | null = null
 let nextId = 0
+let createWorker = (): Worker => new VaultKdfWorker()
 
 const pending = new Map<number, Pending>()
 
-function getWorker() {
-	if (!worker) {
-		worker = new VaultKdfWorker()
+export function isVaultKdfInfrastructureError(error: unknown): boolean {
+	return (
+		error instanceof Error &&
+		(error.message === VAULT_KDF_WORKER_FAILED ||
+			error.message === VAULT_KDF_MESSAGE_FAILED)
+	)
+}
 
-		worker.addEventListener("message", (event: MessageEvent<KdfResponse>) => {
+function rejectAllPending(error: Error) {
+	for (const [id, entry] of pending) {
+		pending.delete(id)
+		entry.reject(error)
+	}
+}
+
+export function disposeVaultKdfWorker() {
+	if (!worker) return
+	worker.terminate()
+	worker = null
+}
+
+function attachWorkerListeners(activeWorker: Worker) {
+	activeWorker.addEventListener(
+		"message",
+		(event: MessageEvent<KdfResponse>) => {
 			const data = event.data
 			const entry = pending.get(data.id)
 
@@ -35,20 +59,30 @@ function getWorker() {
 
 			if (data.ok) entry.resolve(data.hash)
 			else entry.reject(new Error(data.error))
-		})
+		}
+	)
 
-		worker.addEventListener("error", () => {
-			for (const [id, entry] of pending) {
-				pending.delete(id)
-				entry.reject(new Error("Vault KDF worker failed"))
-			}
-		})
+	activeWorker.addEventListener("error", () => {
+		rejectAllPending(new Error(VAULT_KDF_WORKER_FAILED))
+		disposeVaultKdfWorker()
+	})
+
+	activeWorker.addEventListener("messageerror", () => {
+		rejectAllPending(new Error(VAULT_KDF_MESSAGE_FAILED))
+		disposeVaultKdfWorker()
+	})
+}
+
+function getWorker() {
+	if (!worker) {
+		worker = createWorker()
+		attachWorkerListeners(worker)
 	}
 
 	return worker
 }
 
-function stretchMasterKeyInWorker(
+function stretchMasterKeyViaWorkerOnce(
 	password: string,
 	params: KdfParams
 ): Promise<Uint8Array> {
@@ -59,6 +93,46 @@ function stretchMasterKeyInWorker(
 	})
 }
 
+async function tryStretchViaWorker(
+	password: string,
+	params: KdfParams
+): Promise<Uint8Array | null> {
+	try {
+		return await stretchMasterKeyViaWorkerOnce(password, params)
+	} catch (error) {
+		if (!isVaultKdfInfrastructureError(error)) throw error
+		disposeVaultKdfWorker()
+		return null
+	}
+}
+
+async function stretchMasterKeyInWorker(
+	password: string,
+	params: KdfParams
+): Promise<Uint8Array> {
+	const firstAttempt = await tryStretchViaWorker(password, params)
+	if (firstAttempt) return firstAttempt
+
+	const secondAttempt = await tryStretchViaWorker(password, params)
+	if (secondAttempt) return secondAttempt
+
+	return runArgon2Kdf(password, params)
+}
+
 export function installVaultKdfWorker() {
 	setStretchMasterKeyRunner(stretchMasterKeyInWorker)
+}
+
+/** @internal Test helpers */
+export function resetVaultKdfWorkerForTests(options?: {
+	createWorker?: () => Worker
+}) {
+	disposeVaultKdfWorker()
+	pending.clear()
+	nextId = 0
+	createWorker = options?.createWorker ?? (() => new VaultKdfWorker())
+}
+
+export function getVaultKdfWorkerForTests() {
+	return worker
 }
