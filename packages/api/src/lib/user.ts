@@ -159,7 +159,7 @@ function digest(
 			.update(`${label}:${counter}`)
 			.digest()
 		const take = Math.min(block.length, size - offset)
-		block.copy(bytes, offset, 0, take)
+		bytes.set(block.subarray(0, take), offset)
 		offset += take
 		counter += 1
 	}

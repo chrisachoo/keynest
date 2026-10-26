@@ -79,14 +79,14 @@ const testEnv = {
 } as unknown as ApiEnv["Bindings"]
 
 function app() {
-	const app = new Hono<ApiEnv>()
-	app.use("*", async (c, next) => {
+	const api = new Hono<ApiEnv>()
+	api.use("*", async (c, next) => {
 		c.set("db", db)
 		c.env = testEnv
 		await next()
 	})
-	app.route("/", authRoutes)
-	return app
+	api.route("/", authRoutes)
+	return api
 }
 
 function signupBody(email: string) {
