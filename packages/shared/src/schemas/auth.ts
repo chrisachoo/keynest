@@ -70,6 +70,25 @@ export const KdfParamsSchema = v.object({
 	vaultSalt: SaltFieldSchema
 })
 
+export const KdfRequestSchema = v.object({
+	id: v.number(),
+	params: KdfParamsSchema,
+	password: v.string()
+})
+
+export const KdfResponseSchema = v.variant("ok", [
+	v.object({
+		error: v.string(),
+		id: v.number(),
+		ok: v.literal(false)
+	}),
+	v.object({
+		hash: v.instance(Uint8Array),
+		id: v.number(),
+		ok: v.literal(true)
+	})
+])
+
 export const VaultWrapSchema = v.object({
 	...KdfFields,
 	...VaultWrapFields
@@ -224,6 +243,8 @@ export const SessionIdParamSchema = v.object({
 })
 
 export type KdfParams = v.InferOutput<typeof KdfParamsSchema>
+export type KdfRequest = v.InferOutput<typeof KdfRequestSchema>
+export type KdfResponse = v.InferOutput<typeof KdfResponseSchema>
 export type VaultWrap = v.InferOutput<typeof VaultWrapSchema>
 export type SignupForm = v.InferOutput<typeof SignupFormSchema>
 export type SignupInput = v.InferOutput<typeof SignupInputSchema>
