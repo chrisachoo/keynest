@@ -308,6 +308,16 @@ export function downloadVaultExport(file: VaultExport) {
 	const url = URL.createObjectURL(
 		new Blob([JSON.stringify(file)], { type: "application/json" })
 	)
+
+	const { document } = globalThis as unknown as {
+		document: {
+			createElement(tag: "a"): {
+				click(): void
+				download: string
+				href: string
+			}
+		}
+	}
 	const link = document.createElement("a")
 	link.href = url
 	link.download = "keynest-vault.json"
