@@ -1,5 +1,11 @@
 import { LoginFormSchema } from "@keynest/shared"
-import { loginSecrets, message, wipe } from "@keynest/utils"
+import {
+	installMasterKey,
+	lockVault,
+	loginSecrets,
+	message,
+	wipe
+} from "@keynest/utils"
 import { useForm } from "@tanstack/react-form"
 import { CircleCheck, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
 import { useRef, useState } from "react"
@@ -13,7 +19,6 @@ import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { authCopy } from "@/constants"
 import { fetchPrelogin } from "@/lib/auth-api"
-import { installMasterKey, lockVault } from "@/lib/vault-session"
 import { useAppDispatch } from "@/store"
 import {
 	confirmTotpAsync,
