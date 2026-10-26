@@ -1,4 +1,5 @@
 export * from "./constants"
+export * from "./email"
 export * from "./schemas/auth"
 export * from "./schemas/common"
 export * from "./schemas/events"

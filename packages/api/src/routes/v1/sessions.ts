@@ -1,12 +1,18 @@
 import { and, eq, session } from "@keynest/db"
-import { SessionIdParamSchema, SessionListSchema } from "@keynest/shared"
+import {
+	RevokeOthersInputSchema,
+	SessionIdParamSchema,
+	SessionListSchema
+} from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute, validator } from "hono-openapi"
 
 import type { ApiEnv } from "../../env"
-import { notFound } from "../../lib/http"
+import { badRequest, notFound } from "../../lib/http"
 import { jsonContent, UNAUTHORIZED_RESPONSE } from "../../lib/openapi"
+import { verifierMatches } from "../../lib/password"
 import { limitAuthSession } from "../../lib/rate-limit"
+import { storedVerifier } from "../../lib/user"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 import { clearSessionCookie } from "../../services/cookie"
 import { destroyUserSessions, listSessions } from "../../services/session"
@@ -41,16 +47,22 @@ export const sessionRoutes = new Hono<ApiEnv>()
 			description: "Sign out every session except this one.",
 			responses: {
 				204: { description: "Other sessions signed out" },
+				400: { description: "Incorrect password" },
 				401: UNAUTHORIZED_RESPONSE
 			},
 			security: [{ SessionCookie: [] }],
 			tags: ["Auth"]
 		}),
+		validator("json", RevokeOthersInputSchema),
 		async (c) => {
 			const current = getAuthUser(c)
+			const db = c.get("db")
+			const hash = await storedVerifier(db, current.id)
+			if (!verifierMatches(c.req.valid("json").verifier, hash))
+				throw badRequest("Incorrect password")
+
 			const sessionId = c.get("sessionId")
-			if (sessionId)
-				await destroyUserSessions(c.get("db"), current.id, sessionId)
+			if (sessionId) await destroyUserSessions(db, current.id, sessionId)
 			return c.body(null, 204)
 		}
 	)

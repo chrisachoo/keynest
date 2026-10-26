@@ -32,9 +32,9 @@ export function Component() {
 								wrapped vault key.
 							</li>
 							<li>
-								An authenticator secret, encrypted with the server cookie
-								secret, if you turn on two-factor authentication. Recovery codes
-								are stored only as hashes.
+								An authenticator secret, encrypted with a dedicated server key,
+								if you turn on two-factor authentication. Recovery codes are
+								stored only as hashes.
 							</li>
 						</ul>
 					</section>

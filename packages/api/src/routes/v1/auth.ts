@@ -18,21 +18,23 @@ import {
 	ChangePasswordInputSchema,
 	CREDENTIAL_PROVIDER,
 	DeleteAccountInputSchema,
+	EmailVerifiedSchema,
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
 	KDF_PARALLELISM,
 	LoginInputSchema,
+	normalizeEmail,
 	PreloginResultSchema,
 	PreloginSchema,
 	RecoverInputSchema,
 	ResendVerificationSchema,
 	RotateRecoveryInputSchema,
 	SESSION_TTL_SECONDS,
+	SignupAcceptedSchema,
 	SignupInputSchema,
 	TOTP_MAX_ATTEMPTS,
 	TOTP_TICKET_TTL_MS,
 	TotpConfirmLoginInputSchema,
-	EmailVerifiedSchema,
 	VerifyEmailSchema
 } from "@keynest/shared"
 import { Hono, type Context } from "hono"
@@ -82,6 +84,8 @@ function clientMeta(c: Context<ApiEnv>): SessionClient {
 }
 
 const ACCEPTED = { status: "accepted" as const }
+const SIGNUP_NOT_CREATED = { created: false, status: "accepted" as const }
+const SIGNUP_CREATED = { created: true, status: "accepted" as const }
 
 async function sendVerification(
 	c: Context<ApiEnv>,
@@ -206,7 +210,7 @@ export const authRoutes = new Hono<ApiEnv>()
 		},
 		validator("json", PreloginSchema),
 		async (c) => {
-			const { email } = c.req.valid("json")
+			const email = normalizeEmail(c.req.valid("json").email)
 			await enforceAuthAccount(c, email)
 			const [row] = await c
 				.get("db")
@@ -226,7 +230,7 @@ export const authRoutes = new Hono<ApiEnv>()
 				"Create an account. The server stores an authentication verifier and wrapped vault keys, not the master password.",
 			responses: {
 				200: jsonContent(
-					AcceptedSchema,
+					SignupAcceptedSchema,
 					"Accepted. When email delivery is configured, confirm the address before signing in."
 				),
 				201: jsonContent(AuthSessionSchema, "Account created"),
@@ -242,22 +246,23 @@ export const authRoutes = new Hono<ApiEnv>()
 		validator("json", SignupInputSchema),
 		async (c) => {
 			const input = c.req.valid("json")
-			await enforceAuthAccount(c, input.email)
+			const email = normalizeEmail(input.email)
+			await enforceAuthAccount(c, email)
 			const db = c.get("db")
 			const deliverMail = mailConfigured(c.env)
 
 			const [existing] = await db
 				.select({ emailVerified: user.emailVerified, id: user.id })
 				.from(user)
-				.where(eq(user.email, input.email))
+				.where(eq(user.email, email))
 				.limit(1)
 
 			if (existing) {
 				if (deliverMail && !existing.emailVerified)
-					await sendVerification(c, existing.id, input.email)
+					await sendVerification(c, existing.id, email)
 				else if (deliverMail)
-					await enqueueSignupExisting(c.env.EVENTS, existing.id, input.email)
-				return c.json(ACCEPTED)
+					await enqueueSignupExisting(c.env.EVENTS, existing.id, email)
+				return c.json(SIGNUP_NOT_CREATED)
 			}
 
 			let createdId: string | null = null
@@ -266,7 +271,7 @@ export const authRoutes = new Hono<ApiEnv>()
 				const [createdUser] = await db
 					.insert(user)
 					.values({
-						email: input.email,
+						email,
 						emailVerified: !deliverMail,
 						keyCheck: input.keyCheck,
 						keyCheckNonce: input.keyCheckNonce,
@@ -297,8 +302,8 @@ export const authRoutes = new Hono<ApiEnv>()
 				})
 
 				if (deliverMail) {
-					await sendVerification(c, stored.id, input.email)
-					return c.json(ACCEPTED)
+					await sendVerification(c, stored.id, email)
+					return c.json(SIGNUP_CREATED)
 				}
 
 				const expiresAt = await startSession(c, stored.id)
@@ -306,7 +311,7 @@ export const authRoutes = new Hono<ApiEnv>()
 			} catch (error) {
 				if (createdId) await db.delete(user).where(eq(user.id, createdId))
 
-				if (isUniqueViolation(error)) return c.json(ACCEPTED)
+				if (isUniqueViolation(error)) return c.json(SIGNUP_NOT_CREATED)
 
 				throw error
 			}
@@ -330,7 +335,8 @@ export const authRoutes = new Hono<ApiEnv>()
 		},
 		validator("json", LoginInputSchema),
 		async (c) => {
-			const { email, verifier } = c.req.valid("json")
+			const { verifier } = c.req.valid("json")
+			const email = normalizeEmail(c.req.valid("json").email)
 			await enforceAuthAccount(c, email)
 			const db = c.get("db")
 
@@ -532,12 +538,13 @@ export const authRoutes = new Hono<ApiEnv>()
 		validator("json", RecoverInputSchema),
 		async (c) => {
 			const input = c.req.valid("json")
-			await enforceAuthAccount(c, input.email)
+			const email = normalizeEmail(input.email)
+			await enforceAuthAccount(c, email)
 			const db = c.get("db")
 			const [row] = await db
 				.select()
 				.from(user)
-				.where(eq(user.email, input.email))
+				.where(eq(user.email, email))
 				.limit(1)
 
 			const matches = verifierMatches(
@@ -633,17 +640,18 @@ export const authRoutes = new Hono<ApiEnv>()
 					throw invalidCredentials(
 						"This confirmation link is invalid or expired."
 					)
+				const nextEmail = normalizeEmail(change.email)
 				const [taken] = await db
 					.select({ id: user.id })
 					.from(user)
-					.where(eq(user.email, change.email))
+					.where(eq(user.email, nextEmail))
 					.limit(1)
 				if (taken && taken.id !== change.userId)
 					throw badRequest("That email is no longer available.")
 				userId = change.userId
 				await db
 					.update(user)
-					.set({ email: change.email, emailVerified: true })
+					.set({ email: nextEmail, emailVerified: true })
 					.where(eq(user.id, userId))
 				await destroyUserSessions(db, userId)
 			}
@@ -681,7 +689,7 @@ export const authRoutes = new Hono<ApiEnv>()
 		},
 		validator("json", ResendVerificationSchema),
 		async (c) => {
-			const { email } = c.req.valid("json")
+			const email = normalizeEmail(c.req.valid("json").email)
 			await enforceAuthAccount(c, email)
 			const [row] = await c
 				.get("db")

@@ -4,6 +4,7 @@ import {
 	DisableTotpInputSchema,
 	RecoveryCodesResultSchema,
 	TotpCodeSchema,
+	TotpSetupInputSchema,
 	TotpSetupResultSchema
 } from "@keynest/shared"
 import { Hono } from "hono"
@@ -48,10 +49,16 @@ export const totpRoutes = new Hono<ApiEnv>()
 		}),
 		requireAuth,
 		limitAuthSession,
+		validator("json", TotpSetupInputSchema),
 		async (c) => {
 			const current = getAuthUser(c)
 			if (current.totpEnabled)
 				throw badRequest("Turn off the current authenticator first.")
+
+			const db = c.get("db")
+			const hash = await storedVerifier(db, current.id)
+			if (!verifierMatches(c.req.valid("json").verifier, hash))
+				throw badRequest("Incorrect password")
 
 			const secret = generateTotpSecret()
 			await c

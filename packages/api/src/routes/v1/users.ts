@@ -13,7 +13,8 @@ import {
 	AcceptedSchema,
 	AuthSessionSchema,
 	ChangeEmailInputSchema,
-	EMAIL_TOKEN_TTL_MS
+	EMAIL_TOKEN_TTL_MS,
+	normalizeEmail
 } from "@keynest/shared"
 import { Hono } from "hono"
 import { describeRoute, validator } from "hono-openapi"
@@ -43,9 +44,10 @@ export const usersRoutes = new Hono<ApiEnv>()
 		async (c) => {
 			const current = getAuthUser(c)
 			const input = c.req.valid("json")
+			const email = normalizeEmail(input.email)
 			if (!mailConfigured(c.env))
 				throw badRequest("Email delivery is not configured.")
-			if (input.email.toLowerCase() === current.email.toLowerCase())
+			if (email === normalizeEmail(current.email))
 				throw badRequest("That is already your email.")
 
 			const db = c.get("db")
@@ -56,22 +58,22 @@ export const usersRoutes = new Hono<ApiEnv>()
 			const [taken] = await db
 				.select({ id: user.id })
 				.from(user)
-				.where(eq(user.email, input.email))
+				.where(eq(user.email, email))
 				.limit(1)
 
 			if (!taken) {
 				const token = await issueToken(
 					db,
-					emailChangeIdentifier(current.id, input.email),
+					emailChangeIdentifier(current.id, email),
 					EMAIL_TOKEN_TTL_MS
 				)
 
 				const link = `${c.env.CORS_ORIGIN}/verify-email?token=${encodeURIComponent(token)}`
 
-				const message = emailChangeConfirmationEmail(input.email, link)
+				const message = emailChangeConfirmationEmail(email, link)
 				await sendMail(
 					c.env,
-					{ ...message, to: input.email },
+					{ ...message, to: email },
 					isLocalRequest(c.req.url)
 				)
 			}

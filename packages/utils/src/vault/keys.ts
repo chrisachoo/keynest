@@ -311,19 +311,23 @@ export function downloadVaultExport(file: VaultExport) {
 	const link = document.createElement("a")
 	link.href = url
 	link.download = "keynest-vault.json"
+	document.body.appendChild(link)
 	link.click()
-	URL.revokeObjectURL(url)
+	link.remove()
+	setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 function defaultKdf(
 	vaultSalt: string,
-	params: Pick<KdfParams, "kdfIterations" | "kdfMemory" | "kdfParallelism"> = {
+	params?: Pick<KdfParams, "kdfIterations" | "kdfMemory" | "kdfParallelism">
+): KdfParams {
+	return {
 		kdfIterations: KDF_ITERATIONS,
 		kdfMemory: KDF_MEMORY_KIB,
-		kdfParallelism: KDF_PARALLELISM
+		kdfParallelism: KDF_PARALLELISM,
+		...params,
+		vaultSalt
 	}
-): KdfParams {
-	return { ...params, vaultSalt }
 }
 
 function generateRecoveryPhrase() {

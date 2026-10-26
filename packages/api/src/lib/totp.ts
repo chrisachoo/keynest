@@ -35,8 +35,8 @@ export function verifyTotp(secret: string, code: string, now = Date.now()) {
 
 export function generateRecoveryCodes() {
 	return Array.from({ length: 8 }, () => {
-		const raw = base32Encode(randomBytes(5)).slice(0, 10).toLowerCase()
-		return `${raw.slice(0, 5)}-${raw.slice(5)}`
+		const raw = base32Encode(randomBytes(10)).slice(0, 16).toLowerCase()
+		return `${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8)}`
 	})
 }
 

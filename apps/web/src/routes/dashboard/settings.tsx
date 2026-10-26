@@ -1,6 +1,7 @@
-import { VAULT_IDLE_MS } from "@keynest/shared"
-import { errorMessage, message } from "@keynest/utils"
+import { PasswordSchema, VAULT_IDLE_MS } from "@keynest/shared"
+import { accountVerifier, errorMessage, message } from "@keynest/utils"
 import { useFetcher, type ActionFunctionArgs } from "react-router"
+import * as v from "valibot"
 
 import DashboardWrapper from "@/components/dashboard/dashboard-wrapper"
 import RoutingTabs from "@/components/dashboard/routing-tabs"
@@ -15,6 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Countdown } from "@/components/ui/countdown"
 import { DASHBOARD_ACTION, useVault } from "@/hooks/use-vault"
 import { client } from "@/lib/client"
+import { store } from "@/store"
+import { selectUser } from "@/store/auth/auth-slice"
 
 const idleMinutes = VAULT_IDLE_MS / 60_000
 
@@ -38,7 +41,15 @@ export async function action({
 
 	try {
 		if (intent === "revoke-others") {
-			const response = await client.sessions["revoke-others"].$post()
+			const user = selectUser(store.getState())
+			if (!user) return { error: "Log in again.", intent: "revoke-others" }
+			const parsed = v.safeParse(PasswordSchema, field(formData, "password"))
+			if (!parsed.success)
+				return { error: "Enter your password.", intent: "revoke-others" }
+			const verifier = await accountVerifier(parsed.output, user)
+			const response = await client.sessions["revoke-others"].$post({
+				json: { verifier }
+			})
 			if (!response.ok) throw new Error(await errorMessage(response))
 			return { intent: "revoke-others" }
 		}

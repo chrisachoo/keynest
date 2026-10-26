@@ -279,6 +279,19 @@ function TwoFactor() {
 			? confirm.data.recoveryCodes
 			: null
 
+	const setupForm = useForm({
+		defaultValues: { password: "" },
+		onSubmit: async ({ value }) => {
+			await setup.submit(
+				{ ...value, intent: "totp-setup" },
+				{ action: ACCOUNT_ACTION, method: "post" }
+			)
+		},
+		validators: {
+			onSubmit: v.object({ password: PasswordSchema })
+		}
+	})
+
 	const confirmForm = useForm({
 		defaultValues: { code: "" },
 		onSubmit: async ({ value }) => {
@@ -403,19 +416,34 @@ function TwoFactor() {
 					</Button>
 				</form>
 			) : (
-				<Button
-					disabled={setupPending}
-					onClick={() => {
-						void setup.submit(
-							{ intent: "totp-setup" },
-							{ action: ACCOUNT_ACTION, method: "post" }
-						)
+				<form
+					className="space-y-3"
+					onSubmit={(event) => {
+						event.preventDefault()
+						event.stopPropagation()
+						void setupForm.handleSubmit()
 					}}
-					type="button"
-					variant="outline"
 				>
-					{setupPending ? "Preparing..." : "Set up authenticator"}
-				</Button>
+					<setupForm.Field name="password">
+						{(field) => (
+							<Fieldset className="p-0">
+								<Legend>Password</Legend>
+								<Input
+									autoComplete="current-password"
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									required
+									type="password"
+									value={field.state.value}
+								/>
+								<FieldError errors={field.state.meta.errors} />
+							</Fieldset>
+						)}
+					</setupForm.Field>
+					<Button disabled={setupPending} type="submit" variant="outline">
+						{setupPending ? "Preparing..." : "Set up authenticator"}
+					</Button>
+				</form>
 			)}
 		</div>
 	)
