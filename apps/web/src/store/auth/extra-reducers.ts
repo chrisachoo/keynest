@@ -3,6 +3,9 @@ import {
 	type ChangePasswordInput,
 	type DeleteAccountInput,
 	type LoginInput,
+	type OAuthCodeInput,
+	type OAuthCompleteInput,
+	type OAuthConfirmInput,
 	type RecoverInput,
 	type SignupInput,
 	type TotpConfirmLoginInput
@@ -65,6 +68,80 @@ export const signupAsync = createAsyncThunk(
 
 			if (!response.ok) return rejectWithValue(await errorMessage(response))
 
+			return await response.json()
+		} catch (error) {
+			return rejectWithValue(message(error))
+		}
+	}
+)
+
+export const googleStateAsync = createAsyncThunk(
+	"auth/googleStateAsync",
+	async (_, { rejectWithValue }) => {
+		try {
+			const response = await client.auth.oauth.google.state.$post()
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
+			return await response.json()
+		} catch (error) {
+			return rejectWithValue(message(error))
+		}
+	}
+)
+
+export const googleAuthAsync = createAsyncThunk(
+	"auth/googleAuthAsync",
+	async (input: OAuthCodeInput, { rejectWithValue }) => {
+		try {
+			const response = await client.auth.oauth.google.$post(
+				{ json: input },
+				{ headers: { "X-Requested-With": "XmlHttpRequest" } }
+			)
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
+			return await response.json()
+		} catch (error) {
+			return rejectWithValue(message(error))
+		}
+	}
+)
+
+export const googleConfirmAsync = createAsyncThunk(
+	"auth/googleConfirmAsync",
+	async (input: OAuthConfirmInput, { rejectWithValue }) => {
+		try {
+			const response = await client.auth.oauth.google.confirm.$post({
+				json: input
+			})
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
+			return await response.json()
+		} catch (error) {
+			return rejectWithValue(message(error))
+		}
+	}
+)
+
+export const googleCancelAsync = createAsyncThunk(
+	"auth/googleCancelAsync",
+	async (ticket: string | undefined, { rejectWithValue }) => {
+		try {
+			const response = await client.auth.oauth.google.cancel.$post({
+				json: ticket ? { ticket } : {}
+			})
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
+			return null
+		} catch (error) {
+			return rejectWithValue(message(error))
+		}
+	}
+)
+
+export const googleCompleteAsync = createAsyncThunk(
+	"auth/googleCompleteAsync",
+	async (input: OAuthCompleteInput, { rejectWithValue }) => {
+		try {
+			const response = await client.auth.oauth.google.complete.$post({
+				json: input
+			})
+			if (!response.ok) return rejectWithValue(await errorMessage(response))
 			return await response.json()
 		} catch (error) {
 			return rejectWithValue(message(error))

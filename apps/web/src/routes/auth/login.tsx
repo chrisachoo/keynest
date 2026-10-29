@@ -14,10 +14,12 @@ import * as v from "valibot"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
+import GoogleStepForm from "@/components/auth/google-step-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { authCopy } from "@/constants"
+import { useGoogleAuth } from "@/hooks/use-google-auth"
 import { fetchPrelogin } from "@/lib/auth-api"
 import { useAppDispatch } from "@/store"
 import {
@@ -31,6 +33,7 @@ export function Component() {
 	const [searchParams] = useSearchParams()
 	const copy = authCopy["login"]
 	const dispatch = useAppDispatch()
+	const google = useGoogleAuth()
 	const emailVerified = searchParams.get("verified") === "1"
 
 	const [showPassword, setShowPassword] = useState(false)
@@ -186,8 +189,22 @@ export function Component() {
 		)
 	}
 
+	if (google.step)
+		return (
+			<GoogleStepForm
+				authCopyKey="login"
+				flow={google}
+				key={google.step.kind}
+				step={google.step}
+			/>
+		)
+
 	return (
-		<AuthFormWrapper authCopyKey="login" serverError={serverError}>
+		<AuthFormWrapper
+			authCopyKey="login"
+			onGoogle={google.onGoogle}
+			serverError={serverError ?? google.error}
+		>
 			{emailVerified ? (
 				<Alert
 					className="mb-2"
@@ -201,6 +218,7 @@ export function Component() {
 					</AlertDescription>
 				</Alert>
 			) : null}
+
 			<form
 				onSubmit={(event) => {
 					event.preventDefault()

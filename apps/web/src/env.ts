@@ -3,6 +3,7 @@ import * as v from "valibot"
 
 export const env = createEnv({
 	client: {
+		VITE_GOOGLE_CLIENT_ID: v.optional(v.string()),
 		VITE_SERVER_URL: v.pipe(v.string(), v.url())
 	},
 	clientPrefix: "VITE_",

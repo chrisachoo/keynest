@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Github, Google } from "@/components/ui/icons"
 
-export default function SocialButtons() {
+export default function SocialButtons({
+	onGoogle
+}: Readonly<{ onGoogle?: () => void }>) {
 	return (
 		<div className="flex items-center justify-center gap-2">
 			<Button
@@ -17,6 +19,8 @@ export default function SocialButtons() {
 				type="button"
 				shape="square"
 				aria-label="Continue with Google"
+				disabled={!onGoogle}
+				onClick={onGoogle}
 				className="border-base-300 bg-base-100 text-base-content"
 			>
 				<Google />

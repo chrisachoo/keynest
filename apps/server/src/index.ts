@@ -15,7 +15,7 @@ const app = new Hono<{ Bindings: CloudflareEnv }>({ strict: true })
 		const { CORS_ORIGIN } = createServerEnv(c.env)
 
 		return cors({
-			allowHeaders: ["Content-Type", "Authorization"],
+			allowHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 			allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 			credentials: true,
 			origin: CORS_ORIGIN
