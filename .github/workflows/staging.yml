@@ -34,4 +34,6 @@ jobs:
           TOTP_ENCRYPTION_KEY: ${{ secrets.STAGING_TOTP_ENCRYPTION_KEY }}
           CORS_ORIGIN: ${{ secrets.STAGING_CORS_ORIGIN }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
