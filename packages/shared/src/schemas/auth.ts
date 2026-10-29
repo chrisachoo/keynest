@@ -121,6 +121,30 @@ export const OAuthPendingProfileSchema = v.object({
 	name: NameSchema
 })
 
+const OAuthStateValueSchema = v.pipe(
+	v.string(),
+	v.minLength(32),
+	v.maxLength(200)
+)
+
+export const OAuthStateResultSchema = v.object({
+	state: OAuthStateValueSchema
+})
+
+export const OAuthCodeInputSchema = v.object({
+	code: v.pipe(v.string(), v.nonEmpty(), v.maxLength(2048)),
+	state: OAuthStateValueSchema
+})
+
+export const OAuthCancelInputSchema = v.object({
+	ticket: v.optional(v.pipe(v.string(), v.minLength(20), v.maxLength(200)))
+})
+
+export const OAuthPendingResultSchema = v.object({
+	...OAuthPendingProfileSchema.entries,
+	status: v.literal("pending")
+})
+
 export const LoginFormSchema = v.object({
 	email: EmailSchema,
 	password: PasswordSchema
@@ -145,6 +169,16 @@ export const PreloginResultSchema = v.object({
 	recoveryWrappedKey: SealedFieldSchema,
 	recoveryWrappedKeyNonce: SealedFieldSchema,
 	vaultSalt: SaltFieldSchema
+})
+
+export const OAuthLoginChallengeSchema = v.object({
+	...PreloginResultSchema.entries,
+	ticket: v.pipe(v.string(), v.minLength(20), v.maxLength(200))
+})
+
+export const OAuthConfirmInputSchema = v.object({
+	ticket: v.pipe(v.string(), v.minLength(20), v.maxLength(200)),
+	verifier: VerifierFieldSchema
 })
 
 export const ChangePasswordInputSchema = v.object({
@@ -207,6 +241,25 @@ export const TotpChallengeSchema = v.object({
 	totpRequired: v.literal(true)
 })
 
+export const GoogleStepSchema = v.variant("kind", [
+	v.object({
+		challenge: OAuthLoginChallengeSchema,
+		kind: v.literal("password")
+	}),
+	v.object({
+		kind: v.literal("totp"),
+		ticket: TotpChallengeSchema.entries.ticket
+	}),
+	v.object({
+		kind: v.literal("pending"),
+		profile: OAuthPendingProfileSchema
+	}),
+	v.object({
+		kind: v.literal("recovery"),
+		phrase: v.pipe(v.string(), v.nonEmpty(), v.maxLength(200))
+	})
+])
+
 export const TotpConfirmLoginInputSchema = v.object({
 	code: v.pipe(v.string(), v.trim(), v.minLength(6), v.maxLength(44)),
 	ticket: v.pipe(v.string(), v.minLength(20), v.maxLength(200))
@@ -265,6 +318,15 @@ export type OAuthCompleteInput = v.InferOutput<typeof OAuthCompleteInputSchema>
 export type OAuthPendingProfile = v.InferOutput<
 	typeof OAuthPendingProfileSchema
 >
+export type OAuthCodeInput = v.InferOutput<typeof OAuthCodeInputSchema>
+export type OAuthStateResult = v.InferOutput<typeof OAuthStateResultSchema>
+export type OAuthCancelInput = v.InferOutput<typeof OAuthCancelInputSchema>
+export type OAuthLoginChallenge = v.InferOutput<
+	typeof OAuthLoginChallengeSchema
+>
+export type OAuthConfirmInput = v.InferOutput<typeof OAuthConfirmInputSchema>
+export type OAuthPendingResult = v.InferOutput<typeof OAuthPendingResultSchema>
+export type GoogleStep = v.InferOutput<typeof GoogleStepSchema>
 export type LoginForm = v.InferOutput<typeof LoginFormSchema>
 export type LoginInput = v.InferOutput<typeof LoginInputSchema>
 export type UnlockInput = v.InferOutput<typeof UnlockInputSchema>

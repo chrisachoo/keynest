@@ -1,5 +1,6 @@
 export const VAULT_ITEM_TYPES = ["login", "secure_note"] as const
 export const CREDENTIAL_PROVIDER = "credential"
+export const GOOGLE_PROVIDER = "google"
 export const OAUTH_PENDING_COOKIE = "oauth_pending"
 export const OAUTH_STATE_COOKIE = "oauth_state"
 export const SESSION_COOKIE = "session"
