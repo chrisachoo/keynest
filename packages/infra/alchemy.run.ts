@@ -1,6 +1,7 @@
 import * as Alchemy from "alchemy"
 import * as Cloudflare from "alchemy/Cloudflare"
 import * as Output from "alchemy/Output"
+import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 
 import { webWorkerDomain } from "./src/domains"
@@ -44,6 +45,9 @@ export default Alchemy.Stack(
 			dev: { port: 5173 },
 			domain: webWorkerDomain(stage),
 			env: {
+				VITE_GOOGLE_CLIENT_ID: Config.String("GOOGLE_CLIENT_ID").pipe(
+					Config.withDefault("")
+				),
 				VITE_SERVER_URL: serverWorker.url.as<string>()
 			},
 			rootDir: "../../apps/web"

@@ -33,6 +33,12 @@ export function createServer(stage: string, events: Cloudflare.Queues.Queue) {
 			DB: db,
 			EMAIL_FROM: Config.String("EMAIL_FROM").pipe(Config.withDefault("")),
 			EVENTS: events,
+			GOOGLE_CLIENT_ID: Config.String("GOOGLE_CLIENT_ID").pipe(
+				Config.withDefault("")
+			),
+			GOOGLE_CLIENT_SECRET: Config.String("GOOGLE_CLIENT_SECRET").pipe(
+				Config.withDefault("")
+			),
 			RESEND_API_KEY: Config.String("RESEND_API_KEY").pipe(
 				Config.withDefault("")
 			)

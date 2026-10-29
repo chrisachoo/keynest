@@ -1,12 +1,13 @@
 export function securityHeaders(apiOrigin: string) {
 	const policy = [
 		"default-src 'self'",
-		"script-src 'self' 'wasm-unsafe-eval'",
-		"style-src 'self'",
+		"script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client",
+		"style-src 'self' https://accounts.google.com/gsi/style",
 		"style-src-attr 'unsafe-inline'",
 		"img-src 'self' data:",
 		"font-src 'self'",
-		`connect-src 'self' ${apiOrigin}`,
+		`connect-src 'self' ${apiOrigin} https://accounts.google.com/gsi/`,
+		"frame-src https://accounts.google.com/gsi/",
 		"frame-ancestors 'none'",
 		"base-uri 'self'",
 		"form-action 'self'",
@@ -16,7 +17,7 @@ export function securityHeaders(apiOrigin: string) {
 	return [
 		"/*",
 		`  Content-Security-Policy: ${policy}`,
-		"  Cross-Origin-Opener-Policy: same-origin",
+		"  Cross-Origin-Opener-Policy: same-origin-allow-popups",
 		"  Referrer-Policy: no-referrer",
 		"  Strict-Transport-Security: max-age=15552000; includeSubDomains",
 		"  X-Content-Type-Options: nosniff",
