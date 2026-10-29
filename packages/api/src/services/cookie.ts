@@ -1,4 +1,10 @@
-import { SESSION_COOKIE, SESSION_TTL_SECONDS } from "@keynest/shared"
+import {
+	OAUTH_FLOW_TTL_SECONDS,
+	OAUTH_PENDING_COOKIE,
+	OAUTH_STATE_COOKIE,
+	SESSION_COOKIE,
+	SESSION_TTL_SECONDS
+} from "@keynest/shared"
 import type { Context } from "hono"
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie"
 
@@ -58,4 +64,52 @@ export async function readSessionCookie(
 
 export function clearSessionCookie(c: Context<ApiEnv>): void {
 	deleteCookie(c, SESSION_COOKIE, sessionCookieOptions(c))
+}
+
+export async function setOAuthPendingCookie(
+	c: Context<ApiEnv>,
+	value: string
+): Promise<void> {
+	await setSignedCookie(
+		c,
+		OAUTH_PENDING_COOKIE,
+		value,
+		cookieSecret(c),
+		sessionCookieOptions(c, OAUTH_FLOW_TTL_SECONDS)
+	)
+}
+
+export async function readOAuthPendingCookie(
+	c: Context<ApiEnv>
+): Promise<string | null> {
+	const value = await getSignedCookie(c, cookieSecret(c), OAUTH_PENDING_COOKIE)
+	return typeof value === "string" ? value : null
+}
+
+export function clearOAuthPendingCookie(c: Context<ApiEnv>): void {
+	deleteCookie(c, OAUTH_PENDING_COOKIE, sessionCookieOptions(c))
+}
+
+export async function setOAuthStateCookie(
+	c: Context<ApiEnv>,
+	value: string
+): Promise<void> {
+	await setSignedCookie(
+		c,
+		OAUTH_STATE_COOKIE,
+		value,
+		cookieSecret(c),
+		sessionCookieOptions(c, OAUTH_FLOW_TTL_SECONDS)
+	)
+}
+
+export async function readOAuthStateCookie(
+	c: Context<ApiEnv>
+): Promise<string | null> {
+	const value = await getSignedCookie(c, cookieSecret(c), OAUTH_STATE_COOKIE)
+	return typeof value === "string" ? value : null
+}
+
+export function clearOAuthStateCookie(c: Context<ApiEnv>): void {
+	deleteCookie(c, OAUTH_STATE_COOKIE, sessionCookieOptions(c))
 }

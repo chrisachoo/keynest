@@ -3,6 +3,7 @@ import { createHmac } from "node:crypto"
 import { account, and, eq, user, type Database } from "@keynest/db"
 import {
 	CREDENTIAL_PROVIDER,
+	GOOGLE_PROVIDER,
 	KDF_ITERATIONS,
 	KDF_MEMORY_KIB,
 	KDF_PARALLELISM,
@@ -142,6 +143,68 @@ export async function storedVerifier(db: Database, userId: string) {
 		.limit(1)
 
 	return row?.password ?? null
+}
+
+export function googleLoginIdentifier(userId: string, sub: string | null) {
+	if (!sub) return `google-login:${userId}`
+	return `google-login:${userId}:${Buffer.from(sub).toString("base64url")}`
+}
+
+export function parseGoogleLogin(identifier: string) {
+	const prefix = "google-login:"
+	if (!identifier.startsWith(prefix)) return null
+	const rest = identifier.slice(prefix.length)
+	const split = rest.indexOf(":")
+	if (split < 0) return rest ? { sub: null, userId: rest } : null
+	const userId = rest.slice(0, split)
+	const sub = Buffer.from(rest.slice(split + 1), "base64url").toString("utf8")
+	if (!userId || !sub) return null
+	return { sub, userId }
+}
+
+export function totpLoginIdentifier(
+	attempts: number,
+	userId: string,
+	googleSub: string | null
+) {
+	const base = `totp-login:${attempts}:${userId}`
+	if (!googleSub) return base
+	return `${base}:google:${Buffer.from(googleSub).toString("base64url")}`
+}
+
+export function parseTotpLogin(identifier: string) {
+	const match = /^totp-login:(\d+):([^:]+)(?::google:([A-Za-z0-9_-]+))?$/.exec(
+		identifier
+	)
+	if (!match?.[2]) return null
+	const attempts = Number(match[1])
+	if (!Number.isInteger(attempts)) return null
+	const googleSub = match[3]
+		? Buffer.from(match[3], "base64url").toString("utf8")
+		: null
+	if (match[3] && !googleSub) return null
+	return { attempts, googleSub, userId: match[2] }
+}
+
+export async function linkGoogleAccount(
+	db: Database,
+	userId: string,
+	sub: string
+) {
+	try {
+		await db.insert(account).values({
+			accountId: sub,
+			providerId: GOOGLE_PROVIDER,
+			userId
+		})
+	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("UNIQUE constraint failed")
+		)
+			return
+		throw error
+	}
 }
 
 function digest(

@@ -57,11 +57,14 @@ import {
 	limitAuthSession
 } from "../../lib/rate-limit"
 import {
+	linkGoogleAccount,
+	parseTotpLogin,
 	placeholderPrelogin,
 	readPrelogin,
 	readVaultUser,
 	storedVerifier,
-	toAuthSession
+	toAuthSession,
+	totpLoginIdentifier
 } from "../../lib/user"
 import { getAuthUser, requireAuth } from "../../middleware/auth"
 import { clearSessionCookie, setSessionCookie } from "../../services/cookie"
@@ -95,7 +98,7 @@ async function sendVerification(
 	await enqueueUserSignedUp(c.env.EVENTS, c.get("db"), userId, email)
 }
 
-async function startSession(
+export async function startSession(
 	c: Context<ApiEnv>,
 	userId: string,
 	ttlSeconds = SESSION_TTL_SECONDS
@@ -366,7 +369,7 @@ export const authRoutes = new Hono<ApiEnv>()
 			if (row.user.totpEnabled) {
 				const ticket = await issueToken(
 					db,
-					`totp-login:0:${stored.id}`,
+					totpLoginIdentifier(0, stored.id, null),
 					TOTP_TICKET_TTL_MS
 				)
 				return c.json({ ticket, totpRequired: true as const })
@@ -396,12 +399,11 @@ export const authRoutes = new Hono<ApiEnv>()
 			const { code, ticket } = c.req.valid("json")
 			const db = c.get("db")
 			const pending = await readToken(db, ticket)
-			if (!pending?.identifier.startsWith("totp-login:"))
+			const parsed = pending ? parseTotpLogin(pending.identifier) : null
+			if (!pending || !parsed)
 				throw invalidCredentials("That sign-in code expired. Try again.")
 
-			const [, attemptsText, userId] = pending.identifier.split(":")
-			const attempts = Number(attemptsText)
-			if (!userId || Number.isNaN(attempts)) throw invalidCredentials()
+			const { attempts, googleSub, userId } = parsed
 
 			const [row] = await db
 				.select()
@@ -420,11 +422,12 @@ export const authRoutes = new Hono<ApiEnv>()
 				await replaceTokenIdentifier(
 					db,
 					pending.id,
-					`totp-login:${attempts + 1}:${userId}`
+					totpLoginIdentifier(attempts + 1, userId, googleSub)
 				)
 				throw invalidCredentials("Incorrect authentication code")
 			}
 
+			if (googleSub) await linkGoogleAccount(db, stored.id, googleSub)
 			await deleteToken(db, pending.id)
 			const expiresAt = await startSession(c, stored.id)
 			return c.json(toAuthSession(stored, expiresAt))
