@@ -13,9 +13,11 @@ import { useNavigate } from "react-router"
 
 import AuthFormField from "@/components/auth/auth-form-field"
 import AuthFormWrapper from "@/components/auth/auth-form-wrapper"
+import GoogleStepForm from "@/components/auth/google-step-form"
 import RecoveryKit from "@/components/auth/recovery-kit"
 import { Button } from "@/components/ui/button"
 import { authCopy } from "@/constants"
+import { useGoogleAuth } from "@/hooks/use-google-auth"
 import { useAppDispatch } from "@/store"
 import { signupAsync } from "@/store/auth/extra-reducers"
 
@@ -23,6 +25,7 @@ export function Component() {
 	const navigate = useNavigate()
 	const copy = authCopy["signup"]
 	const dispatch = useAppDispatch()
+	const google = useGoogleAuth()
 
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
@@ -115,8 +118,22 @@ export function Component() {
 		)
 	}
 
+	if (google.step)
+		return (
+			<GoogleStepForm
+				authCopyKey="signup"
+				flow={google}
+				key={google.step.kind}
+				step={google.step}
+			/>
+		)
+
 	return (
-		<AuthFormWrapper authCopyKey="signup" serverError={serverError}>
+		<AuthFormWrapper
+			authCopyKey="signup"
+			onGoogle={google.onGoogle}
+			serverError={serverError ?? google.error}
+		>
 			<form
 				onSubmit={(event) => {
 					event.preventDefault()

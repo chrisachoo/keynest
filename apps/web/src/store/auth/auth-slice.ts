@@ -6,6 +6,8 @@ import {
 	confirmTotpAsync,
 	deleteAccountAsync,
 	fetchMeAsync,
+	googleCompleteAsync,
+	googleConfirmAsync,
 	loginAsync,
 	logoutAsync,
 	recoverAsync,
@@ -60,6 +62,13 @@ const authSlice = createSlice({
 			})
 			.addCase(signupAsync.fulfilled, (state, action) => {
 				if (!("sessionExpiresAt" in action.payload)) return
+				applySession(state, action.payload)
+			})
+			.addCase(googleConfirmAsync.fulfilled, (state, action) => {
+				if (!("sessionExpiresAt" in action.payload)) return
+				applySession(state, action.payload)
+			})
+			.addCase(googleCompleteAsync.fulfilled, (state, action) => {
 				applySession(state, action.payload)
 			})
 			.addCase(changePasswordAsync.fulfilled, (state, action) => {

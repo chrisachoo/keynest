@@ -12,12 +12,14 @@ type AuthFormWrapperProps = {
 	children: ReactNode
 	serverError: string | null
 	authCopyKey: keyof typeof authCopy
+	onGoogle?: () => void
 }
 
 export default function AuthFormWrapper({
 	children,
 	serverError,
-	authCopyKey
+	authCopyKey,
+	onGoogle
 }: AuthFormWrapperProps) {
 	const { title, subtitle, switchLink, switchPrompt, switchTo } =
 		authCopy[authCopyKey]
@@ -44,7 +46,7 @@ export default function AuthFormWrapper({
 				</div>
 			</div>
 
-			<SocialButtons />
+			<SocialButtons onGoogle={onGoogle} />
 
 			<div className="relative flex items-center">
 				<div className="flex-1 border-t" />
