@@ -17,6 +17,7 @@
 		"@valibot/to-json-schema": "catalog:",
 		"hono": "catalog:",
 		"hono-openapi": "catalog:",
+		"oauth4webapi": "^3.8.8",
 		"valibot": "catalog:"
 	},
 	"devDependencies": {

@@ -9,6 +9,8 @@ export type ApiEnv = {
 		COOKIE_SECRET: string
 		CORS_ORIGIN: string
 		ERROR_REPORT: RateLimit
+		GOOGLE_CLIENT_ID?: string
+		GOOGLE_CLIENT_SECRET?: string
 		TOTP_ENCRYPTION_KEY: string
 		DB: D1Database
 		EMAIL_FROM?: string
