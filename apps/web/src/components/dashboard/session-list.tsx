@@ -66,6 +66,7 @@ export default function SessionList() {
 									<Legend>Password</Legend>
 									<Input
 										autoComplete="current-password"
+										className="input"
 										disabled={othersPending}
 										name={field.name}
 										onBlur={field.handleBlur}
