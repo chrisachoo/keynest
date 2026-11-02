@@ -119,6 +119,7 @@ function ChangePassword() {
 						<Legend>Current password</Legend>
 						<Input
 							autoComplete="current-password"
+							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
@@ -135,6 +136,7 @@ function ChangePassword() {
 					<Fieldset className="p-0">
 						<Legend>New password</Legend>
 						<Input
+							className="input"
 							autoComplete="new-password"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
@@ -152,6 +154,7 @@ function ChangePassword() {
 					<Fieldset className="p-0">
 						<Legend>Confirm password</Legend>
 						<Input
+							className="input"
 							autoComplete="new-password"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
@@ -219,6 +222,7 @@ function ChangeEmail() {
 						<Legend>New email</Legend>
 						<Input
 							autoComplete="email"
+							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
@@ -235,6 +239,7 @@ function ChangeEmail() {
 						<Legend>Password</Legend>
 						<Input
 							autoComplete="current-password"
+							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
@@ -354,6 +359,7 @@ function TwoFactor() {
 								<Legend>Password</Legend>
 								<Input
 									autoComplete="current-password"
+									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
@@ -369,6 +375,7 @@ function TwoFactor() {
 							<Fieldset className="p-0">
 								<Legend>Authentication code</Legend>
 								<Input
+									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
@@ -402,6 +409,7 @@ function TwoFactor() {
 							<Fieldset className="p-0">
 								<Legend>Code from the app</Legend>
 								<Input
+									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
@@ -430,6 +438,7 @@ function TwoFactor() {
 								<Legend>Password</Legend>
 								<Input
 									autoComplete="current-password"
+									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
@@ -490,6 +499,7 @@ function DeleteAccount() {
 						<Legend>Password</Legend>
 						<Input
 							autoComplete="current-password"
+							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
@@ -594,6 +604,7 @@ function IssueRecovery() {
 						<Legend>Current password</Legend>
 						<Input
 							autoComplete="current-password"
+							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
