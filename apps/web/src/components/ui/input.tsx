@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import type { ComponentProps } from "react"
 
-const inputVariants = cva("input w-full", {
+const inputVariants = cva("w-full", {
 	variants: {
 		color: {
 			accent: "input-accent",
