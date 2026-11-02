@@ -6,7 +6,6 @@ import { authAssurance, authCopy } from "@/constants"
 
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Logo from "../ui/logo"
-import SocialButtons from "../ui/social-buttons"
 
 type AuthFormWrapperProps = {
 	children: ReactNode
@@ -44,7 +43,8 @@ export default function AuthFormWrapper({
 				</div>
 			</div>
 
-			<SocialButtons />
+			{/* TODO: Add social login buttons if needed */}
+			{/* <SocialButtons />
 
 			<div className="relative flex items-center">
 				<div className="flex-1 border-t" />
@@ -52,7 +52,7 @@ export default function AuthFormWrapper({
 					OR CONTINUE WITH EMAIL
 				</span>
 				<div className="flex-1 border-t" />
-			</div>
+			</div> */}
 
 			{children}
 
