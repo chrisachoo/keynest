@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto"
 
-import { eq, verification, type Database } from "@keynest/db"
+import { and, eq, verification, type Database } from "@keynest/db"
 
 function hashToken(token: string) {
 	return createHash("sha256").update(token).digest("hex")
@@ -52,12 +52,20 @@ export async function deleteToken(db: Database, id: string) {
 export async function replaceTokenIdentifier(
 	db: Database,
 	id: string,
+	expectedIdentifier: string,
 	identifier: string
-) {
-	await db
+): Promise<boolean> {
+	const [updated] = await db
 		.update(verification)
 		.set({ identifier })
-		.where(eq(verification.id, id))
+		.where(
+			and(
+				eq(verification.id, id),
+				eq(verification.identifier, expectedIdentifier)
+			)
+		)
+		.returning({ id: verification.id })
+	return updated !== undefined
 }
 
 export function emailChangeIdentifier(userId: string, email: string) {

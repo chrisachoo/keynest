@@ -420,6 +420,7 @@ export const authRoutes = new Hono<ApiEnv>()
 				await replaceTokenIdentifier(
 					db,
 					pending.id,
+					pending.identifier,
 					`totp-login:${attempts + 1}:${userId}`
 				)
 				throw invalidCredentials("Incorrect authentication code")
