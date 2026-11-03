@@ -63,13 +63,10 @@ export function Component() {
 					wipe(recovered.masterKey)
 					lockVault()
 					if (signedIn) await dispatch(logoutAsync())
-					setServerError(
-						signedIn
-							? "Could not unlock the vault."
-							: typeof error === "string"
-								? error
-								: message(error)
-					)
+					let recoverError = message(error)
+					if (signedIn) recoverError = "Could not unlock the vault."
+					else if (typeof error === "string") recoverError = error
+					setServerError(recoverError)
 				}
 			} catch (error) {
 				setServerError(message(error))

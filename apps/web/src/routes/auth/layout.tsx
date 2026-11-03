@@ -1,17 +1,20 @@
+import { useMemo, useState } from "react"
 import { Outlet } from "react-router"
 
-import AuthPanel from "@/components/auth/auth-panel"
+import type { AuthPanelMode } from "@/components/auth/auth-panel"
+import AuthShell from "@/components/auth/auth-shell"
+
+export type AuthOutletContext = {
+	setPanel: (mode: AuthPanelMode) => void
+}
 
 export function Component() {
-	return (
-		<main className="h-screen w-full">
-			<div className="grid h-screen gap-2 md:grid-cols-sidebar-layout">
-				<div className="flex items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
-					<Outlet />
-				</div>
+	const [panel, setPanel] = useState<AuthPanelMode>("default")
+	const context = useMemo(() => ({ setPanel }), [setPanel])
 
-				<AuthPanel />
-			</div>
-		</main>
+	return (
+		<AuthShell panel={panel}>
+			<Outlet context={context satisfies AuthOutletContext} />
+		</AuthShell>
 	)
 }

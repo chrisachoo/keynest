@@ -1,6 +1,7 @@
 import { getInitials } from "@keynest/utils"
 import { LockKeyhole, Search } from "lucide-react"
 
+import AccountMenu from "@/components/dashboard/account-menu"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
@@ -40,7 +41,13 @@ export default function SiteHeader({
 				</Button>
 				<ToggleTheme />
 				<div className="sm:hidden">
-					<Avatar>{getInitials(user?.name ?? "")}</Avatar>
+					<AccountMenu
+						label="Open account menu"
+						triggerClassName="btn btn-circle btn-ghost"
+						className="dropdown-end dropdown-bottom"
+					>
+						<Avatar>{getInitials(user?.name ?? "")}</Avatar>
+					</AccountMenu>
 				</div>
 			</div>
 		</header>

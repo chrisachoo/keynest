@@ -1,5 +1,6 @@
+import { cn } from "cn"
 import { CircleAlert, LockKeyhole } from "lucide-react"
-import type { ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { Link } from "react-router"
 
 import { authAssurance, authCopy } from "@/constants"
@@ -7,22 +8,58 @@ import { authAssurance, authCopy } from "@/constants"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert"
 import Logo from "../ui/logo"
 
+export type AuthStep = "account" | "email" | "recovery"
+
+const steps: Array<{ id: AuthStep; label: string }> = [
+	{ id: "account", label: "Account" },
+	{ id: "recovery", label: "Recovery" },
+	{ id: "email", label: "Email" }
+]
+
 type AuthFormWrapperProps = {
+	authCopyKey: keyof typeof authCopy
 	children: ReactNode
 	serverError: string | null
-	authCopyKey: keyof typeof authCopy
+	showSwitch?: boolean
+	stageKey?: string
+	step?: AuthStep
+	subtitle?: string
+	title?: string
 }
 
 export default function AuthFormWrapper({
 	children,
 	serverError,
-	authCopyKey
+	authCopyKey,
+	showSwitch = true,
+	stageKey,
+	step,
+	subtitle,
+	title
 }: AuthFormWrapperProps) {
-	const { title, subtitle, switchLink, switchPrompt, switchTo } =
-		authCopy[authCopyKey]
+	const copy = authCopy[authCopyKey]
+	const heading = title ?? copy.title
+	const lede = subtitle ?? copy.subtitle
+	const headingRef = useRef<HTMLHeadingElement>(null)
+	const skipFocus = useRef(true)
+	const activeIndex = step ? steps.findIndex((item) => item.id === step) : -1
+	const showLegal = authCopyKey === "signup" && (!step || step === "account")
+
+	useEffect(() => {
+		if (skipFocus.current) {
+			skipFocus.current = false
+			return
+		}
+		if (heading) headingRef.current?.focus()
+	}, [heading])
 
 	return (
-		<div className="mx-auto flex w-full max-w-md flex-col justify-center gap-7">
+		<div
+			className={cn(
+				"mx-auto flex w-full max-w-md flex-col justify-center gap-7",
+				stageKey && "min-h-136"
+			)}
+		>
 			<div className="flex flex-col items-center gap-4 text-center">
 				{serverError && (
 					<Alert
@@ -38,32 +75,52 @@ export default function AuthFormWrapper({
 				<Logo size="md" to="/" />
 
 				<div className="space-y-2">
-					<h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-					<p className="text-muted-foreground text-sm">{subtitle}</p>
+					<h1
+						className="text-3xl font-semibold tracking-tight"
+						ref={headingRef}
+						tabIndex={-1}
+					>
+						{heading}
+					</h1>
+					<p className="text-muted-foreground text-sm">{lede}</p>
 				</div>
+
+				{step ? (
+					<ul aria-label="Create account" className="steps w-full text-xs">
+						{steps.map((item, index) => (
+							<li
+								aria-current={index === activeIndex ? "step" : undefined}
+								className={cn("step", index <= activeIndex && "step-primary")}
+								key={item.id}
+							>
+								{item.label}
+							</li>
+						))}
+					</ul>
+				) : null}
 			</div>
 
-			{/* TODO: Add social login buttons if needed */}
-			{/* <SocialButtons />
+			{stageKey ? (
+				<div
+					className="animate-in duration-300 ease-out fade-in slide-in-from-bottom-2 motion-reduce:animate-none"
+					key={stageKey}
+				>
+					{children}
+				</div>
+			) : (
+				children
+			)}
 
-			<div className="relative flex items-center">
-				<div className="flex-1 border-t" />
-				<span className="text-muted-foreground px-3 text-xs">
-					OR CONTINUE WITH EMAIL
-				</span>
-				<div className="flex-1 border-t" />
-			</div> */}
+			{showSwitch ? (
+				<div className="text-muted-foreground text-center text-sm">
+					{copy.switchPrompt}{" "}
+					<Link className="link link-primary" to={copy.switchTo}>
+						{copy.switchLink}
+					</Link>
+				</div>
+			) : null}
 
-			{children}
-
-			<div className="text-muted-foreground text-center text-sm">
-				{switchPrompt}{" "}
-				<Link className="link link-primary" to={switchTo}>
-					{switchLink}
-				</Link>
-			</div>
-
-			{authCopyKey === "signup" ? (
+			{showLegal ? (
 				<p className="text-muted-foreground text-center text-xs">
 					By creating an account you agree to the{" "}
 					<Link className="link" to="/terms">

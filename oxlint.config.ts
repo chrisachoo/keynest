@@ -26,6 +26,7 @@ export default defineConfig({
 	plugins: ["typescript", "unicorn", "oxc", "node"],
 	rules: {
 		"no-console": "warn",
+		"no-nested-ternary": "error",
 		"no-redeclare": "off",
 		"node/no-process-env": "error",
 		"node/no-top-level-await": "off",
