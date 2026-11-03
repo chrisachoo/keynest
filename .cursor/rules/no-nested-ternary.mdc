@@ -1,0 +1,23 @@
+---
+description: Keep ternaries flat. Nested ternaries are an oxlint error.
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# No nested ternaries
+
+A ternary whose branch is another ternary is an error (`oxlint` rule `no-nested-ternary`, SonarQube `typescript:S3358`). Fix it before finishing.
+
+Use `if` / `else if`, or a lookup, and keep each remaining ternary to one decision.
+
+```ts
+// Bad
+const label = sent ? "Sent" : pending ? "Sending…" : "Resend email"
+
+// Good
+let label = "Resend email"
+if (sent) label = "Sent"
+else if (pending) label = "Sending…"
+```
+
+A single ternary is fine: `hidden ? "Show" : "Hide"`.

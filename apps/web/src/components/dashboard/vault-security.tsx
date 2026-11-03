@@ -344,7 +344,7 @@ function TwoFactor() {
 					</ul>
 				</div>
 			) : null}
-			{recoveryCodes ? null : user.totpEnabled ? (
+			{!recoveryCodes && user.totpEnabled ? (
 				<form
 					className="space-y-3"
 					onSubmit={(event) => {
@@ -389,7 +389,8 @@ function TwoFactor() {
 						{disablePending ? "Turning off..." : "Turn off authenticator"}
 					</Button>
 				</form>
-			) : secret ? (
+			) : null}
+			{!recoveryCodes && !user.totpEnabled && secret ? (
 				<form
 					className="space-y-3"
 					onSubmit={(event) => {
@@ -423,7 +424,8 @@ function TwoFactor() {
 						{confirmPending ? "Checking..." : "Enable authenticator"}
 					</Button>
 				</form>
-			) : (
+			) : null}
+			{!recoveryCodes && !user.totpEnabled && !secret ? (
 				<form
 					className="space-y-3"
 					onSubmit={(event) => {
@@ -453,7 +455,7 @@ function TwoFactor() {
 						{setupPending ? "Preparing..." : "Set up authenticator"}
 					</Button>
 				</form>
-			)}
+			) : null}
 		</div>
 	)
 }

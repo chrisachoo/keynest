@@ -72,6 +72,11 @@ test("signup event sends the confirmation and records one notification", async (
 	expect(bodies[0]).toContain("https://keynest.me/verify-email")
 	expect(bodies[0]).toContain('"html":')
 	expect(bodies[0]).toContain("Confirm email")
+	expect(bodies[0]).toContain("https://keynest.me/email-mark.svg")
+	expect(bodies[0]).toContain("Your credentials. Your control.")
+	expect(bodies[0]).toContain("prefers-color-scheme: dark")
+	expect(bodies[0]).toContain("#422ad5")
+	expect(bodies[0]).toContain("#121c22")
 })
 
 test("an invalid signup event is rejected before delivery", async () => {

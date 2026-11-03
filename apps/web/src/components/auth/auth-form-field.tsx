@@ -29,14 +29,15 @@ export default function AuthFormField({
 				<Icon className="h-[1em] opacity-50" />
 
 				<Input
+					autoComplete={autoComplete}
+					className="bg-inherit"
 					id={field.name}
 					name={field.name}
-					type={type}
-					autoComplete={autoComplete}
-					placeholder={placeholder}
-					value={field.state.value}
 					onBlur={field.handleBlur}
 					onChange={(event) => field.handleChange(event.target.value)}
+					placeholder={placeholder}
+					type={type}
+					value={field.state.value}
 					required
 				/>
 

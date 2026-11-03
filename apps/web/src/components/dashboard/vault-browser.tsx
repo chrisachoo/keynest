@@ -27,6 +27,12 @@ export default function VaultBrowser({
 	const openComposer = useOpenComposer()
 	const items = vault.items.filter(predicate)
 	const unlocked = vault.status === "unlocked"
+	let lockedCopy = "No encrypted items are saved for this account yet."
+	if (vault.notice) lockedCopy = "The item list could not be loaded."
+	else if (vault.itemCount === 1)
+		lockedCopy = "1 encrypted item is saved for this account."
+	else if (vault.itemCount > 1)
+		lockedCopy = `${vault.itemCount} encrypted items are saved for this account.`
 
 	return (
 		<DashboardWrapper
@@ -54,13 +60,8 @@ export default function VaultBrowser({
 				<div className="rounded-box border border-base-300 bg-base-200 p-5">
 					<h2 className="font-semibold">Vault locked</h2>
 					<p className="mt-1 max-w-lg text-sm text-base-content/70">
-						{vault.notice
-							? "The item list could not be loaded."
-							: vault.itemCount
-								? `${vault.itemCount} encrypted ${vault.itemCount === 1 ? "item is" : "items are"} saved for this account.`
-								: "No encrypted items are saved for this account yet."}{" "}
-						Enter your password to unlock them in this tab. Locking drops the
-						key. The server keeps ciphertext only.
+						{lockedCopy} Enter your password to unlock them in this tab. Locking
+						drops the key. The server keeps ciphertext only.
 					</p>
 					<UnlockVault />
 				</div>

@@ -9,7 +9,7 @@ import {
 import { useForm } from "@tanstack/react-form"
 import { CircleCheck, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
 import { useRef, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 import * as v from "valibot"
 
 import AuthFormField from "@/components/auth/auth-form-field"
@@ -26,12 +26,24 @@ import {
 	logoutAsync
 } from "@/store/auth/extra-reducers"
 
+function loginLocationState(state: unknown) {
+	if (typeof state !== "object" || state === null) {
+		return { email: "", verified: false }
+	}
+	const record = state as { email?: unknown; verified?: unknown }
+	return {
+		email: typeof record.email === "string" ? record.email : "",
+		verified: record.verified === true
+	}
+}
+
 export function Component() {
 	const navigate = useNavigate()
-	const [searchParams] = useSearchParams()
+	const location = useLocation()
+	const arrived = loginLocationState(location.state)
 	const copy = authCopy["login"]
 	const dispatch = useAppDispatch()
-	const emailVerified = searchParams.get("verified") === "1"
+	const emailVerified = arrived.verified
 
 	const [showPassword, setShowPassword] = useState(false)
 	const [serverError, setServerError] = useState<string | null>(null)
@@ -49,7 +61,7 @@ export function Component() {
 
 	const form = useForm({
 		defaultValues: {
-			email: "",
+			email: arrived.email,
 			password: ""
 		},
 		onSubmit: async ({ value }) => {

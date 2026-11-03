@@ -2,7 +2,6 @@ import { getInitials } from "@keynest/utils"
 import {
 	ChevronsUpDown,
 	FolderLock,
-	LogOut,
 	Settings,
 	Star,
 	StickyNote,
@@ -11,13 +10,13 @@ import {
 	WandSparkles,
 	type LucideIcon
 } from "lucide-react"
-import { Link, NavLink, useLocation, useNavigate } from "react-router"
+import { Link, useLocation } from "react-router"
 
+import AccountMenu from "@/components/dashboard/account-menu"
 import { Avatar } from "@/components/ui/avatar"
 import Logo from "@/components/ui/logo"
-import { useAppDispatch, useAppSelector } from "@/store"
+import { useAppSelector } from "@/store"
 import { selectUser } from "@/store/auth/auth-slice"
-import { logoutAsync } from "@/store/auth/extra-reducers"
 
 const itemsMenu = {
 	"personal-vaults": [
@@ -81,9 +80,6 @@ function MenuLink({
 }
 
 export default function AppSidebar() {
-	const dispatch = useAppDispatch()
-	const location = useLocation()
-	const navigate = useNavigate()
 	const user = useAppSelector(selectUser)
 
 	return (
@@ -119,7 +115,7 @@ export default function AppSidebar() {
 				</li>
 			</ul>
 
-			<div className="flex items-center gap-2">
+			<div className="z-50 flex items-center gap-2">
 				<Avatar>{getInitials(user?.name ?? "")}</Avatar>
 
 				<div className="min-w-0 flex-1">
@@ -127,69 +123,13 @@ export default function AppSidebar() {
 					<p className="truncate text-xs text-base-content/60">{user?.email}</p>
 				</div>
 
-				<button
-					aria-label="Account menu"
-					className="btn btn-square btn-ghost btn-sm"
-					popoverTarget="profile"
-					style={{ anchorName: "--anchor-1" }}
-					type="button"
+				<AccountMenu
+					label="Account menu"
+					triggerClassName="btn btn-square btn-ghost btn-sm"
+					className="dropdown-end dropdown-top"
 				>
 					<ChevronsUpDown className="size-4" />
-				</button>
-
-				<ul
-					className="menu dropdown w-56 rounded-box border border-base-300 bg-base-200"
-					id="profile"
-					popover="auto"
-					style={{ positionAnchor: "--anchor-1" }}
-				>
-					<li>
-						<Link
-							className={
-								location.pathname === "/dashboard/account"
-									? "active"
-									: undefined
-							}
-							to="/dashboard/account"
-						>
-							<UserRound className="size-4" />
-							<span className="min-w-0 flex-1 truncate">Account</span>
-						</Link>
-					</li>
-
-					<li>
-						<Link
-							className={
-								location.pathname === "/dashboard/settings"
-									? "active"
-									: undefined
-							}
-							to="/dashboard/settings"
-						>
-							<Settings className="size-4" />
-							<span className="min-w-0 flex-1 truncate">Settings</span>
-						</Link>
-					</li>
-
-					<li>
-						<NavLink
-							onClick={async (event) => {
-								event.preventDefault()
-								document.getElementById("profile")?.hidePopover()
-
-								const result = await dispatch(logoutAsync())
-
-								if (logoutAsync.fulfilled.match(result)) {
-									navigate("/login", { replace: true })
-								}
-							}}
-							to="/login"
-						>
-							<LogOut className="size-4" />
-							<span className="min-w-0 flex-1 truncate">Log out</span>
-						</NavLink>
-					</li>
-				</ul>
+				</AccountMenu>
 			</div>
 		</aside>
 	)
