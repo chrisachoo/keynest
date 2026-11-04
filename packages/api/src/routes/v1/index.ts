@@ -5,6 +5,7 @@ import { loadSession } from "../../middleware/auth"
 import { requireSameOrigin } from "../../middleware/origin"
 import { authRoutes } from "./auth"
 import { errorRoutes } from "./errors"
+import { notificationRoutes } from "./notifications"
 import { sessionRoutes } from "./sessions"
 import { totpRoutes } from "./totp"
 import { usersRoutes } from "./users"
@@ -16,6 +17,7 @@ export const v1 = new Hono<ApiEnv>()
 	.route("/auth", authRoutes)
 	.route("/auth", totpRoutes)
 	.route("/errors", errorRoutes)
+	.route("/notifications", notificationRoutes)
 	.route("/sessions", sessionRoutes)
 	.route("/users", usersRoutes)
 	.route("/vault-items", vaultItemRoutes)

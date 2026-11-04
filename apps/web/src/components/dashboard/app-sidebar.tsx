@@ -1,5 +1,6 @@
 import { getInitials } from "@keynest/utils"
 import {
+	Bell,
 	ChevronsUpDown,
 	FolderLock,
 	Settings,
@@ -33,6 +34,7 @@ const itemsMenu = {
 		}
 	],
 	"your-account": [
+		{ icon: Bell, label: "Notifications", to: "/dashboard/notifications" },
 		{ icon: UserRound, label: "Account", to: "/dashboard/account" },
 		{ icon: Settings, label: "Settings", to: "/dashboard/settings" }
 	]
