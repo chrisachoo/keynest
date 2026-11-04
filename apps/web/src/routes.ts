@@ -145,6 +145,14 @@ export const routes = [
 				}
 			},
 			{
+				path: "notifications",
+				HydrateFallback,
+				lazy: async () => {
+					const route = await import("./routes/dashboard/notifications")
+					return { Component: route.Component, loader: route.loader }
+				}
+			},
+			{
 				path: "account",
 				HydrateFallback,
 				lazy: async () => {
