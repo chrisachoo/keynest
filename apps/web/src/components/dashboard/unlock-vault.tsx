@@ -44,7 +44,6 @@ export default function UnlockVault() {
 						<Legend>Password</Legend>
 						<Input
 							autoComplete="current-password"
-							className="input"
 							disabled={pending}
 							name={field.name}
 							onBlur={field.handleBlur}
@@ -52,6 +51,7 @@ export default function UnlockVault() {
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						{field.state.meta.errors.flatMap((error) => {
 							const message = error?.message
