@@ -251,10 +251,6 @@ export const SessionIdParamSchema = v.object({
 	id: IdSchema
 })
 
-export const RevokeOthersInputSchema = v.object({
-	verifier: VerifierFieldSchema
-})
-
 export type KdfParams = v.InferOutput<typeof KdfParamsSchema>
 export type KdfRequest = v.InferOutput<typeof KdfRequestSchema>
 export type KdfResponse = v.InferOutput<typeof KdfResponseSchema>
@@ -280,7 +276,6 @@ export type DeleteAccountInput = v.InferOutput<typeof DeleteAccountInputSchema>
 export type RecoverInput = v.InferOutput<typeof RecoverInputSchema>
 export type Accepted = v.InferOutput<typeof AcceptedSchema>
 export type SignupAccepted = v.InferOutput<typeof SignupAcceptedSchema>
-export type RevokeOthersInput = v.InferOutput<typeof RevokeOthersInputSchema>
 export type ChangeEmailInput = v.InferOutput<typeof ChangeEmailInputSchema>
 export type TotpChallenge = v.InferOutput<typeof TotpChallengeSchema>
 export type TotpConfirmLoginInput = v.InferOutput<

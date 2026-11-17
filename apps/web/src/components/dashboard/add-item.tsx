@@ -163,7 +163,7 @@ function AddItemForm({
 									placeholder={type === "login" ? "GitHub" : "Recovery codes"}
 									required
 									value={field.state.value}
-									className="input w-full"
+									withInputClass
 								/>
 								<FieldError field={field} />
 							</Fieldset>
@@ -246,6 +246,7 @@ function LoginFields<
 							required
 							spellCheck={false}
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError field={field} />
 					</Fieldset>

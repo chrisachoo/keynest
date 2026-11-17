@@ -42,8 +42,9 @@ export function Component() {
 						<h2 className="text-xl font-semibold">What we do not do</h2>
 						<p className="text-base-content/80">
 							Keynest does not sell account data, and it does not use vault
-							contents for advertising. Email is used to confirm an address or
-							finish an email change when delivery is configured.
+							contents for advertising. Email is used to confirm an address,
+							finish an email change, or confirm that an account was deleted,
+							when delivery is configured.
 						</p>
 					</section>
 					<section className="space-y-2">
