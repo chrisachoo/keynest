@@ -21,7 +21,13 @@ const inputVariants = cva("w-full", {
 		},
 		variant: {
 			ghost: "input-ghost"
+		},
+		withInputClass: {
+			true: "input"
 		}
+	},
+	defaultVariants: {
+		withInputClass: false
 	}
 })
 
@@ -32,11 +38,15 @@ function Input({
 	color,
 	size,
 	variant,
+	withInputClass,
 	...props
 }: Readonly<InputProps>) {
 	return (
 		<input
-			className={cn(inputVariants({ color, size, variant }), className)}
+			className={cn(
+				inputVariants({ color, size, variant, withInputClass }),
+				className
+			)}
 			{...props}
 		/>
 	)
