@@ -238,6 +238,7 @@ function LoginFields<
 							autoCapitalize="off"
 							autoComplete="off"
 							autoCorrect="off"
+							className="input"
 							maxLength={320}
 							name={field.name}
 							onBlur={field.handleBlur}
