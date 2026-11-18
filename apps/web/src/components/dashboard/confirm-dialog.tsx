@@ -18,7 +18,7 @@ export default function ConfirmDialog({
 	pending?: boolean
 	size?: ComponentProps<typeof DialogContent>["size"]
 }>) {
-	const dialogRef = useDialog(open, pending)
+	const dialogRef = useDialog(open)
 
 	return (
 		<Dialog
