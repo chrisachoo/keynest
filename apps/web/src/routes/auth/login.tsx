@@ -166,6 +166,7 @@ export function Component() {
 								<Legend>Authentication code</Legend>
 								<Input
 									autoComplete="one-time-code"
+									className="input"
 									inputMode="text"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}

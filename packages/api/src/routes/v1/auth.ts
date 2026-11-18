@@ -1,5 +1,10 @@
 import { account, and, eq, user, type Database } from "@keynest/db"
-import { mailConfigured } from "@keynest/services/mail"
+import { accountDeletedEmail } from "@keynest/services/email"
+import {
+	isLocalRequest,
+	mailConfigured,
+	sendMail
+} from "@keynest/services/mail"
 import {
 	enqueueSignupExisting,
 	enqueueUserSignedUp
@@ -597,8 +602,21 @@ export const authRoutes = new Hono<ApiEnv>()
 			if (!verifierMatches(c.req.valid("json").verifier, hash))
 				throw badRequest("Incorrect password")
 
+			const { email, name } = current
 			await db.delete(user).where(eq(user.id, current.id))
 			clearSessionCookie(c)
+
+			const message = accountDeletedEmail({
+				deletedAt: new Date(),
+				email,
+				name,
+				origin: c.env.CORS_ORIGIN
+			})
+			await sendMail(
+				c.env,
+				{ ...message, to: email },
+				isLocalRequest(c.req.url)
+			)
 			return c.body(null, 204)
 		}
 	)
