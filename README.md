@@ -22,6 +22,12 @@ cp packages/db/.env.example packages/db/.env
 - `bun run lint:fix` — apply fixable lint and format
 - `bun run deploy` / `bun run destroy` — Alchemy (use `--stage production` for prod)
 
+## Deployment workflows
+
+Pull requests do not run CI checks. The production workflow runs checks, type
+checks, and tests before deploying on pushes to `main`. The manually triggered
+staging workflow runs the same checks before deploying to staging.
+
 ## API
 
 The Worker mounts `@keynest/api` at `/api`.
