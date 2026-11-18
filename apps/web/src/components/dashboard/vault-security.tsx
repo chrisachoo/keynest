@@ -1,12 +1,12 @@
 import { EmailSchema, PasswordSchema, TotpCodeSchema } from "@keynest/shared"
 import { useForm } from "@tanstack/react-form"
-import { Trash2, TriangleAlert } from "lucide-react"
+import { TriangleAlert } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import * as v from "valibot"
 
 import RecoveryKit from "@/components/auth/recovery-kit"
-import PasswordConfirmDialog from "@/components/dashboard/password-confirm-dialog"
+import DeleteAccountDialog from "@/components/dashboard/delete-account-dialog"
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { useAppSelector } from "@/store"
@@ -502,12 +502,9 @@ function DeleteAccount() {
 				</Button>
 			</div>
 
-			<PasswordConfirmDialog
-				confirmLabel="Delete account"
-				description="Your account and every encrypted item in your vault will be permanently deleted. We'll email you once the account is gone. This action cannot be undone. Enter your password to confirm."
+			<DeleteAccountDialog
 				disabled={!user}
 				error={error}
-				icon={<Trash2 />}
 				onClose={() => setOpen(false)}
 				onConfirm={async (password) => {
 					await fetcher.submit(
@@ -517,8 +514,6 @@ function DeleteAccount() {
 				}}
 				open={open}
 				pending={pending}
-				pendingLabel="Deleting..."
-				title="Delete your account?"
 			/>
 		</section>
 	)
