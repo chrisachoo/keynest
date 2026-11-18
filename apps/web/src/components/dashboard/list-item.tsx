@@ -219,7 +219,11 @@ export function RowBadge({ item }: Readonly<{ item: VaultItemView }>) {
 	}
 
 	return (
-		<Badge size="sm" variant={item.type === "login" ? "light" : "success"}>
+		<Badge
+			size="sm"
+			variant={item.type === "login" ? "light" : "success"}
+			className="hidden md:inline-flex"
+		>
 			{TYPE_NAMES[item.type]}
 		</Badge>
 	)
@@ -254,6 +258,7 @@ function RowFavoriteButton({ item }: Readonly<{ item: OpenVaultItem }>) {
 			shape="square"
 			type="button"
 			variant="ghost"
+			className="hidden md:inline-flex"
 		>
 			<Star
 				className={favorite ? "fill-amber-500 text-amber-500" : undefined}
@@ -280,6 +285,7 @@ function RowCopyButton({ item }: Readonly<{ item: OpenVaultItem }>) {
 			shape="square"
 			type="button"
 			variant="ghost"
+			className="hidden md:inline-flex"
 		>
 			{copied ? <Check /> : <Copy />}
 		</Button>
@@ -337,6 +343,7 @@ function ListRow({ item }: Readonly<{ item: VaultItemView }>) {
 					</span>
 				</span>
 			</button>
+
 			<RowBadge item={item} />
 			{isOpenItem(item) ? <RowFavoriteButton item={item} /> : null}
 			{isOpenItem(item) ? <RowCopyButton item={item} /> : null}

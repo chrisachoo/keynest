@@ -20,7 +20,7 @@ export default function SiteHeader({
 	const locked = vault.status !== "unlocked"
 
 	return (
-		<header className="navbar justify-between gap-3 border-b border-base-300 bg-base-100 px-5 sm:px-8">
+		<header className="navbar sticky top-0 z-40 justify-between gap-3 border-b border-base-300 bg-base-100 px-5 sm:px-8">
 			<div className="flex min-w-0 items-center gap-3">
 				<div className="lg:hidden">
 					<Logo name />
