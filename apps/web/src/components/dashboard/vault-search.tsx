@@ -36,11 +36,11 @@ export default function VaultSearch({
 
 	return (
 		<Dialog
-			className="place-items-start! justify-items-center! pt-16 sm:pt-24"
+			className="place-items-start! justify-items-center! px-4 pt-16 sm:pt-24"
 			onClose={onClose}
 			ref={dialogRef}
 		>
-			<DialogContent className="w-full max-w-lg p-2">
+			<DialogContent className="w-full max-w-2xl p-2">
 				{open ? <SearchPanel onClose={onClose} /> : null}
 			</DialogContent>
 			<form className="modal-backdrop" method="dialog">
@@ -53,8 +53,10 @@ export default function VaultSearch({
 function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 	const navigate = useNavigate()
 	const vault = useVault()
+
 	const [query, setQuery] = useState("")
 	const [activeIndex, setActiveIndex] = useState(0)
+
 	const needle = query.trim()
 	const results = needle
 		? vault.items.filter(isOpen).filter((item) => matches(item, needle))
@@ -94,6 +96,16 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 		}
 	}
 
+	function getEmptyMessage() {
+		if (vault.status === "locked") return "Unlock this tab to search items."
+
+		if (!needle) return "Type a name or username. Use arrow keys and enter."
+
+		if (results.length === 0) return "No matching items."
+
+		return null
+	}
+
 	return (
 		<>
 			<label className="input w-full">
@@ -122,23 +134,11 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 			</label>
 
 			<div className="max-h-72 overflow-y-auto pt-2" id="vault-search-results">
-				{vault.status === "locked" ? (
+				{getEmptyMessage() && (
 					<p className="px-3 py-4 text-sm text-base-content/60">
-						Unlock this tab to search items.
+						{getEmptyMessage()}
 					</p>
-				) : null}
-
-				{vault.status !== "locked" && !needle ? (
-					<p className="px-3 py-4 text-sm text-base-content/60">
-						Type a name or username. Use arrow keys and enter.
-					</p>
-				) : null}
-
-				{vault.status !== "locked" && needle && results.length === 0 ? (
-					<p className="px-3 py-4 text-sm text-base-content/60">
-						No matching items.
-					</p>
-				) : null}
+				)}
 
 				{results.length > 0 ? (
 					<ul
@@ -148,7 +148,7 @@ function SearchPanel({ onClose }: Readonly<{ onClose: () => void }>) {
 					>
 						{results.map((item, index) => (
 							<li
-								className="list-row cursor-pointer items-center px-1 transition-colors hover:bg-base-200"
+								className="list-row cursor-pointer items-center px-2 transition-colors hover:bg-base-200"
 								key={item.id}
 								onClick={() => choose(item)}
 								onMouseEnter={() => setActiveIndex(index)}
