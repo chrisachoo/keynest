@@ -2,16 +2,86 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - ".cursor/**"
+      - "LICENSE"
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   check:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Fetch base branch
+        run: git fetch origin "${{ github.base_ref }}"
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
       - run: bun install --frozen-lockfile
       - run: bun run check
-      - run: bun run check-types -- --ui=stream
-      - run: bun run test
+      - name: Check affected packages
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          base="origin/${BASE_REF}"
+          json=$(bunx turbo query affected --packages --base "$base" --head HEAD --ui=stream)
+          echo "$json"
+          names=$(printf '%s' "$json" | bun -e 'const data = JSON.parse(await Bun.stdin.text()); for (const item of data.data.affectedPackages.items) console.log(item.name)')
+          echo "Affected packages:"
+          echo "$names"
+
+          if [ -z "$names" ]; then
+            echo "No affected packages were reported. Running the full suite."
+            bun run check-types -- --ui=stream
+            bun run test
+            exit 0
+          fi
+
+          full=0
+          run_utils=0
+          run_api=0
+          run_services=0
+          run_web=0
+          while IFS= read -r name; do
+            case "$name" in
+              "//" | keynest | @keynest/shared | @keynest/db | @keynest/client)
+                full=1
+                ;;
+              @keynest/utils) run_utils=1 ;;
+              @keynest/api) run_api=1 ;;
+              @keynest/services) run_services=1 ;;
+              web) run_web=1 ;;
+            esac
+          done <<< "$names"
+
+          if [ "$full" -eq 1 ]; then
+            echo "A shared package changed. Running the full suite."
+            bun run check-types -- --ui=stream
+            bun run test
+            exit 0
+          fi
+
+          echo "Typechecking affected packages"
+          TURBO_SCM_BASE="$base" bunx turbo run check-types --affected --ui=stream
+
+          if [ "$run_utils$run_api$run_services$run_web" = "0000" ]; then
+            echo "No test suites are affected."
+            exit 0
+          fi
+
+          if [ "$run_utils" -eq 1 ]; then bun test packages/utils; fi
+          if [ "$run_api" -eq 1 ]; then bun test packages/api; fi
+          if [ "$run_services" -eq 1 ]; then bun test packages/services; fi
+          if [ "$run_web" -eq 1 ]; then bun run --cwd apps/web test; fi
