@@ -35,6 +35,7 @@ export default function SessionList() {
 	const revokeOthers = useFetcher<SettingsActionData>()
 	const revoke = useFetcher<SettingsActionData>()
 	const titleId = useId()
+
 	const [baseline, setBaseline] = useState<SettingsActionData | undefined>()
 	const [confirming, setConfirming] = useState(false)
 	const [locked, setLocked] = useState(false)
