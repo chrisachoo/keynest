@@ -235,3 +235,54 @@ ${button(confirmUrl, "Confirm new email")}
 		text
 	}
 }
+
+export function accountDeletedEmail(input: {
+	deletedAt: Date
+	email: string
+	name: string
+	origin: string
+}): TransactionalEmail {
+	const home = siteOrigin(input.origin)
+	const when = `${new Intl.DateTimeFormat("en-GB", {
+		day: "numeric",
+		hour: "2-digit",
+		hourCycle: "h23",
+		minute: "2-digit",
+		month: "long",
+		timeZone: "UTC",
+		year: "numeric"
+	}).format(input.deletedAt)} UTC`
+	const subject = "Your Keynest account was deleted"
+	const safeEmail = escapeHtml(input.email)
+	const safeName = escapeHtml(input.name)
+	const safeWhen = escapeHtml(when)
+	const text = [
+		`${input.name}, your Keynest account for ${input.email} was deleted on ${when}.`,
+		"",
+		"We removed your account, every signed-in session, and the encrypted vault stored for this account.",
+		"Keynest cannot restore them. A new account starts with an empty vault.",
+		"",
+		"This deletion was confirmed with your master password.",
+		"If you did not delete this account, someone used your password to confirm it. The vault cannot be recovered.",
+		"",
+		`Keynest — ${ASSURANCE}`,
+		home
+	].join("\n")
+
+	const body = `<h1 class="text-body" style="margin:0 0 12px;font-size:24px;line-height:1.25;color:${light.content};">Your account was deleted</h1>
+<p style="margin:0 0 8px;">${safeName}, the Keynest account for <strong>${safeEmail}</strong> was deleted on ${safeWhen}.</p>
+<p style="margin:0 0 8px;">We removed your account, every signed-in session, and the encrypted vault stored for this account. Keynest cannot restore them. A new account starts with an empty vault.</p>
+<p style="margin:0;">This deletion was confirmed with your master password.</p>`
+
+	return {
+		html: layout({
+			body,
+			note: `<p style="margin:0;">If you did not delete this account, someone used your password to confirm it. The vault cannot be recovered.</p>`,
+			origin: home,
+			preheader: "Your Keynest account and encrypted vault were removed.",
+			title: subject
+		}),
+		subject,
+		text
+	}
+}

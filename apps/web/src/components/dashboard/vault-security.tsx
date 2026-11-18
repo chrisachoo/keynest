@@ -1,10 +1,12 @@
 import { EmailSchema, PasswordSchema, TotpCodeSchema } from "@keynest/shared"
 import { useForm } from "@tanstack/react-form"
+import { Trash2, TriangleAlert } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import * as v from "valibot"
 
 import RecoveryKit from "@/components/auth/recovery-kit"
+import PasswordConfirmDialog from "@/components/dashboard/password-confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Fieldset, Input, Legend } from "@/components/ui/input"
 import { useAppSelector } from "@/store"
@@ -119,12 +121,12 @@ function ChangePassword() {
 						<Legend>Current password</Legend>
 						<Input
 							autoComplete="current-password"
-							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -136,13 +138,13 @@ function ChangePassword() {
 					<Fieldset className="p-0">
 						<Legend>New password</Legend>
 						<Input
-							className="input"
 							autoComplete="new-password"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -154,13 +156,13 @@ function ChangePassword() {
 					<Fieldset className="p-0">
 						<Legend>Confirm password</Legend>
 						<Input
-							className="input"
 							autoComplete="new-password"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -222,12 +224,12 @@ function ChangeEmail() {
 						<Legend>New email</Legend>
 						<Input
 							autoComplete="email"
-							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="email"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -239,12 +241,12 @@ function ChangeEmail() {
 						<Legend>Password</Legend>
 						<Input
 							autoComplete="current-password"
-							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -359,12 +361,12 @@ function TwoFactor() {
 								<Legend>Password</Legend>
 								<Input
 									autoComplete="current-password"
-									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
 									type="password"
 									value={field.state.value}
+									withInputClass
 								/>
 								<FieldError errors={field.state.meta.errors} />
 							</Fieldset>
@@ -375,11 +377,11 @@ function TwoFactor() {
 							<Fieldset className="p-0">
 								<Legend>Authentication code</Legend>
 								<Input
-									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
 									value={field.state.value}
+									withInputClass
 								/>
 								<FieldError errors={field.state.meta.errors} />
 							</Fieldset>
@@ -410,11 +412,11 @@ function TwoFactor() {
 							<Fieldset className="p-0">
 								<Legend>Code from the app</Legend>
 								<Input
-									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
 									value={field.state.value}
+									withInputClass
 								/>
 								<FieldError errors={field.state.meta.errors} />
 							</Fieldset>
@@ -440,12 +442,12 @@ function TwoFactor() {
 								<Legend>Password</Legend>
 								<Input
 									autoComplete="current-password"
-									className="input"
 									onBlur={field.handleBlur}
 									onChange={(event) => field.handleChange(event.target.value)}
 									required
 									type="password"
 									value={field.state.value}
+									withInputClass
 								/>
 								<FieldError errors={field.state.meta.errors} />
 							</Fieldset>
@@ -464,93 +466,61 @@ function DeleteAccount() {
 	const user = useAppSelector(selectUser)
 	const fetcher = useFetcher<AccountActionData>()
 	const pending = fetcher.state !== "idle"
-	const [confirming, setConfirming] = useState(false)
-	const confirmingRef = useRef(false)
-	const error = actionError(fetcher, "delete")
-
-	const form = useForm({
-		defaultValues: { password: "" },
-		onSubmit: async ({ value }) => {
-			if (!confirmingRef.current) {
-				confirmingRef.current = true
-				setConfirming(true)
-				return
-			}
-			await fetcher.submit(
-				{ ...value, intent: "delete" },
-				{ action: ACCOUNT_ACTION, method: "post" }
-			)
-		},
-		validators: {
-			onSubmit: v.object({ password: PasswordSchema })
-		}
-	})
+	const [open, setOpen] = useState(false)
+	const [baseline, setBaseline] = useState<AccountActionData | undefined>()
+	const error =
+		fetcher.data === baseline ? null : actionError(fetcher, "delete")
 
 	return (
-		<form
-			className="mt-4 max-w-sm space-y-3"
-			onSubmit={(event) => {
-				event.preventDefault()
-				event.stopPropagation()
-				void form.handleSubmit()
-			}}
-		>
-			<form.Field name="password">
-				{(field) => (
-					<Fieldset className="p-0">
-						<Legend>Password</Legend>
-						<Input
-							autoComplete="current-password"
-							className="input"
-							onBlur={field.handleBlur}
-							onChange={(event) => field.handleChange(event.target.value)}
-							required
-							type="password"
-							value={field.state.value}
-						/>
-						<FieldError errors={field.state.meta.errors} />
-					</Fieldset>
-				)}
-			</form.Field>
-			{error ? <p className="text-sm text-error">{error}</p> : null}
-			{confirming ? (
-				<div className="space-y-2">
-					<p className="text-sm text-base-content/70">
-						This permanently deletes the account and every encrypted item.
-					</p>
-					<div className="flex gap-2">
-						<Button
-							onClick={() => {
-								confirmingRef.current = false
-								setConfirming(false)
-							}}
-							type="button"
-							variant="ghost"
-						>
-							Keep account
-						</Button>
-						<Button
-							disabled={!user || pending}
-							type="submit"
-							variant="destructive"
-						>
-							{pending ? "Deleting..." : "Delete account"}
-						</Button>
+		<section id="delete-account">
+			<div className="mt-4 flex flex-col gap-4 rounded-box border border-error/30 bg-error/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex items-start gap-3">
+					<div
+						aria-hidden="true"
+						className="grid size-9 shrink-0 place-items-center rounded-field bg-error text-error-content"
+					>
+						<TriangleAlert className="size-5" />
+					</div>
+					<div className="space-y-1">
+						<h3 className="font-medium">Deleting your account is permanent</h3>
+						<p className="text-sm text-base-content/70">
+							Your account and every encrypted item in your vault are deleted
+							right away. Keynest cannot recover them.
+						</p>
 					</div>
 				</div>
-			) : (
 				<Button
+					className="shrink-0"
 					onClick={() => {
-						confirmingRef.current = true
-						setConfirming(true)
+						setBaseline(fetcher.data)
+						setOpen(true)
 					}}
 					type="button"
 					variant="destructive"
 				>
 					Delete account
 				</Button>
-			)}
-		</form>
+			</div>
+
+			<PasswordConfirmDialog
+				confirmLabel="Delete account"
+				description="Your account and every encrypted item in your vault will be permanently deleted. We'll email you once the account is gone. This action cannot be undone. Enter your password to confirm."
+				disabled={!user}
+				error={error}
+				icon={<Trash2 />}
+				onClose={() => setOpen(false)}
+				onConfirm={async (password) => {
+					await fetcher.submit(
+						{ intent: "delete", password },
+						{ action: ACCOUNT_ACTION, method: "post" }
+					)
+				}}
+				open={open}
+				pending={pending}
+				pendingLabel="Deleting..."
+				title="Delete your account?"
+			/>
+		</section>
 	)
 }
 
@@ -606,12 +576,12 @@ function IssueRecovery() {
 						<Legend>Current password</Legend>
 						<Input
 							autoComplete="current-password"
-							className="input"
 							onBlur={field.handleBlur}
 							onChange={(event) => field.handleChange(event.target.value)}
 							required
 							type="password"
 							value={field.state.value}
+							withInputClass
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Fieldset>
@@ -666,13 +636,7 @@ export function AccountSecurity() {
 				<TwoFactor />
 			</section>
 
-			<section className="rounded-box border border-error/40 bg-base-100 p-5">
-				<h2 className="font-semibold">Delete account</h2>
-				<p className="mt-2 max-w-2xl text-sm text-base-content/70">
-					Enter your password, then confirm. This cannot be undone.
-				</p>
-				<DeleteAccount />
-			</section>
+			<DeleteAccount />
 		</div>
 	)
 }
